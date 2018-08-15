@@ -43,11 +43,55 @@ di criticità alto.
 %     \item[Cosa fare in caso di attacco]
 % \end{description}
 
+%TODO tls-crypt per client
 
 \subsection{Scenario 1}
 \begin{description}
+    \item[Scenario]Attacco (D)DoS verso i VPN server.
+    \item[Livello di difficoltà]Basso, è sufficiente disporre
+    di sufficiente potenza di calcolo. 
+    \item[In caso di successo]L'operatività di MoonCloud sarebbe
+    compressa per tutta la durata dell'attacco. 
+    \item[Criticità]Alta, anche grazie alla relativa facilità dell'attacco.
+    \item[Prevenzione]Sebbene si assume che l'attaccante non disponga di
+    certificati validi, e che quindi la connessione VPN non andrebbe a buon
+    fine, se l'attaccante riuscisse a creare un'adeguata mole di
+    traffico, allora riuscirà a sovraccare il server quanto basta
+    per causare un'interruzione di servizio.
+    L'opzione \texttt{tls-crypt} potrebbe mitigare gli effetti dell'attacco,
+    oppure richiedere maggiore sforzo all'attaccante. Non sarebbe
+    comunque una soluzione definitiva.
+    \item[Ulteriori misure preventive]Non vi sono altre misure di prevenzione. 
+    \item[Cosa fare in caso di attacco]E' tristemente noto come sia
+    difficile proteggersi da attacchi DoS. Si potrebbero spegnere
+    i server coinvolti nell'attacco (e magari anche quelli non
+    coinvolti per precauzione) fino a che l'ISP non riesce
+    a bloccare il traffico malevolo in anticipo.
+\end{description}
+
+
+\subsection{Scenario 2}
+\begin{description}
     \item[Scenario]Inviare pacchetti malevoli alla rete MoonCloud
-    mediante un VPN client.
+    mediante un VPN client non legittimo.
+    \item[Livello di difficoltà]Basso. Si suppone che l'attaccante abbia
+    ha disposizione un qualsiasi dispositivo con OpenVPN installato, e che
+    voglia connettersi ad un VPN server e sfruttarlo per inviare
+    pacchetti malevoli alla rete MoonCloud.
+    \item[In caso di successo]Non vi sono possibilità di successo, perché
+    non disponendo di un VPN client valido, non riuscirebbe a connettersi 
+    \item[Criticità]Bassa a causa dell'impossibilità di successo.
+    \item[Prevenzione]OpenVPN rifiuta connessioni da client che non riesce
+    a verificare. 
+    \item[Ulteriori misure preventive]Nessuna.
+    \item[Cosa fare in caso di attacco]Se non si tratta di un attacco DoS,
+    non c'è molto da fare. 
+\end{description}
+
+\subsection{Scenario 3}
+\begin{description}
+    \item[Scenario]Inviare pacchetti malevoli alla rete MoonCloud
+    mediante un VPN client legittimo (in tutto o in parte).
     \item[Livello di difficoltà]Medio. Si suppone che l'attaccante abbia
     ha disposizione un VPN client legittimo, ovvero con un certificato
     valido. E' possibile che l'attaccante sia riuscito ad ottenre un
@@ -70,26 +114,6 @@ di criticità alto.
     passo da seguire.
 \end{description}
 
-\subsection{Scenario 2}
-\begin{description}
-    \item[Attaccante]ciao
-\end{description}
-
-\subsection{Scenario 3}
-L'attaccante in questo caso può disporre di un VPN client valido,
-cioè dispone di certificato valido che sarà accettato dai server
-VPN.
-L'attaccante riuscirebbe effettivamente a connettersi al server,
-tuttavia non potrebbe fare altro: infatti, grazie alle regole
-di filtraggio sui server, \textit{passano solo le risposte
-alle richieste di MoonCloud}.
-Ulteriori azioni mitigatorie: revocare il certificato.
-% \begin{description}
-%     \item[Ulteriori requisiti]L'attaccante deve anche sapere:
-%     \begin{itemize}
-%         \item 
-%     \end{itemize}
-% \end{description}
 
 \subsection{Scenario 4}
 \begin{description}
