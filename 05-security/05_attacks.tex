@@ -1,21 +1,74 @@
 \section{Scenari di attacco}\label{sec:attacks}
 
-\subsection{Scenario 1}
+In questa sezione si discutono alcuni scenari di attacco
+che sfruttano la VPN.
+Per ciascuno di essi, si utilizza la seguente struttura:
+\begin{description}
+    \item[Scenario]Una breve descrizione dello scenario.
+    \item[Livello di difficoltà]Lo sforzo richiesto all'attaccante
+    per portare a termine l'attacco, di cosa deve disporre per avere
+    successo.
+    \item[In caso di successo]Che cosa otterrebbe l'attaccante
+    in caso di successo.
+    \item[Criticità]Quanto è grave l'attacco.
+    \item[Prevenzione]Le principali 
+    per mitigare la possibilità che l'attacco si verifichi.
+    \item[Ulteriori misure preventive]Ulteriori misure
+    di prevenzione secondaria attuate e attuabili.
+    \item[Cosa fare in caso di attacco]Nel caso in cui
+    l'attacco si verifichi, quali contromisure occorre
+    adottare. Oltre a quelle indicate, è sempre necessario
+    verificare \textit{come mai} l'attacco si sia verificato
+    (ovvero: \textit{come ha fatto l'attaccante a riuscirci?}).
+\end{description}
+Poiché allo stato delle cose non è ancora stato approntato come
+sarà effettivamente realizzato il VPN client (es: quale versione
+di Linux? Quali utenti? Quali interfacce? Ecc\ldots), è prematuro
+analizzare le contromisure da attuare sui client.
+Inoltre, è comunque possibile che l'attaccante usi un proprio
+dispositivo client, su cui ovviamente MoonCloud non ha controllo.
+
+E' molto importante notare che la protezione data dalle regole di
+firewalling è molto efficace, anche nei casi di attacchi con livello
+di criticità alto.
+
+
 % \begin{description}
-%     \item[Attaccante]L'attaccante non dispone di 
 %     \item[Scenario]
-%     Un attaccante ha a disposizione un client VPN
-%     \textit{non valido} e vuole mandare pacchetti in qualche
-%     modo malevoli verso la rete MoonCloud passando per
-%     il collegamento VPN.
-%     \item[Requisiti]
-%     Un client \textit{non valido} è un client
-%     che non ha alcun titolo per connettersi ai VPN server, ovvero
-%     non dispone nemmeno di un certificato valido.
-%     L'attaccante non potrebbe fare molto, in quanto non riuscirebbe
-%     nemmeno a completare la connessione VPN.
+%     \item[Livello di difficoltà]
+%     \item[In caso di successo]
+%     \item[Criticità]
+%     \item[Prevenzione]
+%     \item[Ulteriori misure preventive]
+%     \item[Cosa fare in caso di attacco]
 % \end{description}
-Boh
+
+
+\subsection{Scenario 1}
+\begin{description}
+    \item[Scenario]Inviare pacchetti malevoli alla rete MoonCloud
+    mediante un VPN client.
+    \item[Livello di difficoltà]Medio. Si suppone che l'attaccante abbia
+    ha disposizione un VPN client legittimo, ovvero con un certificato
+    valido. E' possibile che l'attaccante sia riuscito ad ottenre un
+    VPN client \textit{ufficiale}, o che sia riuscito ad ottenere
+    da esso
+    un certificato valido.
+    \item[In caso di successo]L'attaccante riuscirebbe a connettersi
+    ai server VPN, ma le sue possibilità si fermerebbero lì grazie
+    alle contromisure.
+    \item[Criticità]Media, la rete MoonCloud è intatta e la vulnerabilità
+    è eventualmente sul client VPN.
+    \item[Prevenzione]Grazie alle regole di firewalling sui server,
+    se anche l'attaccante ottenesse dei certificati validi, non
+    potrebbe \textit{in ogni caso} inviare pacchetti a MoonCloud, poiché
+    sono consentite solo risposte a richieste dalle Docker machine. 
+    \item[Ulteriori misure preventive]E' possibile revocare il certificato
+    usato dall'attaccante, limitando del tutto la sua possibilità di azione.
+    \item[Cosa fare in caso di attacco]Il servizio  \texttt{MoonCloud\_VPN}
+    offre una API dedicata alla revoca dei certificati, questo è il primo
+    passo da seguire.
+\end{description}
 
 \subsection{Scenario 2}
 \begin{description}
@@ -47,12 +100,22 @@ Ulteriori azioni mitigatorie: revocare il certificato.
     \item[In caso di successo]Un attaccente potrebbe generare dei nuovi
     certificati validi per client VPN. Egli potrebbe quindi connettersi
     senza alcuna difficoltà ai VPN server.
-    \item[Contromisure]La chiave privata è utilizzata \textit{esclusivamente}
+    \item[Criticità]Molto alta, l'attaccante è per forza di cose riuscito 
+    ad introdursi nella rete MoonCloud ed aver ottenuto la chiave privata. 
+    \item[Prevenzione]La chiave privata è utilizzata \textit{esclusivamente}
     dal microservizio \texttt{MoonCloud\_VPN}, e sono in approntamento
     misure di protezione basate su firewall per far sì che
     solo richieste legittime arrivano al servizio.
-
-    Inoltre, anche se l'avversario riuscisse a connettersi, non potrebbe
+    \item[Ulteriori misure preventive]Anche se l'avversario riuscisse a connettersi,
+    non potrebbe
     comunque modificare le regole di firewalling che consentono
     alle sole risposte di transitare dai VPN server verso la rete MoonCloud.
+    Per limitare ulteriormente lo spazio di manovra dell'attaccante
+    si può usare l'opzione \texttt{tls-verify} per una sorta di \textit{abilitazione
+    esplicita}.
+    \item[Cosa fare in caso di attacco]E' chiaro che la compromissione della
+    chiave privata sia uno scenario estremamente grave, pertanto vi sono
+    numerose contromisure attuabili per limitare i danni. Tuttavia, in
+    caso in cui questo si verifichi, occorre spegnare i server VPN, e
+    chiaramente generare delle nuove chiavi.
 \end{description}
