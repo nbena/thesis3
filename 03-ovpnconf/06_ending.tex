@@ -1,0 +1,244 @@
+\section{Configurazione finale}\label{sec:ending}
+Dopo aver visto tutti i problemi affrontati e come sono stati risolti, è il
+momento di vedere come sono configurati \textit{davvero} i server ed i client
+VPN in MoonCloud. Come per il mappaggio degli indirizzi IP, il mio microservizio,
+si occupa di automatizzare il tutto, e di generare tutto ciò che
+serve.\\
+Durante tutte le sottosezioni successive, si supporrà la seguente configurazione
+di esempio:
+\begin{itemize}
+  \item rete target 1: \texttt{192.168.100.0/24} (cliente $A$)
+  \item rete target 1 mappata: \texttt{192.168.1.0/24}
+  \item rete MoonCloud: \texttt{192.168.200.0/24}
+  \item indirizzo IP interno VPN server: \texttt{192.168.200.20}
+  \item indirizzo IP pubblico VPN server: \texttt{100.4.78.5}
+  \item \texttt{CommonName} del VPN server: \texttt{ovpn1.moon-cloud.eu}
+  \item indirizzo IP del \textit{Docker host} per client $A$: \texttt{192.168.200.2}
+  \item indirizzo IP VPN client $A$: \texttt{192.168.100.50}
+  \item subnet VPN: \texttt{10.7.0.0/24}
+  \item indirizzo IP scheda di rete virtuale VPN server: \texttt{10.7.0.1}
+  \item indirizzo IP scheda di rete virtuale VPN client $A$: \texttt{10.7.0.2}
+  \item \texttt{CommonName} del VPN client $A$: \texttt{office1.company.com}
+\end{itemize}
+Si tenga presente che ci concentrà sulla configurazione della VPN ed anche l'
+\textit{IP mapping} viene affrontato solo dal punto di vista della VPN. Per avere ulteriori
+informazioni sulla generazione dei certificati, sull'algoritmo che mappa una rete o che
+mappa un IP, capitolo \ref{ch:microservice} è dedicato ad esso.
+Nei file \texttt{client-up.sh} e \texttt{client-down.sh} si noteranno alcune regole iptables
+che non state ancora spiegate: esse sono funzionali ad incrementare la sicurezza della VPN,
+e sono descritte nel prossimo capitolo.
+
+\subsection{Configurazione del server}
+Al momento della creazione di un nuovo server, viene generato il seguente file
+di configurazione:
+\begin{minted}{squidconf}
+# /etc/openvpn/ovpn1.conf
+
+# role
+mode server
+tls-server
+
+# L4 protocol
+proto tcp
+
+# virtual NIC configuration
+dev-type tun
+dev ovpn-1
+
+persist-tun
+persist-key
+
+# listening on port 443
+port 443
+
+# vpn subnet
+server 10.7.0.0 255.255.255.0
+
+topology subnet
+
+# where client-specific file will be
+client-config-dir /etc/openvpn/ovpn1/ccd
+
+# tls configuration
+remote-cert-eku "TLS Web Client Authentication"
+tls-version-min 1.2
+# newline(s) are not allowed, used here just for space reason
+tls-cipher TLS-ECDHE-ECDSA-WITH-AES-256-GCM-SHA384:\
+TLS-ECDHE-ECDSA-WITH-CHACHA20-POLY1305-SHA256
+cipher AES-256-GCM
+
+# keys and certs
+ca /etc/openvpn/certs/ca.crt
+key /etc/openvpn/ovpn1/certs/ovpn1.key
+cert /etc/openvpn/ovpn1/certs/ovpn1.crt
+
+# for ECDH
+dh none
+
+# reneg keys every 20 minutes
+reneg-sec 1200
+
+# log configuration
+log /var/log/openvpn/ovpn1/openvpn.log
+verb 4
+status /var/log/openvpn/ovpn1/openvpn-status.log
+
+# livello di sicurezza per comandi user-defined
+script-security-level 2
+
+# scripts
+client-connect /etc/openvpn/ovpn1/cs/client-up.sh
+client-disconnect /etc/openvpn/ovpn1/cs/client-down.sh
+
+# 'ping' options
+keepalive 10 60
+\end{minted}
+Si può notare che non vi è nessuna direttiva ulteriore che non è stata spiegata in
+precedenza, l'unica aggiunta è un'ulteriore ciphersuite:\\
+\texttt{TLS-ECDHE-ECDSA-WITH-CHACHA20-POLY1305-SHA256}. Per considerazioni sulla
+sicurezza si rimanda al capitolo specifico, ciò che è importante sapere è che
+queste sono le uniche ciphersuite che il server utilizzerà. \texttt{ChaCha20-Poly1305}
+ha ottime prestazioni in implementazioni solo software, ed in particolare è molto
+più veloce di \texttt{AES-GCM} in mancanza di accelerazione hardware crittografica.
+Queste due ciphersuite sono state selezionate poiché sono di fatto, le più sicure,
+per inciso, sono le uniche due incluse in TLS 1.3. Attualmente non c'è supporto
+per \texttt{ChaCha20-Poly1305} per il\texttt{Data Channel}.\\
+Il file mostrato sopra verà posizionato in \texttt{/etc/openvpn/ovpn1.conf}, ed
+ovviamente tutti i percorsi indicati in questo file devono esistere.\\
+I file \texttt{/etc/openvpn/ovpn1/cs/client-up.sh} e
+\texttt{/etc/openvpn/ovpn1/cs/client-down.sh}:
+\begin{minted}{bash}
+#! /bin/bash
+
+# /etc/openvpn/ovpn1/cs/client-up.sh
+
+if [ "$common_name" == "office1.company.org" ]; then
+  ip route add 192.168.1.0/24 via 10.7.0.1
+  iptables -t nat -A POSTROUTING -d 192.168.1.0/24 -j MASQUERADE
+
+  # non fondamentali, verranno spigete in seguito.
+  iptables -t filter -I OUTPUT -d 192.168.1.0/24 -o ovpn+ \
+  -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
+  iptables -t filter -I INPUT -s 192.168.1.0/24 -i ovpn+ \
+  -m state --state RELATED,ESTABLISHED -j ACCEPT
+  iptables -t filter -I FORWARD -s 192.168.1.0/24 -i ovpn+ \
+  -m state --state RELATED,ESTABLISHED -j ACCEPT
+fi
+\end{minted}
+
+\begin{minted}{bash}
+#! /bin/bash
+
+# /etc/openvpn/ovpn1/cs/client-down.sh
+
+if [ "$common_name" == "office1.company.org" ]; then
+  ip route add 192.168.1.0/24 via 10.7.0.1
+  iptables -t nat -D POSTROUTING -d 192.168.1.0/24 -j MASQUERADE
+
+  # verranno spiegate in seguito
+  iptables -t filter -D OUTPUT -d 192.168.1.0/24 -o ovpn+ \
+  -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
+  iptables -t filter -D INPUT -s 192.168.1.0/24 -i ovpn+ \
+  -m state --state RELATED,ESTABLISHED -j ACCEPT
+  iptables -t filter -D FORWARD -s 192.168.1.0/24 -i ovpn+ \
+  -m state --state RELATED,ESTABLISHED -j ACCEPT
+fi
+\end{minted}
+Il file \texttt{/etc/openvpn/ovpn1/ccd/office1.company.org}:
+\begin{minted}{squidconf}
+iroute 192.168.1.0 255.255.255.0
+\end{minted}
+
+\subsection{Configurazione del client}
+Come prima cosa, ecco come si presenta il file di configurazione di OpenVPN
+del client.
+\begin{minted}{squidconf}
+# /etc/openvpn/office1.conf
+
+client
+
+# used protocol
+proto tcp
+
+# server address and port
+remote ovpn1.moon-cloud.eu 443
+
+# virtual NIC configuration
+dev-type tun
+dev ovpn-office1
+
+persist-tun
+persist-key
+
+group nogroup
+user nobody
+
+# tls configuration
+remote-cert-eku "TLS Web Server Authentication"
+tls-version-min 1.2
+# newline(s) are not allowed, used here just for space reason
+tls-cipher TLS-ECDHE-ECDSA-WITH-AES-256-GCM-SHA384:\
+TLS-ECDHE-ECDSA-WITH-CHACHA20-POLY1305-SHA256
+cipher AES-256-GCM
+
+# keys and certs
+ca /etc/openvpn/certs/ca.crt
+key /etc/openvpn/office1/certs/office1.key
+cert /etc/openvpn/office1/certs/office1.crt
+
+# log configuration
+log /var/log/openvpn/office1/openvpn.log
+verb 4
+status /var/log/openvpn/office1/openvpn-status.log
+\end{minted}
+Si possono osservare le seuguenti differenze rispetto al server:
+\begin{itemize}
+  \item mancanza della direttiva ``\texttt{topology subnet}'' poiché è
+  riservata al server
+  \item mancanza della direttiva ``\texttt{client-config-dir}'' per la stessa
+  ragione
+  \item mancanza delle direttive ``\texttt{client-connect}'' e
+  ``\texttt{client-disconnect}'' per la stessa ragione
+  \item aggiunta della direttiva ``\texttt{remote}'' che indica come raggiungere
+  il server
+  \item aggiunta delle direttive ``\texttt{user nobody}'' e ``\texttt{group nogroup}''
+  che consentono di fare il downgrade dei privilegi. Non è possibile farlo sul
+  server poiché è necessario che abbia privilegi amministrativi per eseguire i
+  comandi contenuti negli script di connessione e disconnessione dei client.
+\end{itemize}
+Si è supposto di mappare \texttt{192.168.100.0/24} in \texttt{192.168.1.0/24},
+ed ogni IP della rete originale viene mappato nella nuova rete nel seguente
+modo: $\texttt{192.168.100.1} \leftrightarrow \texttt{192.168.1.1}$, e così via
+fino a $\texttt{192.168.100.254} \leftrightarrow \texttt{192.168.1.254}$.
+Si produce quindi uno script di comandi per \texttt{iptables} così composto:
+\begin{minted}{bash}
+# !/bin/bash
+
+# ip mapping, changing destination addresses
+# (done for request packets)
+iptables -t nat -A PREROUTING -d 192.168.1.1 -s 10.7.0.0/24 \
+-j DNAT --to-destination 192.168.100.1
+iptables -t nat -A PREROUTING -d 192.168.1.2 -s 10.7.0.0/24 \
+-j DNAT --to-destination 192.168.100.2
+iptables -t nat -A PREROUTING -d 192.168.1.3 -s 10.7.0.0/24 \
+-j DNAT --to-destination 192.168.100.3
+# ...
+iptables -t nat -A PREROUTING -d 192.168.1.254 -s 10.7.0.0/24 \
+-j DNAT --to-destination 192.168.100.254
+
+# 'reverse NAT'
+iptables -t nat -A POSTROUTING -d 192.168.1.0/24 -s 10.7.0.0/24 \
+-j MASQUERADE
+
+# ip mapping, changing source addresses
+# (done for response packets)
+iptables -t nat -A POSTROUTING -s 192.168.100.1 -d 10.7.0.0/24 \
+-j SNAT --to-source 192.168.1.1
+iptables -t nat -A POSTROUTING -s 192.168.100.2 -d 10.7.0.0/24 \
+-j SNAT --to-source 192.168.1.2
+iptables -t nat -A POSTROUTING -s 192.168.100.3 -d 10.7.0.0/24 \
+-j SNAT --to-source 192.168.1.3
+# ...
+iptables -t nat -A POSTROUTING -s 192.168.100.254 -d 10.7.0.0/24 \
+-j SNAT --to-source 192.168.1.254
+\end{minted}

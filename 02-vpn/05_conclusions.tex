@@ -1,0 +1,90 @@
+\section{Conclusioni}
+In conclusione del capitolo si fornisce un riassunto di pro e contro delle principali
+tecnologie.
+Nonostante WireGuard non sia stato analizzato
+in dettaglio, viene comunque inserito in questa lista grazie ai suoi vantaggi.
+\begin{description}
+  \item[\textbf{OpenVPN}]:
+  \begin{itemize}
+    \item ampio supporto e documentazione
+    \item sicurezza basata su TLS e protocollo custom
+    \item vari tipi di autenticazione
+    \item possibile connessione anche al layer 2
+    \item topologie consigliate:
+    \begin{enumerate}
+      \item \textit{MLS} con client in \textit{NAT al contrario}
+      \item \textit{RS} con port forwarding abilitato sulla rete target
+    \end{enumerate}
+    \item Contro:
+    \begin{itemize}
+      \item utilizzo di TLS su protocollo custom, quindi il traffico non riesce
+      ad essere spacciato completamente per HTTPS
+      \item necessaria gestione dei certificati
+    \end{itemize}
+  \end{itemize}
+    \item[\textbf{SoftEther}]:
+    \begin{itemize}
+      \item multi-protocol e multi-platform
+      \item incapsulamento in HTTPS
+      \item possibile connessione anche al layer 2;
+      \begin{itemize}
+        \item bypassa la maggior parte dei firewall
+      \end{itemize}
+      \item NAT Traversal del server
+      \item Dynamic DNS;
+      \item VPN over ICMP e over DNS;
+      \item topologia consigliate:
+      \begin{enumerate}
+        \item \textit{RS} senza bisogno di abilitare port forwarding sfruttando
+        NAT Traversal
+        \item \textit{LS}
+      \end{enumerate}
+      \item Contro:
+      \begin{itemize}
+        \item necessità di una secondo NIC sul server in modalità promiscua;
+        \item documentazione buona per Windows, meno per Linux
+      \end{itemize}
+    \end{itemize}
+    \item[\textbf{IPsec}]:
+    \begin{itemize}
+      \item IKEv2 dà ampia scelta di configurazioni
+      \item sicurezza mediante ESP (cifratura payload pacchetto IP)
+      \item NAT Traversal
+      \item topologie consigliate:
+      \begin{enumerate}
+        \item \textit{LS}
+        \item \textit{RS}
+      \end{enumerate}
+      \item Contro:
+      \begin{itemize}
+        \item setup non facile
+        \item necessaria gestione dei certificati
+        \item non passa tutti i firewall poiché si tratta di un nuovo protocollo
+        che deve essere abiltato
+        \item voci di indebolimento da parte dell'NSA
+      \end{itemize}
+    \end{itemize}
+    \item[\textbf{WireGuard}]:
+    \begin{itemize}
+      \item molto più performante di ogni altra soluzione
+      \item altamente sicuro
+      \item keep-alive per funzionare con NAT
+      \item Contro:
+      \begin{itemize}
+        \item il sito stesso non lo definisce \textit{production ready};
+        \item necessità di scambiare chiavi a priori
+        \item traffico UDP potrebbe essere bloccato
+      \end{itemize}
+    \end{itemize}
+\end{description}
+La soluzione SoftEther con HTTPS è sembrata essere quasi perfetta, se il NAT Traversal
+funzionasse come dichiarato si sarebbe potuta creare una topologia \textit{RS}.
+Per firewall molto stringenti sono sembrate molto interessanti le soluzioni di incapsulamento
+su ICMP  e DNS, sebbene dichiarate come non completamente affidabili.
+
+L'opzione IPsec con IKEv2 è altrettanto valida, il principale svantaggio è che i firewall più stringenti
+potrebbero bloccare il traffico \textit{ESP}. In tal caso si può incapsulare \textit{ESP} in \textit{UDP},
+ma comunque si richiede che il traffico UDP sia permesso (porta 4500).
+
+Come prima soluzione si è scelta SoftEther, ma infine quella utilizzata è OpenVPN. Il
+prossimo capitolo affronta tutto nel dettaglio.

@@ -1,0 +1,84 @@
+\section{Sicurezza di OpenVPN}
+\subsection{Protocollo}
+Come detto ampiamente in precedenza, OpenVPN si compone di due canali di comunicazione:
+\begin{itemize}
+  \item \texttt{Control Channel} protetto con TLS ed usato per scambiarsi informazioni
+  \textit{di servizo}
+  \item \texttt{Data Channel} utilizzato per l'effettivo scambio dei dati
+\end{itemize}
+Entrambi i due canali sono multiplexati su una singola connessione TCP o UDP.
+Poiché il protocollo TLS è stato progettato per funzionare su un livello di trasporto affidabile,
+questa affidabilità viene offerta da OpenVPN quando il protocollo di trasporto è UDP.
+
+
+La sicurezza di OpenVPN può essere riassunto dalla seguente frase:
+\say{Use the IPSec ESP protocol for tunnel packet security,
+but then drop IKE in favor of SSL/TLS for session authentication}\cite{openvpn-security-faq}.
+
+Di fatto, IPsec ESP qui corrisponde al \texttt{Data Channel}.
+
+
+TLS è stato analizzato e studiato in dettaglio in tutti questi anni ed io non intendo
+aggiungere niente di nuovo rispetto alle analisi già fatte. La versione attuale
+di TLS è la 1.3, tuttavia quest'ultima versione non è completamente supportata
+nelle varie libreria SSL/TLS, in particolare non è ancora supportata dalla versione
+di \texttt{OpenSSL} utilizzata in OpenVPN. Le altre librerie supportate sono:
+\begin{itemize}
+  \item \texttt{LibreSSL} (supportata non in maniera ufficiale)
+  \item \texttt{mbedTLS}
+\end{itemize}
+
+TLS utilizza uno scambio di chiavi Diffie-Hellman (è possibile anche una scambio
+basato su RSA), che se usato propriamente garantisce la proprietà di \textit{Perfect Forward Secrecy}, ciò
+significa che se anche la chiave privata contenuta nel certificato fosse compromessa
+ed un avversario avesse registrato tutto il traffico comunque non riuscirebbe a decifrarlo,
+poiché le chiavi utilizzate per Diffie-Hellman vengono generate \textit{al volo} ad
+ogni connessione, e quindi anche se l'avversario potesse vedere le chiavi pubbliche
+Diffie-Hellman, comunque dovrebbe essere in grado di rompere tale algoritmo, il che
+non è assolutamente fattibile.
+Le chiavi negoziate sono unidirezionali.
+
+TLS offre diverse \textit{cipher-suite}, in particolare quelle \textit{migliori}
+sono basate su uno scambio di chiavi Diffie-Hellman effimero su curva ellittica
+(\textit{ECDHE}) ed un cifrario \textit{AEAD - Authenticated Encryption with Associated Data}.
+Diffie-Hellman effimero garantisce la proprietà di \textit{Perfect Forward Secrecy}: se
+la chiave privata \texttt{ECDSA} o \texttt{RSA} relativa ad un certo certificato fosse in qualche modo
+compromessa e l'avversario avesse registrato tutto il traffico, non riuscirebbe comunque
+a scoprire la chiave segreta negoziata con Diffie-Hellman, da cui poi si derivano le
+chiavi simmetriche. Questo perché nella ciphesuite con Diffie-Hellman effimero la chiave
+pubblica contenuta nel certificato viene utilizzata \textit{solo} per autenticare
+le chiave pubbliche Diffie-Hellman generate \textit{al volo} (eccho perché \textit{effimere}).
+Quindi, anche avendo a disposizione la chiave privata, dovrebbe ancora essere in grado di
+rompere lo scambio Diffie-Hellman per ottenere il valore segreto negoziato.
+
+\textit{Authenticated Encryption with Associated Data} è una proprietà di sicurezza
+che garantisce confidenzialità, integrità ed autenticazione dei dati, oltre
+a autenticazione ed integrità di ulteriori dati \textit{associati}, come ad esempio
+metadati relativi al protocollo che non devono essere anche essere segreti.
+Esistono algoritmi di cifratura che utilizzati nella maniera opportuna, tipicamente in combinazione
+con una funzione di MAC, garantiscono questa proprietà con un'unica chiave simmetrica
+(anziché con due chiavi, una per la cifratura ed una per il MAC). Tutti gli algoritmi
+utilizzati in TLS 1.3 garantiscono questa proprietà, essi sono:
+possibili, gli unici algoritmi ammessi in TLS 1.3 sono:
+\begin{itemize}
+  \item \texttt{AES-CCM}, ovvero AES in modalità \texttt{CTR} combinato con CBC-MAC
+  \item \texttt{AES-GCM} cioè AES in modalità \texttt{CTR} combinata con una funzione di hash nota come
+  \texttt{GHASH}
+  \item \texttt{ChaCha20-Poly1305} che è la combinazione del cifrario a stream \textit{ChaCha20}
+  con l'algoritmo di MAC \textit{Poly1305}
+\end{itemize}
+
+
+Una volta completato il TLS handshake, i due partecipanti alla VPN (server ed un client)
+generano del materiale pseudo casuale e lo trasmettono sul \texttt{Control Channel}: tale
+materiale è utilizzato per le chiavi nel \texttt{Data Channel}. Il \texttt{Data Channel},
+proprio come TLS, garantisce \textit{Authenticated Encryption}.
+
+
+OpenVPN non ha pubblicato una specifica formale del proprio protocollo, tuttavia
+esistono in letteratura diverse analisi che hanno provato a ricostruire, con buon
+successo, il suo funzionamento mediante \textit{protocol state fuzzing} (si veda
+ad esempio \cite{openvpn-fuzz-1} e \cite{openvpn-fuzz-2}). Il risultato è stato
+che non sono state trovate particolari vulnerabilità nel protocollo, sebbene
+altri testing abbiano in passato scovato classiche vulnerabilità implementative,
+legate ad esempio ad una gestione scorretta della memoria (OpenVPN è scritto in C).

@@ -1,0 +1,56 @@
+\section{SoftEther}
+Dopo aver concluso lo studio sulle principali tecnologie VPN attualmente disponibili,
+è stata scelta, assieme al prof. Anisetti, SoftEther. La ragione di tale scelta
+sta principalmente nella funzionalità di NAT traversal e di VPN-over-HTTPS; la
+configurazione che si era pensata era di tipo \textit{Remote Server}.\\
+Il passo successivo è stato quello di testare tale soluzione in un ambiente virtuale,
+mi sono quindi iscritto ad Amazon AWS in modo che disponessi di un host in Internet
+su cui effettuare le mie prove. Ecco come si componeva la configurazione nel test
+iniziale:
+\begin{itemize}
+  \item su Amazon EC2: 1 host che fungeva da client VPN
+  \item sul mio PC ho creato, mediante VirtualBox, due reti locali separate (come
+  se fossero due reti target di due client diversi), ciascuna composta da:
+  \begin{itemize}
+    \item 1 router/firewall di confine che eseguisse il NAT verso l'esterno
+    (utilizzando iptables)
+    \item 1 server VPN
+    \item due host ``normali'' con un server web in esecuzione
+  \end{itemize}
+\end{itemize}
+Tutti i PC coinvolti utilizzavano una distribuzione Linux, in particolare \texttt{Ubuntu}
+(in versione server su Amazon), mentre i firewall utilizzavano \texttt{Alpine Linux}.\\
+L'obiettivo di questo test era, innazitutto riuscire a connetere client e server in
+VPN, e quindi poter visualizzare dal client VPN le pagine web offerte dagli host
+nelle due reti.\\
+I firewall avevano una configurazione di tipo \textit{stateful}, e l'unico traffico
+ammesso era sulle porte 80 e 443 TCP.\\
+Questo test non ha avuto successo, infatti non sono riuscito nemmeno a raggiungere il
+punto 1, non c'è stato modo di far connettere client e server. Nel prossimo paragrafo
+descriverò più nel dettaglio la configurazione di SoftEther che ho testato.
+
+
+Sul server VPN ho installato il componente ``\textit{SoftEther VPN Server}'', sul client ho
+invece installato ``\textit{SoftEther VPN Bridge}''. Già solo realizzare questo primo passo
+non si è dimostrato facile, a causa della scarsa documentazione disponbile per Linux,
+ed anche a causa dell'\textit{operosità} dell'installazione e della configurazione:
+infatti per gestire tali software è disponibile un programma linea di comando chiamato
+``\texttt{vpncmd}'' con il quale l'interazione è abbastanza \textit{tediosa}.\\
+Una volta che l'installazione è terminata, mi sono scontrato con il primo vero problema:
+il tanto sbandierato NAT traversal offerto dal server funziona su UDP (scoprirlo non
+è stato affatto facile), pertanto la soluzione \textit{Remote Server} è stata scartata.
+Tra i requisiti per la VPN vi era infatti la necessità di funzionare su TCP, e senza
+la possibilità per il server installato nella rete cliente di porter essere raggiunto
+dall'esterno (trovandosi ragionevolmente dietro un NAT) questa configurazione è stata
+abbandonata.\\
+Il passo successivo è stato quindi quello di installare il \textit{SoftEther VPN Server}
+sull'host in esecuzione nel cloud di Amazon ed il \textit{Bridge} sulla VM che precedentemente
+ospitava il server. Ho quindi configurato propriamente i due software, ed ho quindi
+tentato di collegarli, tuttavia il collegamento VPN non si instaurava. Ho quindi
+esaminato i file di log, ed ho scoperto che i componenti riuscivano ad instaurare
+una connessione, ma vi era un misterioso \texttt{Error Code 33}. Ho cercato a lungo
+cosa significasse tale errore, ma dopo due giorni mi sono arreso.\\
+
+Sia chiaro che non metto in dubbio la bontà di SoftEther, esso infatti è largamente usato,
+ad esempio anche nel progetto \texttt{VPN Gate} (\url{http://www.vpngate.net}); tuttavia
+SoftEther non ha funzionato nello scenario in questione.

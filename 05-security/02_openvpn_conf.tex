@@ -1,0 +1,117 @@
+\subsection{Configurazioni}
+In questa sottosezione si affrontano tutte le scelte in merito alla configurazione
+specifica
+di OpenVPN, comprese la scelta dei cifrari.
+
+\subsubsection{Crittografia}
+OpenVPN consente di specificare quali algoritmi crittografici utilizzare, in entrambi i canali.
+Fino a qualche versione fà, le ciphersuite del TLS vengono negoziate nel
+modo classico del TLS, mentre non era prevista alcuna modalità di negoziazione
+dei cifrari sul \texttt{Data Channel}, pertanto dovevano essere specificati
+nel file di configurazione. L'algoritmo di cifratura di default era \texttt{Blowfish}
+in modalità \texttt{CBC} combinato con \texttt{HMAC-SHA1}.
+
+Nel 2016 due ricercatori francesi hanno pubblicato un attacco chiamato \texttt{SWEET32} (\cite{sweet32}),
+il quale sostanzialmente sfrutta l'utilizzo di cifrari con una dimensione del blocco
+\textit{piccola} (minore di 128 bit) in modalità \texttt{CBC}. Registrando
+una sufficiente quantità di traffico (circa 700 GB), un attaccante riesce con successo
+a decifrare il plaintext, supponendo che esso conosca ne conosca una buona parte.
+Ad esempio, i ricercatori propongono l'esempio di una pagina servita su HTTPS che l'attaccante
+conosce, e ad esempio vuole scoprire il valore di un cookie. Questo attacco si applica
+a qualsiasi protocollo che utilizzi un cifrario con le caratteristiche sopra citate, e richiede
+molto traffico per poter aver successo, tuttavia nel caso di una VPN il fatto che
+vi sia molto traffico è la normalità.
+
+Un esempio di cifrari vulnerabili è \texttt{Blowfish}, \texttt{DES}, \texttt{3DES}.
+Per tale ragione quindi OpenVPN è vulnerabile.
+
+
+La prima contromisura che gli sviluppatori di OpenVPN hanno implementato è stata
+avvertire gli utenti mediante il file di log. Nelle ultime versioni è stata infine
+aggiunta la negoziazione dei cifrari, ed il cifrario di default non è più
+\texttt{Blowfish} ma \texttt{AES-GCM-256}, cioè AES in modalità \texttt{GCM} con
+chiavi a 256 bit. Poiché è un cifrario \textit{AEAD}, garantisce autenticità ed
+integrità di per sè, per cui non occorre specificare anche un algoritmo MAC.
+
+\paragraph{Protezione del \texttt{Data Channel}}
+\texttt{AES-256-GCM} è il cifrario che ho scelto di utilizzare per la protezione
+del \texttt{Data Channel}. Si tratta di un algoritmo molto veloce, ed ovviamente
+molto sicuro.
+Sebbene sia il cifrario di default si è comunque scelto di specificare questo algoritmo in
+maniera esplicita. La direttiva è la seguente:
+\begin{minted}{bash}
+cipher AES-GCM-256
+\end{minted}
+
+\paragraph{Configurazione di TLS}
+Allo stesso modo, ho scelto di specificare in maniera esplicita quali siano
+le ciphersuite TLS, e sono stato molto stringente. Anche in questo caso
+l'unica possibile è quella basata su \texttt{AES-256-GCM}, cioè:\\
+\texttt{TLS-ECDHE-ECDSA-AES-GCM-256-SHA384}.
+Si può notare che è si utilizza una ciphersuite
+\textit{ECDHE -- Elliptic Curve Diffie-Hellman Ephemeral}, e come tale si garantisce
+\textit{Perfect Forward Secrecy}. Si utilizza \texttt{ECDSA} in quanto i certificati
+utilizzati hanno chiavi pubbliche per questo algoritmo.
+Per specificare questo si usa la direttiva:
+\begin{minted}{bash}
+tls-cipher TLS-ECHDE-AES-265-GCM-SHA384
+\end{minted}
+Esistono ciphersuite basate su \texttt{ChaCha20-Poly1305}, tuttavia di default non
+sono incluse nei file di configurazioni perché non sono ancora supportate nella
+versione di \texttt{OpenSSL} utilizzata da OpenVPN. E' supportata in alcune versioni
+di OpenVPN compilate con \texttt{LibreSSL}, tuttavia solo come ciphersuite di TLS,
+per il \texttt{Data Channel} ancora non vi è nessun supporto. Con \textit{di default
+non è supportata} si intende il fatto che sia possibile configurare dinamicamente
+il mio microservizio per indicare se \texttt{ChaCha20} sia supportato o meno.
+
+La fase di handshake del TLS include anche la negoziazione della versione supportata
+da TLS, in modo che cleint e server utilizzino la versione più alta supportata da entrambi.
+In passato gli attaccanti riuscivano con successo a portare avanti il \texttt{Downgrade Attack}
+per il quale si riusciva a forzare un browser a negoziare una versione di TLS/SSL
+più bassa rispetto a quella effettivamente possibile. Per evitare alcun tipo
+di problema, si è scelto di specificare esplicitamente la versione nel seguente modo:
+\begin{minted}{bash}
+tls-version-min 1.2
+\end{minted}
+
+Un'altra contromisura che viene consigliata per incrementare la sicurezza di OpenVPN
+è quella dello specificare il tipo di certificato che l'host si aspetta.
+E' infatti ragionevole presuppore che un server dovrebbe aspettarsi solo certificati
+demandati all'uso come client e viceversa.
+Nel file del server:
+\begin{minted}{bash}
+remote-cert-eku "TLS Web Client Authentication"
+\end{minted}
+Mentre nel client:
+\begin{minted}{bash}
+remote-cert-eku "TLS Web Server Authentication"
+\end{minted}
+
+
+E' infine possibile configurare anche direttive in cui si può specificare, ad esempio,
+come deve essere composto il certificato del remote, ad esempio quale debba essere il suo \texttt{CommonName}.
+Attualmente questa configurazione non è applicata, non si esclude che in futuro lo sia.
+
+
+\subsubsection{Certificate Revocation List}
+Una \textit{Certificate Revocation List} è una lista che contiene un elenco di certificati
+revocati (mediante i loro seriali), la data di revoca, ed eventualmente la ragione della loro revoca.
+Essa è emessa dalla CA che ha precedentemente emesso i certificati revocati, ed è firmata digitalmente
+dalla CA, in modo da attestarne l'autenticità e l'integrità.
+
+OpenVPN supporta la verifica mediante CRL, tale verifica è ovviamente fatta lato server: quando
+un client si connette al server, OpenVPN legge tale CRL e, se il numero seriale del certificato
+del client è presente nella lista, la connessione con il client in questione viene terminata.
+A differenza dei file di configurazione in \texttt{/etc/} che vengono letti solo all'avvio
+dal software, la CRL viene riletta ad ogni nuova connessione, pertanto è possibile aggiornarla senza
+preoccuparsi di dover riavviare il server.
+
+La gestione della CRL (aggiornamento e trasferimento verso i server) viene effettuata dal microservizio
+\texttt{MoonCloud\_VPN}, vi è una API REST dedicata alla revoca/cancellazione dei client, uno
+dei suoi effetti è appunto la revoca del certificato di quel client.
+
+La direttiva per utilizzare una CRL nel server è la seguente, assumendo che il file della CRL
+si trovi nella posizione indicata:
+\begin{minted}{bash}
+crl-verify /etc/openvpn/certs/crl.pem
+\end{minted}

@@ -1,0 +1,58 @@
+\section{Scenari di attacco}\label{sec:attacks}
+
+\subsection{Scenario 1}
+% \begin{description}
+%     \item[Attaccante]L'attaccante non dispone di 
+%     \item[Scenario]
+%     Un attaccante ha a disposizione un client VPN
+%     \textit{non valido} e vuole mandare pacchetti in qualche
+%     modo malevoli verso la rete MoonCloud passando per
+%     il collegamento VPN.
+%     \item[Requisiti]
+%     Un client \textit{non valido} è un client
+%     che non ha alcun titolo per connettersi ai VPN server, ovvero
+%     non dispone nemmeno di un certificato valido.
+%     L'attaccante non potrebbe fare molto, in quanto non riuscirebbe
+%     nemmeno a completare la connessione VPN.
+% \end{description}
+Boh
+
+\subsection{Scenario 2}
+\begin{description}
+    \item[Attaccante]ciao
+\end{description}
+
+\subsection{Scenario 3}
+L'attaccante in questo caso può disporre di un VPN client valido,
+cioè dispone di certificato valido che sarà accettato dai server
+VPN.
+L'attaccante riuscirebbe effettivamente a connettersi al server,
+tuttavia non potrebbe fare altro: infatti, grazie alle regole
+di filtraggio sui server, \textit{passano solo le risposte
+alle richieste di MoonCloud}.
+Ulteriori azioni mitigatorie: revocare il certificato.
+% \begin{description}
+%     \item[Ulteriori requisiti]L'attaccante deve anche sapere:
+%     \begin{itemize}
+%         \item 
+%     \end{itemize}
+% \end{description}
+
+\subsection{Scenario 4}
+\begin{description}
+    \item[Scenario]Compromissione della chiave private della CA
+    \item[Livello di difficoltà]Alto: la chiave privata della CA 
+    non è mai distribuita al di fuori della rete MoonCloud, tantomeno
+    viene distribuita ai VPN server.
+    \item[In caso di successo]Un attaccente potrebbe generare dei nuovi
+    certificati validi per client VPN. Egli potrebbe quindi connettersi
+    senza alcuna difficoltà ai VPN server.
+    \item[Contromisure]La chiave privata è utilizzata \textit{esclusivamente}
+    dal microservizio \texttt{MoonCloud\_VPN}, e sono in approntamento
+    misure di protezione basate su firewall per far sì che
+    solo richieste legittime arrivano al servizio.
+
+    Inoltre, anche se l'avversario riuscisse a connettersi, non potrebbe
+    comunque modificare le regole di firewalling che consentono
+    alle sole risposte di transitare dai VPN server verso la rete MoonCloud.
+\end{description}

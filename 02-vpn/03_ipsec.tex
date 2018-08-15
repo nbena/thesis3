@@ -1,0 +1,137 @@
+\section{IPsec}
+\subsection{Overview}
+IPsec è una suite di protocolli usata per rendere sicuro il livello 3 dello stack di
+rete. Mediante la crittografia si realizza una connessione che garantisce
+numerose proprietà di sicurezza. Due protocolli disponibili:
+\begin{itemize}
+  \item \textit{AH - Authentication Header}: integrità ed autenticazione (no IP spoofing) del pacchetto con HMAC.
+  E' fondamentale comprendere che questa soluzione non è compatibile con NAT.
+  \item \textit{ESP - Encapsulating Payload}: confidenzialità del pacchetto mediante cifratura simmetrica.
+  Opzionalmente in \textit{ESP} si può abilitare direttamente l'autenticazione e l'integrità,
+  si consiglia questa strada.
+\end{itemize}
+Si può abilitare anche la protezione da replay attacks.\\
+
+Il terzo membro della suite IPsec è \textit{IKE -- Internet Key Exchange} che viene
+utilizzato per negoziare i parametri per i due protocolli precedentemente citati.
+
+IPsec (sia \textit{AH} o \textit{ESP}) può funzionare in due modalità:
+\begin{itemize}
+  \item \textit{Transport Mode}: aggiunta di un nuovo header (AH o ESP) tra l'header IP
+  ed il payload.
+  Il suo uso tipico è quello in comunicazioni \textit{dirette} tra due host, che non si affidano a
+  due gateway di confine per eseguire IPsec.
+  \item \textit{Tunnel Mode}: si crea un nuovo pacchetto. Esso è costituito da
+  un nuovo header IP, dall'header IPsec (AH o ESP), e quindi dal payload di IPsec, costituito dal
+  vecchio header IP e dal suo payload.
+\end{itemize}
+
+Per ciò che concerne IKE, è un protocollo abbastanza complesso. Brevemente, la negoziazione
+dei parametri avviene in due fasi:
+\begin{itemize}
+  \item nella \textit{phase 1} viene negoziata una \textit{Security Association} (set di parametri)
+  bidirezionale, utilizzata nella
+  \item \textit{phase 2}; in questa fase si utilizza la SA precedente per negoziare i
+  parametri per la sessione IPsec, tra essi vi sono le chiavi di sessione (stabilite con
+  uno scambio Diffie-Hellman).
+\end{itemize}
+Attualmente, è disponibile la versione 2 di IKE. Si tratta di un upgrade importante sotto molteplici punti
+di vista, ed è fortemente consigliata una implementazione di IPsec che supporti IKEv2.
+La porta standard utilizzata è la 500 UDP.
+
+
+L2TP (Layer 2 Forwarding Protocol) è un protocollo standardizzato il cui scopo è quello
+di realizzare una connessione punto-punto, per cui non include vere funzionalità
+di sicurezza. L'RFC 3193 (e successive) standardizza l'uso combinato di IPsec per creare una
+connessione sicura, sulla quale si negoziano
+i parametri L2TP.
+
+
+Per realizzare VPN con IPsec tipicamente si utilizzano due configurazioni:
+\begin{itemize}
+  \item L2TP on IPsec (negoziazione di L2TP su un canale IPsec sicuro--\textit{ESP Transport Mode});
+  \item IPsec with IKEv2.
+\end{itemize}
+
+
+Lo stack tipico di IPsec su Linux è il seguente:
+\begin{itemize}
+  \item ESP ed AH implementati nel kernel, per cui molto veloci
+  \item demone IKE in user-space, negozia le policy per la sessione e le
+  passa al kernel.
+\end{itemize}
+L'implementazione IKE di riferimento per Linux, sebbene sia disponibile anche
+cross-platform, è \texttt{strongSwan}. Maggiori dettagli su essa sono descritti
+tra qualche riga.
+
+
+E' possibile realizzare configurazioni Remote Access e LAN-to-LAN. IPsec è uno stack
+complesso, e configurarlo nella maniera corretta non è facile, tuttavia non è nemmeno
+impossibile, il sito di strongSwan è ricco di esempi e di documentazione.
+Nella terminologia IPsec con strongSwan si definiscono:
+\begin{itemize}
+  \item \textit{roadwarrior} è il client, cioè il dispositivo che si connette da remoto alla rete.
+  \item \textit{VPN Gateway} è il dispositivo server che riceve le connessioni.
+\end{itemize}
+Il client è l'\textit{initiator},
+il server è il \textit{responder}.
+
+Da subito ci si è concentrati su un setup basato su IKEv2, non si è considerato IPsec con L2TP
+perché considerato \textit{legacy} dall'avvento della nuova versione di IKE
+
+Utilizzando strongSwan sono possibili moltissime forme di autenticazione, distinguendo tra:
+\begin{itemize}
+  \item autenticazione degli host, può essere fatta con PSK (fortemente sconsigliato) o certificati X509
+  \item autenticazione degli utenti, in questo è possibile anche appoggiarsi ad un
+  server RADIUS.
+\end{itemize}
+Si tenga presente che l'autenticazione degli utenti è fatta \textit{on top} dell'autenticazione
+degli host.
+Per ciò che concerne un'autenticazione basata su certificati, occorre seguite gli stessi
+fatti già descritti per OpenVPN, ovvero creare chiavi/certificato per la CA, quindi generare
+certificati con essa, ecc\ldots
+
+
+Come per la maggior parte dei software Linux, la configurazione di strongSwan viene
+fatta mediante file di configurazione.
+E' di particolare rilevanza configurare correttamente \textit{quali} indirizzi IP vengono
+incapsulati nel tunnel IPsec, perché le policy presenti nel kernel descrivono anche questo,
+e se un pacchetto ha sorgente o destinazione IP non corretti sarà droppato dal kernel.
+
+strongSwan è una soluzione molto interessante e completa, alcune caratteristiche
+che meritano una menzione sono relative ad alcuni algoritmi crittografici supportati:
+\begin{itemize}
+  \item supporto a certificati \texttt{Ed25519} (istanza dell'algoritmo di firma digitale
+  \textit{EdDSA} basato su \textit{Twisted Edward Curves},
+  particolarmente interessante per numerosi motivi tra cui le
+  performance e la facilità di implementazione)
+  \item supporto ad alcuni algoritmo a chiave pubblica post-quantistici (basati su
+  problemi matematici per i quali i computer quantistici non portano alcun vantaggio
+  nella loro soluzione) come \texttt{NTRU} (\textit{lattice-based cryptography})
+\end{itemize}
+strongSwan offre NAT Traversal basato su UDP.
+
+
+\subsection{IPsec e MoonCloud}
+Si analizzano ora le topologie possibili per MoonCloud. In IPsec, una volta
+che le policy sono state stabilite, non vi è davvero distinzione tra chi sia client e server, pertanto,
+non vi è davvero la necessità di distinguere tra \textit{RS} ed \textit{LS}.
+Si distingue solamente nelle topologie che si realizzano, ed in base a dove si posiziona il server cioè
+l'\textit{initiator}.
+Sono quindi possibili sia topologie \textit{RS} ed \textit{LS}, un server nella rete target
+potrebbe sfruttare il NAT Traversal che strongSwan offre, occorrerebbe testarne attentantamente
+le funzionalità. Tuttavia, è fondamentale che si configurino correttamente le policy
+relativamente af IP sorgente e destinazione.
+
+
+\subsection{Conclusioni}
+Si è consigliata una topologia \textit{RS}, posto che il NAT Traversal consente
+la raggiungibilità dall'esterno.
+Vi sono diverse voci fondate dalle dichiarazioni di Snowden, secondo cui l'\textit{NSA avrebbe volontariamente
+indebolito il protocollo}\ldots\footnote{La bibliografia è il corso di Sicurezza dei Sistemi
+e delle Reti.}
+Altre voce invece riportano di come l'NSA sia in grado di rompere sessioni IPsec
+configurate con PSK (\cite{ipsec-nsa}).
+
+Tuttavia il problema principale di IPsec è che si tratta di un protocollo ulteriore che
+i firewall devono consentire.

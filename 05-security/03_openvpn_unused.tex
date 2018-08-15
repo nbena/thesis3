@@ -1,0 +1,105 @@
+\subsection{Opzioni non ancora utilizzate}
+In questa sottosezione si mostrano alcune configurazioni che OpenVPN offre che
+non sono state utilizzate. Per ciascuna di esse vale la seguente considerazione:
+in futuro potranno essere adottate.
+
+\subsubsection{\texttt{tls-crypt} e \texttt{tls-auth}} Si tratta di ulteriori
+misure di sicurezza:
+\begin{itemize}
+  \item \texttt{tls-crypt}: il \texttt{Control Channel} viene cifrato ulteriormente
+  con una chiave precondivisa nota a tutti i partecipanti.
+  \item \texttt{tls-auth}: il \texttt{Control Channel} viene protetto da un ulteriore
+  layer di MAC usando una chiave statica che deve essere nota a tutti i partecipanti a priori.
+\end{itemize}
+Lo scopo principale è quello di mitigare attacchi DoS: se il server riceve un pacchetto con HMAC non valido,
+  o che non riesce a decifrare, immediatamente droppa la connessione, anziché iniziare
+  il TLS handshake (che eventualmente fallirebbe nel caso l'attaccante non avesse
+  nessun certificato valido).
+Se questa chiave precondivisa fosse compromessa rimarrebbero comunque i certificati
+come forma effettiva di protezione, infatti i certificati sono e rimangono
+l'effettiva forma di autenticazione.
+
+Si è scelto di non adottare questa soluzione per ora a causa della necessità di dover gestire
+in modo sicura la chiave precondivisa: essa deve essere nota a tutti i partecipanti
+alla VPN. Nel caso in cui essa fosse compromessa occorrerebbe cambiare \textit{tutte}
+le chiavi, poiché sebbene rimanga la protezione dei certificati, una chiave
+compromessa non garantirebbe nessun livello di protezione, per cui appunto, bisognerebbe
+generarne una nuova.
+
+A puro scopo di documentazione, il comando per generare una chiave valida per
+\texttt{tls-auth} o \texttt{tls-crypt} e scriverla in un file chiamato \texttt{tls\_crypt.key}
+è il seguente:
+\begin{minted}{bash}
+openvpn --genkey --secret tls_crypt.key
+\end{minted}
+Il contenuto di tale file è simile al seguente:
+\begin{verbatim}
+  #
+  # 2048 bit OpenVPN static key
+  #
+  -----BEGIN OpenVPN Static key V1-----
+  54d84d5baa8534de608864311958bc82
+  26d630157c0f7c03306d83f52eda7b6e
+  bd5b95cfb9f107e1e968fb14d72ba515
+  81f9fdb74473eea7e68682483c026170
+  532994275e0c81a07f23231aeefa816a
+  837dbd8ccba4fbbac1fd281dc986e403
+  cb6486b57066b96790bae3b1d102757d
+  3c09b96c0f21f8e5d5836301b41aab11
+  d55c4167110952971fd698fc89c03c5f
+  897c487adb18149d892668c0c54f1fe2
+  6a65c112acbbd4f00977993d073e34ae
+  140bc7159da6a9a7c5075b6baf6dcf26
+  545cfe36478ed731cb53e5a3a36bdcb0
+  3f92ecec02d8060ff3afb3b58c560ae5
+  48f0a13a443cebe31431f8234586c0f9
+  20c5f523330dc5b0ff5e4c9478bd2357
+  -----END OpenVPN Static key V1-----
+\end{verbatim}
+
+
+\subsubsection{\texttt{tls-verify}}
+\texttt{tls-verify} è un hook che scatta quando un client ha appena concluso il TLS
+handshake ed ha passato tutte le verifiche, tranne, eventualmente, quella della CRL.
+Il lanciato con questo hook ha accesso ad un certo numero di variabili d'ambiente
+(minori rispetto a \texttt{client-connect} perché non è stato ancora completamente
+\textit{accettato}). 
+
+Si può usare questo hook per una sorta di \textit{abilitazione esplicita} dei client,
+per la quale dei dati relativi al nuovo client (come ad esempio il seriale), devono
+essere \textit{trasmessi} al server per poter accettarlo.
+Si noti che comunque
+affinché un client possa completare il TLS handshake deve avere un certificato valido
+creato dalla CA in questione.
+
+A puro titolo esemplificativo, si presente uno script in Python che
+verifica che il seriale settato al lancio da OpenVPN sia in una lista di seriali noti,
+in caso positivo ritorna \texttt{0}, sennò \texttt{-1}.
+\begin{minted}{python}
+#!/usr/bin/env python3
+
+import os
+
+# lista dei seriali ammessi
+clients = ['3','4']
+  
+returned_value = -1
+
+# accesso alla variabile d'ambiente
+serial = os.getenv('tls_serial_0', None)
+
+# se la variabile d'ambiente non è definita ritorna 0,
+# perché vi sono casi 'leciti' in cui
+# tale variabile non sia settata, cioè quando si stanno
+# verificano tutti i certificati superiori nella
+# gerarchia a quello del client in questione.
+if serial is None or (serial is not None and serial in clients):
+  returned_value = 0
+  
+exit(returned_value)   
+\end{minted}
+Per abilitare l'uso dello script:
+\begin{minted}{bash}
+  tls-verify /etc/openvpn/server/cs/tls_verify.py
+\end{minted}
+

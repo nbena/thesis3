@@ -1,0 +1,16 @@
+\chapter{MoonCloud\_VPN}\label{ch:microservice}
+\textit{MoonCloud\_VPN} è il nome poco fantasioso che ho dato al microservizio
+che ho scritto per l'automatizzazione della gestione di tutti gli aspetti legati
+alla soluzione VPN proposta per MoonCloud. In questo capitolo si descriverà tale
+servizio.
+Esso, come tutti gli altri microservizi di cui si compone MoonCloud, rispecchia
+il paradigma \textit{REST} per il quale %TODO.
+Un elenco delle principali caratteristiche:
+\begin{itemize}
+  \item scritto in Python usando il framework \texttt{Django}
+  \item in produzione viene deployato in un container Docker
+  \item si sfrutta il DBMS \texttt{PostgreSQL}
+\end{itemize}
+
+
+\input{06-microservice/01_req}

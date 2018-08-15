@@ -1,0 +1,58 @@
+\section{Requisiti}
+Il mio microservizio implementa delle API REST per le seguenti funzionalità:
+\begin{itemize}
+  \item creazione di tutti i file di configurazione e strutture di directory
+  necessarie per creare un nuovo OpenVPN server
+  \item creazione di tutti i file di configurazione necessari per un nuovo client VPN
+  \item creazione di coppie di chiavi e certificati sia per server sia per client VPN
+  \item gestione dell'IP mapping:
+  \begin{itemize}
+    \item ogni volta che si crea un nuovo client VPN, allocare ad esso $n$ reti mappate
+    univoche
+    \item implementazione di una API che dato un indirizzo IP originale restituisca
+    l'indirizzo IP mappato
+    \item gestione di blacklist di indirizzi IP, reti, nomi di dominio che non
+    possono essere assegnati a reti mappate
+  \end{itemize}
+  \item trasferimento dei file necessari ai server VPN
+  \item revoca dei client, essa riguarda:
+  \begin{itemize}
+    \item cancellazione del mapping, se si richiede l'IP mappato per tale client
+    l'API dovrà rispondere che non vi sono mappaggi disponibili
+    \item revoca del certificato propagata a tutti i VPN server: se tale client
+    provasse a connettersi in VPN i server rifiuterebbero la connessione
+  \end{itemize}
+\end{itemize}
+
+Attualmente, l'intero deployment del mio microservizio si compone di un container
+su cui è in esecuzione Django, cioè il server web che espone le API REST, e
+di un secondo container su cui è in esecuzione PostgreSQL.
+Non è escluso che in futuro questo servizio venga separato in microservizi
+ancora più piccoli, ad esempio si può pensare di creare un microservizio
+che gestisca solo le funzionalità legate ai certificati. Realizzarlo non sarebbe
+difficile poiché ho cercato di mantenere il più possibile separate ed independenti
+tra loro le singole componenti (\textit{Low Coupling}).
+
+\section{Architettura}
+
+%\subsection{Singole componenti}
+
+\section{Dettagli}
+
+\subsection{Creazione dei certificati}
+
+\subsection{Gestione del mapping}
+
+\subsubsection{Blacklisting}
+
+\subsection{Creazione dei file -- client}
+
+\subsection{Creazione dei file -- server}
+
+\subsection{Trasferimento file ai server}
+
+\section{API}
+Questa sezione provvede a dare una rapida overview delle principali API REST
+esposte. Per questioni di spazio, vengono riportate solo le API più importanti,
+e di ciascuna si dà una breve descrizione (questo documento \textit{non} è
+la documetazione per \texttt{MoonCloud\_VPN}).

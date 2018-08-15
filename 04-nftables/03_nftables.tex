@@ -1,0 +1,296 @@
+\section{nftables}
+
+%TODO BPF REF
+La soluzione a questi problemi c'è e si chiama \texttt{nftables}.
+Esso utilizza un approccio completamente diverso rispetto ai predecessori: una
+\textit{in-kernel virtual machine} per il packet matching, concettualmente
+simile a \texttt{BPF -- Berkeley Packet Filter}.
+Vi è un unico programma in userspace chiamato
+\texttt{nft}, il quale traduce in bytecode i comandi inseriti dall'utente e li
+\textit{inietta} nel kernel (mediante \texttt{Netlink}\footnote{\texttt{Netlink}
+è un meccanismo IPC -- Inter-Process Comunication del kernel Linux che consente
+di comandare e ottenre informazioni riguardo lo stack di rete, è una interfaccia
+che offre API basate su socket.}). Ecco un elenco
+delle principali novità:
+\begin{itemize}
+  \item Il kernel non ha più conoscenza specifica
+  dei protocolli di rete: fare match con una porta TCP o un flag dell'header Ethernet
+  si traduce in semplici istruzioni come: \textit{carica x byte del pacchetto nel
+  registro z a partire dall'offset y}. Questo significa che è molto facile estendere
+  nftables con nuovi protocolli, e che il codice del kernel è molto più semplice.
+  \item Non ci sono tabelle e chain di default.
+  \item Ogni regola consente di pià target in una sola volta.
+  \item Il programma \texttt{nft} diventa l'unico programma per la gestione delle regole,
+  rimpiazzando iptables, ip6tables, arptables, ebtables.
+  \item L'aggiunta, l'aggiornamento, la cancellazione ed ogni altra operazione
+  sulle regole viene ora fatta in maniera atomica. Ciò significa che ogni volta che
+  si fa un'operazione, anche su più regole, essa va a buon fine (cioè i suoi effetti
+  sono applicati) solo se ogni singola operazione va a buon fine.
+  \item Possibilità di gestire contemporanemente IPv4 ed IPv6 in una singola tabella/chain.
+  \item Supporto a strutture dati avanzate basate su \texttt{set} che consentono un matching/targeting
+  molto veloce.
+  \item La sintassi delle regole cambia e diventa più simile ad una frase.
+\end{itemize}
+
+La maggior parte dell'\textit{intelligenza} è spostata su \texttt{nft}, il quale compila
+le regole ricevute in input e le passa al kernel, esso è anche responsabile di
+decompilare il bytecode presente nel kernel per presentarlo all'utente in un
+formato human-readable.
+
+Vi sono due tipi di sintassi supportate: il primo è una sintassi assimilabile a quella
+di iptables dove si scrive una regola per volta. Il secondo tipo è invece
+una sintassi \textit{strutturata} più simile a sintassi usati in specifici
+file di configurazione. Saranno mostrati esempi di entrambe.
+
+
+\paragraph{Tabelle e chain}
+Si è detto che non esistono tabelle di default, quindi è spetta all'utente
+il compito di crearle. In nftables, le tabelle sono di una certa \textit{famiglia}:
+\begin{itemize}
+  \item \texttt{ip} è la famiglia per operare su pacchetti dal livello 3 in su e
+  che usano IPv4 come protocollo di rete; è la famiglia di default se non è specificata.
+  \item \texttt{ip6} è la famiglia per operare con pacchetti di protocolli che utilizzano
+  il protocollo IPv6.
+  \item \texttt{arp} viene utilizzata per processare pacchetti ARP.
+  \item \texttt{inet} è la famiglia che consente di lavorare con pacchetti sia IPv4
+  sia IPv6.
+  \item \texttt{bridge} è usata per lavorare con frame Ethernet.
+  \item \texttt{netdev} consente di \textit{attaccarsi} direttamente ad una interfaccia
+  di rete.
+\end{itemize}
+Le tabelle sono solo dei contenitori vuoti, il cui nome non ha alcuna semantica (rispetto
+ad iptables). Comunque, la scelta della famiglia influenza quali hook possono
+essere utilizzati (es: l'hook \texttt{ingress} è disponibile solo per \texttt{netdev}).
+
+Le tabelle a loro volta racchiudono delle chain, ed anche in questo caso non vi
+sono delle chain predefinite ma occorre crearle. Quando si crea una chain occorre
+specificare
+almeno tre cose:
+\begin{itemize}
+  \item tipo; le scelte possibili sono:
+  \begin{itemize}
+    \item \texttt{filter} da utilizzare quando si vuole fare del filtraggio
+    \item \texttt{nat} per utilizzare le funzionalità NAT
+    \item \texttt{route} per fare generico \textit{packet mangling} che non sia NAT
+  \end{itemize}
+  \item hook, in questo caso le scelte possibili sono gli hook già visti, cambia solo
+  il fatto che vengono scritti in minuscolo.
+  \item priorità: espressa con un numero, si tratta di una priorità \textit{inversa},
+  più è bassa più il suo valore è alto; indica l'ordine con cui alcune operazioni
+  sono svolte. Un \textit{buon} valore è 0.
+\end{itemize}
+
+Quando si crea una nuova chain è possibile specificare la policy di default, cioè
+l'azione da compiere se non si matcha nessun'altra regola; il valore di default è
+\texttt{accept} (accettazione il pacchetto), altri valori possibili sono: \texttt{drop},
+\texttt{queue}, \texttt{continue}, \texttt{return}.
+
+
+\subsection{Set e altre strutture dati}
+nftables introduce tre strutture dati pensate indirizzando i problemi
+presenti in iptables (e sue controparti):
+\begin{itemize}
+  \item matching limitato, per cui è problematico specificare più di una porta
+  o più di un singolo indirizzo IP in una regola; il che porta a:
+  \item elevato numero di regole a causa della suddetta limitazione.
+\end{itemize}
+E' possibile dichiarare queste strutture dati in due modi:
+\begin{itemize}
+  \item \textit{anonymous}: vengono create ed istanziate all'interno di una regola
+  e sono immutabili, non è possibile modificarle dopo la loro creazione.
+  \item \textit{Named}: sono vere e proprie variabili che vivono nello \textit{scope}
+  di una tabella in cui sono definite. Una volta create è possibile modificarle
+  in seguito. Per riferirsi ad una variabile, occorre preporre \texttt{@} al nome
+  della variabile.
+\end{itemize}
+Esse consentono di ridurre il numero di regole necessarie rispetto
+ai predecessori, e di compattarle usando delle strutture dati molto efficienti.
+
+\subsubsection{Set}
+La struttura dati avanzata di nftables si chiama \textit{set}, ed è implementata
+utilizzando alberi rosso-neri, tabelle di hash, bitmap.
+Un set è, come dice il nome, un insieme di elementi di un certo \textit{tipo},
+esso può essere un tipo \textit{base} predefinito come \texttt{ipv4\_addr} o
+\texttt{inet\_service} (porta protocollo di trasporto), oppure un tipo complesso
+\textit{composto} da altri tipi, ad esempio un nuovo tipo \texttt{ipv4\_port}.
+Quando si crea una nuova struttura dati è possibile specificare vari parametri,
+tra cui una \texttt{policy}: per cosa deve essere ottimizzata la struttura?
+I valori possibili sono \texttt{performance} o \texttt{memory}
+Un esempio è il seguente.
+
+I set sono utilizzati per:
+\begin{itemize}
+  \item fare match su più elementi in un unico regola, ad esempio, se si vogliono
+  bloccare connessioni da 10 indirizzi IP diversi, è possibile definire un set
+  che contenga questi 10 IP, anziché scrivere 10 regole diverse. Si consideri che
+  i set sono molto performanti.
+  \item Essere la struttura dati base su cui si creano ulteriori strutture dati.
+\end{itemize}
+
+
+\subsubsection{Map}
+Le map sono costruite sui set, infatti possono essere visti come dei set in cui
+ciascun elemento è composto a sua volta da due elementi: il primo di essi
+è la \textit{chiave}, il secondo è il \textit{valore} associato alla chiave. Essi
+si comportano effettivamente come una mappa poiché definiscono un \textit{mappaggio}
+tra la chiave ed il valore, e sono utilizzati in contesti in cui si \textit{trasforma}
+un input in un certo output secondo il mappaggio definito in questa struttura dati.
+Si può forse intuire l'utilizzo delle map nel mappaggio delle reti\ldots
+
+
+In particolare, le map sono molto utili con target di tipo \texttt{dnat} ed \texttt{snat}.
+Si supponga che si voglia modificare l'indirizzo IP destinazione da \texttt{192.168.1.0/24}
+nel corrispondente indirizzo in \texttt{192.168.100.0/24} (mantenendo lo stesso
+offset) in \texttt{prerouting}, ed il viceversa in \texttt{postrouting}. Si
+è già visto che farlo in iptables richiede 508 regole, 254 per ogni indirizzo in
+\texttt{prerouting} e 254 per ogni indirizzo in \texttt{postrouting}. Con nftables
+lo si può fare in due regole e due mappe!
+L'esempio qui riportato mostra come farlo, ed è esattamente ciò che è stato fatto
+nella mia soluzione finale di mappaggio delle reti (si veda la sezione successiva
+per maggiori dettagli).
+
+
+\subsubsection{Dictionary}
+La struttura dati \textit{dictionary}, a vole nota anche come \textit{vmap -- verdict map}
+, è concettualmente
+molto simile alle map, tuttavia gli elementi di questo insieme sono nelle forma:
+\texttt{key: verdict}, dove \texttt{Verdict} indica l'azione da applicare nel
+momento in cui si la chiave viene
+matchata.
+
+\paragraph{Esempi}
+Di seguito si riportano degli esempi che mostrano il funzionamento di nftables.
+Si noti in particolare come, nelle ultime quattro regole l'utilizzo dei set
+consente di specificare match multipli in un'unica regola. Questo non significa
+solo una comodità per chi scrive le regole, infatti i set sono molto performanti
+e sono le strutture dati base su cui nftables costruisce altre strutture
+più avanzate, che verranno descritte in seguito.
+
+Supponendo che ciò che si vede listato qui sotto sia il contenuto di un file,
+si può notare lo shebang all'inizio, in modo che sia eseguito da nft nella
+modalità nativa di shell che offre: tutte queste regole sono inserite atomicamente
+in una transazione. Invocando questi comandi in una shell normale invece si
+perderebbe l'atomicità perché ciascun comando è una invocazione separata al programma nft
+(si noti che qui tutte le regole non sono appunto prefisse da ``\textit{nft}'').
+\begin{minted}{squidconf}
+#!/usr/sbin/nft -f
+
+# creazione della tabella, sia IPv4 sia IPv6
+# chiamata 'filter'
+add table inet filter
+
+# aggiunta chain 'input'
+add chain inet filter input { type filter hook input priority 0; \
+policy drop;}
+
+# chain 'output'
+add chain inet filter output { type filter hook output priotrity 0; \
+policy drop;}
+
+# consentire il traffico in entrata sulla porta 22 in modo statefull
+add rule inet filter input tcp dport 22 ct state\
+{new, related, established} accept
+
+# consentire le risposte
+add rule inet filter output tcp sport 22 ct state\
+{related, established} accept
+
+# consentire tutto il traffico in uscita sulle
+# porte 80 e 443 usando un set
+add rule inet output tcp dport { 80, 443 } ct state \
+{new, related, established} accept
+
+# consentire le risposte
+add rule input tcp sport { 80, 443 } ct state \
+{related, established} accept
+
+# creazione di un set chiamato 'allowed'
+
+add set filter allowed { type: ipv4_addr }
+add element filter allowed {
+  192.168.1.20,
+  192.168.2.20,
+  192.168.100.1,
+  192.168.200.254,
+  10.7.0.20
+}
+
+# consentire tutte le connessioni dagli indirizzi IP
+# elencati sulla porta 8080
+# nota: per accedere ad una named set si utilizza '@'
+add rule input ip saddr @allowed tcp dport 8080 \
+ct state {new, related, established } accept
+# consentire le risposte
+add rule output ip daddr @allowed tcp sport 8080 \
+ct state {related, established }accept
+\end{minted}
+E' possibile ottenere lo stesso risultato usando una sintassi \textit{strutturata}:
+\begin{minted}{squidconf}
+#!/usr/sbin/nft -f
+table inet filter {
+  set allowed {
+    type ipv4_addr
+    elements = {
+      192.168.1.20,
+      192.168.2.20,
+      192.168.100.1,
+      192.168.200.254,
+      10.7.0.20
+    }
+  }
+
+  chain input {
+    type inet hook input priority 0; policy drop;
+    tcp dport 22 ct state {new, related, established} accept
+    tcp sport {80, 443} ct state {related, established} accept
+    ip saddr @allowed tcp dport 8080 ct state {new, related,
+      established} accept
+  }
+
+  chain output {
+    type inet hook output priority 0; policy drop;
+    tcp sport 22 ct state {related, established} accept
+    tcp dport {80, 443}  ct state {new, related, established} accept
+    ip addr @allowed tcp sport 8080 ct state {related,
+      established} accept
+  }
+}
+\end{minted}
+Per ottenere la lista delle regole attive, è disponibile il comando
+\texttt{nft list ruleset}, che produce un output nello stesso formato \textit{strutturato}
+apppena mostrato.
+
+L'esempio seguente si concentra invece sull'utilizzo dei dizionari.
+Si supponga di dover gestire una serie di regole relative alla porta 22:
+\begin{itemize}
+  \item consentito dalle reti \texttt{192.168.100.0/24}, \texttt{192.168.101.0/24},
+  \texttt{192.168.200.0/24}
+  \item proveniente dalla rete \texttt{192.168.1.0/24} occorre \texttt{REJECT}
+  \item tutto il resto non è consentito.
+\end{itemize}
+\begin{minted}[breaklines]{bash}
+iptables -t filter -A INPUT -p tcp --dport 22 -s 192.168.100.0/24 -j ACCEPT
+iptables -t filter -A INPUT -p tcp --dport 22 -s 192.168.101.0/24 -j ACCEPT
+iptables -t filter -A INPUT -p tcp --dport 22 -s 192.168.200.0/24 -j ACCEPT
+
+iptables -t filter -A INPUT -p tcp --dport 22 -s 192.168.1.0/24 -j REJECT
+iptables -t filter -A INPUT -p tcp --dport 22 -j DROP
+
+# per brevità le regole in OUPUT sono omesse
+\end{minted}
+Mentre con nftables:
+\begin{minted}{squidconf}
+#!/usr/sbin/nft -f
+
+# supponendo tabelle e chain già create
+# aggiunta di 'dict' alla tabella filter
+add map filter dict { type ipv4_addr: verdict; }
+
+add element filter dict { 192.168.100.0/24: accept, \
+192.168.101.0/24: accept, \
+192.168.200.0/24: accept, \
+192.168.1.0/24: reject }
+
+add rule filter input tcp dport 22 ip saddr vmap @dict
+add rule filter input tcp dport 22 drop
+\end{minted}

@@ -1,0 +1,14 @@
+A Cost-effective certification-based service composition for the cloud
+https://ieeexplore.ieee.org/abstract/document/7557436/
+
+
+A semi-automatic and trustworthy scheme for continuous cloud service certification
+https://ieeexplore.ieee.org/abstract/document/7831357/
+
+
+A certification framework for cloud-based services
+https://dl.acm.org/citation.cfm?id=2851628
+
+
+Modeling time, probability, and configuration constraints for continuous cloud service certification
+https://www.sciencedirect.com/science/article/pii/S0167404817302018
