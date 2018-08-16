@@ -79,6 +79,8 @@ img_files += $(img_directory)/softether_ras.jpg
 img_files += $(img_directory)/softether_scheme_2.jpg
 img_files += $(img_directory)/softether_scheme.jpg
 img_files += $(img_directory)/wireguard_performance.png
+img_files += $(img_directory)/NetfilterHooks.png
+img_files += $(img_directory)/NetfilterIngress.png
 
 aux_files := *.aux
 
