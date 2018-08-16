@@ -175,89 +175,89 @@ in una transazione. Invocando questi comandi in una shell normale invece si
 perderebbe l'atomicità perché ciascun comando è una invocazione separata al programma nft
 (si noti che qui tutte le regole non sono appunto prefisse da ``\textit{nft}'').
 % BIG WARNING: state {related, established} and state related,established seems to be the same
-\begin{minted}{squidconf}
-	#!/usr/sbin/nft -f
+\begin{minted}[tabsize=3]{squidconf}
+#!/usr/sbin/nft -f
 	
-	# creazione della tabella, sia IPv4 sia IPv6
-	# chiamata 'filter'
-	add table inet filter
+# creazione della tabella, sia IPv4 sia IPv6
+# chiamata 'filter'
+add table inet filter
 	
-	# aggiunta chain 'input'
-	add chain inet filter input { type filter hook input priority 0; \
-	policy drop;}
+# aggiunta chain 'input'
+add chain inet filter input { type filter hook input priority 0; \
+policy drop;}
 	
-	# chain 'output'
-	add chain inet filter output { type filter hook output priotrity 0; \
-	policy drop;}
+# chain 'output'
+add chain inet filter output { type filter hook output priotrity 0; \
+policy drop;}
 	
-	# consentire il traffico in entrata sulla porta 22 in modo statefull
-	add rule inet filter input tcp dport 22 ct state\
-	new, related, established accept
+# consentire il traffico in entrata sulla porta 22 in modo statefull
+add rule inet filter input tcp dport 22 ct state\
+new, related, established accept
 	
-	# consentire le risposte
-	add rule inet filter output tcp sport 22 ct state\
-	related, established accept
+# consentire le risposte
+add rule inet filter output tcp sport 22 ct state\
+related, established accept
 	
-	# consentire tutto il traffico in uscita sulle
-	# porte 80 e 443 usando un set
-	add rule inet output tcp dport { 80, 443 } ct state \
-	new, related, established accept
+# consentire tutto il traffico in uscita sulle
+# porte 80 e 443 usando un set
+add rule inet output tcp dport { 80, 443 } ct state \
+new, related, established accept
 	
-	# consentire le risposte
-	add rule input tcp sport { 80, 443 } ct state \
-	related, established accept
+# consentire le risposte
+add rule input tcp sport { 80, 443 } ct state \
+related, established accept
 	
-	# creazione di un set chiamato 'allowed'
+# creazione di un set chiamato 'allowed'
 	
-	add set filter allowed { type: ipv4_addr }
-	add element filter allowed {
-		192.168.1.20,
-		192.168.2.20,
-		192.168.100.1,
-		192.168.200.254,
-		10.7.0.20
-	}
+add set filter allowed { type: ipv4_addr }
+add element filter allowed {
+	192.168.1.20,
+	192.168.2.20,
+	192.168.100.1,
+	192.168.200.254,
+	10.7.0.20
+}
 	
-	# consentire tutte le connessioni dagli indirizzi IP
-	# elencati sulla porta 8080
-	# nota: per accedere ad una named set si utilizza '@'
-	add rule input ip saddr @allowed tcp dport 8080 \
-	ct state {new, related, established } accept
-	# consentire le risposte
-	add rule output ip daddr @allowed tcp sport 8080 \
-	ct state {related, established }accept
+# consentire tutte le connessioni dagli indirizzi IP
+# elencati sulla porta 8080
+# nota: per accedere ad una named set si utilizza '@'
+add rule input ip saddr @allowed tcp dport 8080 \
+ct state {new, related, established } accept
+# consentire le risposte
+add rule output ip daddr @allowed tcp sport 8080 \
+ct state {related, established }accept
 \end{minted}
 E' possibile ottenere lo stesso risultato usando una sintassi \textit{strutturata}:
-\begin{minted}{squidconf}
-	#!/usr/sbin/nft -f
-	table inet filter {
-		set allowed {
-			type ipv4_addr
-			elements = {
-				192.168.1.20,
-				192.168.2.20,
-				192.168.100.1,
-				192.168.200.254,
-				10.7.0.20
-			}
+\begin{minted}[tabsize=3]{squidconf}
+#!/usr/sbin/nft -f
+table inet filter {
+	set allowed {
+		type ipv4_addr
+		elements = {
+			192.168.1.20,
+			192.168.2.20,
+			192.168.100.1,
+			192.168.200.254,
+			10.7.0.20
 		}
+	}
 		
-		chain input {
-			type inet hook input priority 0; policy drop;
-			tcp dport 22 ct state new, related, established accept
-			tcp sport {80, 443} ct state {related, established accept
-				ip saddr @allowed tcp dport 8080 ct state new, related,
-				established accept
-			}
+	chain input {
+    type inet hook input priority 0; policy drop;
+    tcp dport 22 ct state new, related, established accept
+    tcp sport {80, 443} ct state {related, established accept
+    ip saddr @allowed tcp dport 8080 ct state new, related,
+      established accept
+	}
 			
-			chain output {
-				type inet hook output priority 0; policy drop;
-				tcp sport 22 ct state related, established accept
-				tcp dport {80, 443}  ct state new, related, established accept
-				ip addr @allowed tcp sport 8080 ct state elated,
-				established accept
-			}
-		}
+	chain output {
+    type inet hook output priority 0; policy drop;
+    tcp sport 22 ct state related, established accept
+    tcp dport {80, 443}  ct state new, related, established accept
+    ip addr @allowed tcp sport 8080 ct state elated,
+      established accept
+	}
+}
 	\end{minted}
 	Per ottenere la lista delle regole attive, è disponibile il comando
 	\texttt{nft list ruleset}, che produce un output nello stesso formato \textit{strutturato}
@@ -271,29 +271,29 @@ E' possibile ottenere lo stesso risultato usando una sintassi \textit{strutturat
 		\item proveniente dalla rete \texttt{192.168.1.0/24} occorre \texttt{REJECT}
 		\item tutto il resto non è consentito.
 	\end{itemize}
-	\begin{minted}[breaklines]{bash}
-		iptables -t filter -A INPUT -p tcp --dport 22 -s 192.168.100.0/24 -j ACCEPT
-		iptables -t filter -A INPUT -p tcp --dport 22 -s 192.168.101.0/24 -j ACCEPT
-		iptables -t filter -A INPUT -p tcp --dport 22 -s 192.168.200.0/24 -j ACCEPT
+\begin{minted}[breaklines]{bash}
+iptables -t filter -A INPUT -p tcp --dport 22 -s 192.168.100.0/24 -j ACCEPT
+iptables -t filter -A INPUT -p tcp --dport 22 -s 192.168.101.0/24 -j ACCEPT
+iptables -t filter -A INPUT -p tcp --dport 22 -s 192.168.200.0/24 -j ACCEPT
 		
-		iptables -t filter -A INPUT -p tcp --dport 22 -s 192.168.1.0/24 -j REJECT
-		iptables -t filter -A INPUT -p tcp --dport 22 -j DROP
+iptables -t filter -A INPUT -p tcp --dport 22 -s 192.168.1.0/24 -j REJECT
+iptables -t filter -A INPUT -p tcp --dport 22 -j DROP
 		
-		# per brevità le regole in OUPUT sono omesse
-	\end{minted}
+# per brevità le regole in OUPUT sono omesse
+\end{minted}
 	Mentre con nftables:
-	\begin{minted}{squidconf}
-		#!/usr/sbin/nft -f
+\begin{minted}[tabsize=3]{squidconf}
+#!/usr/sbin/nft -f
 		
-		# supponendo tabelle e chain già create
-		# aggiunta di 'dict' alla tabella filter
-		add map filter dict { type ipv4_addr: verdict; }
+# supponendo tabelle e chain già create
+# aggiunta di 'dict' alla tabella filter
+add map filter dict { type ipv4_addr: verdict; }
 		
-		add element filter dict { 192.168.100.0/24: accept, \
-			192.168.101.0/24: accept, \
-			192.168.200.0/24: accept, \
-		192.168.1.0/24: reject }
+add element filter dict { 192.168.100.0/24: accept, \
+	192.168.101.0/24: accept, \
+	192.168.200.0/24: accept, \
+	192.168.1.0/24: reject }
 		
-		add rule filter input tcp dport 22 ip saddr vmap @dict
-		add rule filter input tcp dport 22 drop
-	\end{minted}
+add rule filter input tcp dport 22 ip saddr vmap @dict
+add rule filter input tcp dport 22 drop
+\end{minted}
