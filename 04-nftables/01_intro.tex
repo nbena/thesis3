@@ -37,6 +37,22 @@ In particolare, gli hook disponibili per quest'ultimo sottosistema sono:
   Linux, avviene prima di \texttt{NF\_IP\_PREROUTING} per pacchetti in ingresso.
 \end{itemize}
 
+\begin{figure}
+  \includegraphics[scale=0.5]{img/NetfilterHooks}
+  \label{fig:netfiler-hooks}
+  \caption[Hook di Netfiler]{Gli hook di Netfilter \textit{classici}. Tutti i
+  pacchetti in arrivo passano per \texttt{PREROUTING}, viceversa quelli in
+  uscita devono passare per forza per \texttt{POSTROUTING}.}
+\end{figure}
+
+
+\begin{figure}
+  \includegraphics[scale=0.5]{img/NetfilterIngress}
+  \label{fig:ingress-hooks}
+  \caption[Hook \texttt{INGRESS}]{Hook \texttt{INGRESS} di Netfilter. E' l'hook
+  che viene prima di tutti gli altri.}
+\end{figure}
+
 \paragraph{iptables}
 iptables è uno dei programmi userspace usati per registrare degli hook in netfilter e
 specificare quale azioni devono essere eseguite.  Ciò che tipicamente si scrive
