@@ -1,0 +1,77 @@
+\section{Overview}\label{sec:mooncloud-overview}
+MoonCloud è un framework per la valutazione ed il monitoraggio continuo
+di servizi cloud.
+Molto sinteticamente, si definiscono delle proprietà (es: \textit{cifratura
+dei dati salvati su storage}) e si verifica in maniera continua che tale
+proprietà sia sempre rispettata. Il rispetto della proprietà porta al
+rilascio di un certificato che ne attesta il rispetto. Nel momento in cui
+tale rispetto viene meno il certificato diventa revocato, e, si presume
+che vengano al più presto applicate azioni correttive per ripristinare
+la proprietà.
+
+
+Il framework prevede il coinvolgimento di diversi soggetti:
+\begin{itemize}
+    \item \textit{CA -- Certification Authority} responsabile del
+    rilascio dei certificato
+    \item \textit{accreditated lab} che si occupa dell'analisi e della
+    verifica delle proprietà (può essere il framework MoonCloud stesso)
+    \item \textit{service provider} ovvero lo sviluppatore di di applicazioni
+    basate sul cloud
+    \item \textit{cloud provider}, il fornitore della piattaforma/infrastruttura
+    cloud. Può essere esso stesso a volersi certificare, oppure semplicemente
+    supportare le applicazioni del \textit{service provider}.
+\end{itemize}
+
+Si definisce il concetto di \textit{ToC -- Target of Certification} come il
+contesto di applicazione ed il perimetro del cloud entro il quale
+si vuole effettuare una valutazione.
+Il processo di certificazione si svolge in due fasi Nella prima fase
+avviene la verifica del rispetto della proprietà in un ambiente di
+laboratorio controllato (\textit{pre-deployment evaluation}), allo scopo
+di collezionare evidenze.
+Nel caso in cui le evidenze diano esito positivo, la CA rilascia
+un certificato per il ToC.
+
+Nella seconda fase, detta \textit{production evaluation}, l'accreditated
+lab, mediante test continui, verifica che il certificato sia o meno
+valido.
+
+\subsection{Proprietà, meccanismi, certificati}
+Fondamentale è la separazione tra \textit{proprietà} e \textit{meccanismi}.
+
+Una \textit{proprietà non funzionali} è definita
+come ``una proprietà astratta presa da vocabolari comuni o domain-specific, ed un set
+di attributi che la raffinano'' \cite{mooncloud-semi-automatic-and-trustworthy}.
+
+Un \textit{meccanismo non funzionale} viene definito come ``un tipo di meccanismo (es: cifratura)
+ed un set di attributi che specificano la configurazione del meccanismo (es: lunghezza chiave),
+unitamente a configurazioni cloud-specific che interessano il comportamento del
+meccanismo''\cite{mooncloud-semi-automatic-and-trustworthy}.
+
+Questi due concetti si riflettono su due \textit{modelli} necessari per l'attività di
+certificazione.
+\begin{description}
+    \item[\textit{CM Template -- Certificate Model Template $\mathcal{T}$}]E' un modello dichiarativo che
+    descrive ad alto livello che cosa deve essere fatto per verificare delle proprietà.
+    Viene definito dalla CA.
+    \item[\textit{CM Instance -- Certificate Model Instance $\mathcal{I}$}]Si tratta di un modello 
+    eseguibile generato istanziando un $\mathcal{T}$ su un vero ToC.
+\end{description}
+Il certificato viene rilasciato quando le attività indicate da $\mathcal{I}$ danno un
+riscontro positivo, esso contiene una descrizione della proprietà certificata,
+un riferimento alle evidenze collezionate, ed è legato al ToC.
+
+
+Affinché le evidenze raccolte ed i risultati derivati da esse siano conformi alla
+realtà è fondamentale che tutti i modelli usati siano conformi a quelli reali. Ad esempio
+i modelli di evidenze che ci si aspetta siano corretti devono corrispondere alle
+evidenze effettive che provino la correttezza. Lo stesso vale per l'intera modellazione
+del sistema \cite{mooncloud-modelling-time}.
+
+Oltre al test di proprietà funzionali, recentemente (\cite{mooncloud-modelling-time}),
+MoonCloud ha introdotto anche verifichi di vincoli basati sul tempo (es: garantire che
+un tempo di risposta di una API inferiore ad $x$ ms), sulla probabilità che
+certi eventi si verifichino, su particolari configurazioni che devono essere adottati
+all'interno di un modello più ampio, ed anche alla verifica di attacchi noti.
+ 

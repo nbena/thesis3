@@ -16,6 +16,9 @@ microservice_directory := 06-microservice
 img_directory := img
 
 mooncloud_files := $(mooncloud_directory)/index.tex
+mooncloud_files += $(mooncloud_directory)/01_overview.tex
+mooncloud_files += $(mooncloud_directory)/02_archi.tex
+mooncloud_files += $(mooncloud_directory)/03_not_only_cloud.tex
 
 vpn_files := $(vpn_directory)/index.tex
 vpn_files += $(vpn_directory)/00_intro.tex
