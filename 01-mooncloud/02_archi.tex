@@ -1,1 +1,43 @@
 \section{Architettura}\label{sec:mooncloud-archi}
+
+
+TODO INSERT HERE FIGURE
+
+Logicamente, è possibile dividere l'architettura MoonCloud
+in due macrocomponenti, così come mostrato in figura \ref{fig:moonclod-archi}.
+La comunicazione tra di essi avviene mediante due code:
+\begin{description}
+    \item[\texttt{Agent Queue}]Su di essa vengono inviate richieste di esecuzione di test.
+    \item[\texttt{Evidence Queue}]Tale coda è responsabile del passaggio delle evidenze tra
+    il componente di esecuzione e quello di gestione. 
+\end{description}
+I due macrocomponenti sono:
+\begin{description}
+    \item[\texttt{Certification Manager}]Componente responsabile dell'orchestrazione
+    dell'intero processo di certificazione. Ne fanno parte i seguenti moduli:
+    \begin{itemize}
+        \item \texttt{Dashboard}: una web GUI utilizzata dai clienti per
+        gestire l'intero processo di certificazione.
+        \item \texttt{Model Database}: una base di dati in cui sono memorizzate
+        tutte le regole relative al processo di certificazione (e di verifica
+        dei modelli) \textbf{Postgres?}.
+        \item \texttt{Probe Dispatcher} il quale si occupa della comunicazione
+        tra \texttt{Certification Manager} ed i cluster di esecuzione.
+        \item \texttt{Result Database} ovvero una base di dati \texttt{InfluxDB} in
+        cui vengono salvate le evidenze collezionate durante i test.
+        \item \texttt{Evidence Analyzer} è un componente responsabile di analizzare
+        le evidenze raccolte nella specifica base di dati. % e di verificare la correttezza di modelli.
+    \end{itemize}
+    \item[\texttt{Execution Cluster}]Un set di VM dedicate all'esecuzione dei
+    test così come orchestrato dal \texttt{Certification Manager}. In ciascun
+    cluster vi sono uno o più \texttt{Execution Manager}, responsabili
+    della gestione degli agent per l'analisi. Ognuno di questi \texttt{Manager}
+    è composto da:
+    \begin{itemize}
+        \item \texttt{Scheduler}: aspetta richieste dal \texttt{Certification Manager}
+        e le dispaccia al successivo componente.    
+        \item \texttt{Worker}: esso è connesso direttamente agli agenti che analizzano,
+        manda ad essi le configurazioni necessarie, ne raccoglie le evidenze e le invia
+        al \texttt{Certification Manager}.
+    \end{itemize}
+\end{description}
