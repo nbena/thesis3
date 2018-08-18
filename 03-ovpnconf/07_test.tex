@@ -54,7 +54,7 @@ dell'\textit{IP mapping}. In particolare:
     % \item \texttt{192.168.100.40} $\leftrightarrow$ \texttt{192.168.200.40}
   \end{itemize}
 \end{itemize}
-La figure \ref{fig:test1-scheme} dà una rappresentazione grafica della topologia
+La figure \ref{fig:openvpn-test1} dà una rappresentazione grafica della topologia
 realizzata.\\
 I due firewall sono stati configurati volutamente in modo restrittivo, al fine
 di verificare se OpenVPN fosse in grado di passarli. Riporto quindi i comandi
@@ -264,6 +264,13 @@ per cui si eseguono i seguenti due comandi sul \textit{Docker host}:
 ip route add 192.168.50.0/24 via 172.31.40.221
 ip route add 192.168.200.0/24 via 172.31.40.221
 \end{minted}
+
+\begin{figure}
+  \includegraphics[scale=0.6]{img/openvpn_test1}
+  \label{fig:openvpn-test1}
+  \caption{Test 1 per OpenVPN}
+\end{figure}
+
 Ecco quindi il risultato:
 \begin{figure}[h]
   \includegraphics[scale=0.35]{img/test1-result}
@@ -291,4 +298,18 @@ sui tre host target.
   \label{fig:alpine-internal-client-net200}
 \end{figure}
 
-TODO TEST2
+\subsection{Test 2}
+Il secondo test è stato eseguito interamente su macchine virtuali messe
+a disposizione dal SESAR Lab. Per brevità, non si riporta di nuovo la
+configurazione dettagliata del test, poiché a parte gli indirizzi IP
+che in sè sono diversi, il setup è stato di fatto lo stesso. L'unica
+differenza è che si è usata una sola rete target anziché due.
+L'obiettivo era testare una connessione SSH dalla \textit{Docker machine}
+nella stessa rete del VPN server verso un host nella rete target (passando
+ovviamente per il collegamento VPN).
+Il test ha dato esito positivo, ed è mostrato in figura \ref{fig:openvpn-test2}.
+\begin{figure}
+  \includegraphics[scale=0.55]{img/openvpn_test2}
+  \label{fig:openvpn-test2}
+  \caption{Test 2 per OpenVPN}
+\end{figure}

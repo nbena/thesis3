@@ -92,6 +92,9 @@ img_files += $(img_directory)/rssc.pdf
 img_files += $(img_directory)/ip_mapping_send.pdf
 img_files += $(img_directory)/ip_mapping_recv.pdf
 
+img_files += $(img_directory)/openvpn_test1.pdf
+img_files += $(img_directory)/openvpn_test2.pdf
+
 aux_files := *.aux
 
 # deps := $(files)
