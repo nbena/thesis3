@@ -68,11 +68,11 @@ files += thesis.tex # thesis.pdf
 # $(deps) is used as a dependency for thesis.pdf
 
 img_files := $(img_directory)/minerva_2013_DI.jpg
-img_files += $(img_directory)/mls.png
+# img_files += $(img_directory)/mls.png
 img_files += $(img_directory)/openvpn_sec.png
-img_files += $(img_directory)/rsmc.png
-img_files += $(img_directory)/rssc.png
-img_files += $(img_directory)/securenat.png
+# img_files += $(img_directory)/rsmc.png
+# img_files += $(img_directory)/rssc.png
+# img_files += $(img_directory)/securenat.png
 img_files += $(img_directory)/sls.png
 img_files += $(img_directory)/softether_code_archi.jpg
 img_files += $(img_directory)/softether_l2_lan_to_lan.png
@@ -84,6 +84,8 @@ img_files += $(img_directory)/softether_scheme.jpg
 img_files += $(img_directory)/wireguard_performance.png
 img_files += $(img_directory)/NetfilterHooks.png
 img_files += $(img_directory)/NetfilterIngress.png
+
+img_files += $(img_directory)/ls.pdf
 
 aux_files := *.aux
 

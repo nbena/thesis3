@@ -76,7 +76,7 @@ da fare è decidere dove posizionare il server: nel cloud o nella rete target?
   \item[\textbf{Nel cloud}]Con questa opzione si preparano nella rete MoonCloud una serie
   di VM destinate ad essere VPN server; se esse sono configurate propriamente, ciascun server
   può servire diverse reti target. I probes
-  hanno delle rotte configurate del tipo \texttt{rete target via VPN server}
+  hanno delle rotte configurate del tipo \texttt{rete target via VPN server}.
   Nelle reti dei client si porta quindi una appliance che quindi client di un server in MoonCloud.
   Tale appliance deve rendere visibile l'intera rete (possibilmente anche più di una) nella VPN. In
   particolare si pone un problema di routing nella rete target a prescindere che lì vi sia
@@ -108,34 +108,34 @@ della rete target o su tutti gli host. In ogni caso, questa assieme a tutte
 le altre soluzioni adottate per la VPN sono descritte molto dettagliatamente
 nel prossimo capitolo.
 
-\begin{figure}
-  \includegraphics[scale=0.35]{img/sls}
-  \caption[Configurazione \textit{SLS (Single Local Server)}]{Configurazione \textit{SLS (Single Local Server)},
-  il server è in grado di collegare subnet con indirizzi IP diversi, a patto che tutto
-  sia configurato opportunamente. Le frecce rosse indicano il collegamento VPN, le frecce blu il traffico prima di essere inviato
-  e dopo essere stato decifrato dalla VPN.}
-\end{figure}
+% \begin{figure}
+%   \includegraphics[scale=0.35]{img/sls}
+%   \caption[Configurazione \textit{SLS (Single Local Server)}]{Configurazione \textit{SLS (Single Local Server)},
+%   il server è in grado di collegare subnet con indirizzi IP diversi, a patto che tutto
+%   sia configurato opportunamente. Le frecce rosse indicano il collegamento VPN, le frecce blu il traffico prima di essere inviato
+%   e dopo essere stato decifrato dalla VPN.}
+% \end{figure}
 
-\begin{figure}
-  \includegraphics[scale=0.4]{img/mls}
-  \caption[Configurazione \textit{MLS (Multi Local Server)}]{Configurazione \textit{MLS (Multi Local Server)},
-  per ciascuna rete target si configura un VPN server che instrada il traffico dei containter (in blu) sulla VPN (in rosso).}
-\end{figure}
+% \begin{figure}
+%   \includegraphics[scale=0.4]{img/mls}
+%   \caption[Configurazione \textit{MLS (Multi Local Server)}]{Configurazione \textit{MLS (Multi Local Server)},
+%   per ciascuna rete target si configura un VPN server che instrada il traffico dei containter (in blu) sulla VPN (in rosso).}
+% \end{figure}
 
-\begin{figure}
-%   \centering
-%   \begin{minipage}[t]{0.5\textwidth}
-  \includegraphics[scale=0.45]{img/rsmc}
-  \caption[Configurazione \textit{RSMC (Remote Server Multi Client)}]{Configurazione \textit{RSMC (Remote Server Multi Client)}.}
-\end{figure}
-  % \end{minipage}
-  % \hfill
-  % \begin{minipage}[t]{0.45\textwidth}
-\begin{figure}
-  \includegraphics[scale=0.45]{img/rssc}
-  \caption[Configurazione \textit{RSSC (Remote Server Single Client)}]{Configurazione \textit{RSSC (Remote Server Single Client)}.}
-  % \end{minipage}
-\end{figure}
+% \begin{figure}
+% %   \centering
+% %   \begin{minipage}[t]{0.5\textwidth}
+%   \includegraphics[scale=0.45]{img/rsmc}
+%   \caption[Configurazione \textit{RSMC (Remote Server Multi Client)}]{Configurazione \textit{RSMC (Remote Server Multi Client)}.}
+% \end{figure}
+%   % \end{minipage}
+%   % \hfill
+%   % \begin{minipage}[t]{0.45\textwidth}
+% \begin{figure}
+%   \includegraphics[scale=0.45]{img/rssc}
+%   \caption[Configurazione \textit{RSSC (Remote Server Single Client)}]{Configurazione \textit{RSSC (Remote Server Single Client)}.}
+%   % \end{minipage}
+% \end{figure}
 
 \subsection{Conclusioni}
 Per ciò che concerne OpenVPN, si è consigliato di realizzare una soluzione \textbf{\textit{Local Server}} per
