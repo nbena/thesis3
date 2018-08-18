@@ -225,7 +225,9 @@ sia dietro router/firewall che esegua NAT. Come tale, la rete target è raggiung
 mediante un indirizzo IP pubblico dinamico. Poiché vi è NAT, è fondamentale che il server disponga
 di un qualche meccanismo di NAT Traversal, poiché si vuole evitare di dover configurare
 port forwarding sul router del cliente.\\
-Vi sono naturalmente casi in cui non c'è NAT, ma sono una minoranza.
+Vi sono naturalmente casi in cui non c'è NAT, ma sono una minoranza.\\
+In configurazini \textit{Local Server} il problema non si pone perché la comunicazione viene
+\textit{iniziata} dall'interno della rete target.
 
 \begin{figure}
   \includegraphics[scale=0.6]{img/ls}
@@ -235,6 +237,14 @@ Vi sono naturalmente casi in cui non c'è NAT, ma sono una minoranza.
   le due reti), mentre quelle \textit{thin} indicano del traffico non incapsulato.}
 \end{figure}
 
+\begin{figure}
+  \includegraphics[scale=0.6]{img/rsmc}
+  \label{fig:rsmc}
+  \caption[Configurazione \textit{RSMC -- Remote Server Multi Client}]{Configurazione
+  \textit{RSMC -- Remote Server Multi Client}. Ciascun probe è \textit{anche} un VPN client.
+  La spunta verde sui firewall nelle reti target indica che deve essere consentito l'accesso
+  dall'esterno verso i VPN server.}
+\end{figure}
 
 Già in questa fase iniziale di studio avevo previsto l'utilizzo del \textit{NAT al contrario},
 un termine coniato qui per indicare un particolare utilizzo del NAT. Si supponga di

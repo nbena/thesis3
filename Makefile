@@ -86,10 +86,11 @@ img_files += $(img_directory)/NetfilterHooks.png
 img_files += $(img_directory)/NetfilterIngress.png
 
 img_files += $(img_directory)/ls.pdf
+img_files += $(img_directory)/rsmc.pdf
 
 aux_files := *.aux
 
-deps := $(files)
+# deps := $(files)
 all_deps := $(files) $(img_files)
 
 tar_dest  := /media/nicola/Drive/BackupTar/thesis3.tar.bz2
@@ -98,7 +99,7 @@ gdrive_dest_file := /home/nicola/GDrive/backs-tar/thesis3.tar.bz2
 
 tar_exclude := .git
 
-$(latex_output): $(deps)
+$(latex_output): $(all_deps)
 	$(latex) -file-line-error --shell-escape $(latex_input)
 	$(latex) -file-line-error --shell-escape $(latex_input)
 
