@@ -87,6 +87,7 @@ img_files += $(img_directory)/NetfilterIngress.png
 
 img_files += $(img_directory)/ls.pdf
 img_files += $(img_directory)/rsmc.pdf
+img_files += $(img_directory)/rssc.pdf
 
 aux_files := *.aux
 

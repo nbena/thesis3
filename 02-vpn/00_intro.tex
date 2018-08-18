@@ -204,7 +204,8 @@ dettagliate.
   \item[\textit{LS - Local Server}]In questa configurazione si prevede di installare i
   VPN server in MoonCloud, mentre nelle reti target si porta (o si installa) il device
   VPN client, il quale è incaricato di connettersi al VPN server. Un server può essere
-  potenzialmente responsabile per più reti client diverse. I container che fanno analisi
+  potenzialmente responsabile per più reti client diverse, anzi questo
+  è ciò che si vorrebbe fortemente. I container che fanno analisi
   (o l'host su cui sono in esecuzione)
   sono configurati per inoltrare i pacchetti al VPN server, il quale li invia alla rete
   target mediante il collegamento VPN.
@@ -244,6 +245,15 @@ In configurazini \textit{Local Server} il problema non si pone perché la comuni
   \textit{RSMC -- Remote Server Multi Client}. Ciascun probe è \textit{anche} un VPN client.
   La spunta verde sui firewall nelle reti target indica che deve essere consentito l'accesso
   dall'esterno verso i VPN server.}
+\end{figure}
+
+\begin{figure}
+  \includegraphics[scale=0.6]{img/rssc}
+  \label{fig:rsmc}
+  \caption[Configurazione \textit{RSSC -- Remote Server Single Client}]{Configurazione
+  \textit{RSSC -- Remote Server Single Client}. Per ogni cluster dedicato ad una certa rete target
+  vi è una host che svolge il ruolo di VPN client. E' ancora richiesto che i firewall
+  consentano il traffico.}
 \end{figure}
 
 Già in questa fase iniziale di studio avevo previsto l'utilizzo del \textit{NAT al contrario},
