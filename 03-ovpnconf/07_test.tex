@@ -59,7 +59,7 @@ realizzata.\\
 I due firewall sono stati configurati volutamente in modo restrittivo, al fine
 di verificare se OpenVPN fosse in grado di passarli. Riporto quindi i comandi
 \texttt{iptables} utilizzati (essi sono gli stessi per entrambi i firewall):
-\begin{minted}{bash}
+\begin{minted}[breaklines]{bash}
 #!/bin/ash
 # ash is the default shell on Alpine
 
@@ -71,16 +71,12 @@ iptables -t filter -A FORWARD -p udp --dport 53 -s 192.168.100.0/24 -j ACCEPT
 iptables -t filter -A FORWARD -p udp --sport 53 -d 192.168.100.0/24 -j ACCEPT
 
 # http stateful
-iptables -t filter -A FORWARD -p tcp --dport 80 -s 192.168.100.0/24 \
--m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
-iptables -t filter -A FORWARD -p tcp --sport 80 -d 192.168.100.0/24 \
--m state --state RELATED,ESTABLISHED -j ACCEPT
+iptables -t filter -A FORWARD -p tcp --dport 80 -s 192.168.100.0/24 -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
+iptables -t filter -A FORWARD -p tcp --sport 80 -d 192.168.100.0/24 -m state --state RELATED,ESTABLISHED -j ACCEPT
 
 # https stateful
-iptables -t filter -A FORWARD -p tcp --dport 443 -s 192.168.100.0/24 \
--m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
-iptables -t filter -A FORWARD -p tcp --sport 443 -d 192.168.100.0/24 \
--m state --state RELATED,ESTABLISHED -j ACCEPT
+iptables -t filter -A FORWARD -p tcp --dport 443 -s 192.168.100.0/24 -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
+iptables -t filter -A FORWARD -p tcp --sport 443 -d 192.168.100.0/24 -m state --state RELATED,ESTABLISHED -j ACCEPT
 \end{minted}
 Sia i client sia il server sono stati configurati come indicato nel capitolo
 precedente. Qui di seguito sono mostrati i file di configurazione, a cominciare
@@ -139,7 +135,7 @@ keepalive 10 60
 
 \end{minted}
 Il contenuto dello script eseguito quando un client si connette:
-\begin{minted}{bash}
+\begin{minted}[breaklines]{bash}
 #!/bin/bash
 
 if [ "$common_name" == "client50" ]; then
@@ -154,7 +150,7 @@ fi
 
 \end{minted}
 Mentre quello eseguito quando i client si disconnettono:
-\begin{minted}{bash}
+\begin{minted}[breaklines]{bash}
 #!/bin/bash
 
 if [ "$common_name" == "client50" ]; then

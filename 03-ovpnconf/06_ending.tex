@@ -102,46 +102,40 @@ ha ottime prestazioni in implementazioni solo software, ed in particolare è mol
 più veloce di \texttt{AES-GCM} in mancanza di accelerazione hardware crittografica.
 Queste due ciphersuite sono state selezionate poiché sono di fatto, le più sicure,
 per inciso, sono le uniche due incluse in TLS 1.3. Attualmente non c'è supporto
-per \texttt{ChaCha20-Poly1305} per il\texttt{Data Channel}.\\
+per \texttt{ChaCha20-Poly1305} per il \texttt{Data Channel}.\\
 Il file mostrato sopra verà posizionato in \texttt{/etc/openvpn/ovpn1.conf}, ed
 ovviamente tutti i percorsi indicati in questo file devono esistere.\\
-I file \texttt{/etc/openvpn/ovpn1/cs/client-up.sh} e
+I file \texttt{/etc/openvpn/ovpn1/cs/client-up.sh} e \\
 \texttt{/etc/openvpn/ovpn1/cs/client-down.sh}:
-\begin{minted}{bash}
-#! /bin/bash
-
+\begin{minted}[breaklines]{bash}
 # /etc/openvpn/ovpn1/cs/client-up.sh
+
+#! /bin/bash
 
 if [ "$common_name" == "office1.company.org" ]; then
   ip route add 192.168.1.0/24 via 10.7.0.1
   iptables -t nat -A POSTROUTING -d 192.168.1.0/24 -j MASQUERADE
 
   # non fondamentali, verranno spigete in seguito.
-  iptables -t filter -I OUTPUT -d 192.168.1.0/24 -o ovpn+ \
-  -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
-  iptables -t filter -I INPUT -s 192.168.1.0/24 -i ovpn+ \
-  -m state --state RELATED,ESTABLISHED -j ACCEPT
-  iptables -t filter -I FORWARD -s 192.168.1.0/24 -i ovpn+ \
-  -m state --state RELATED,ESTABLISHED -j ACCEPT
+  iptables -t filter -I OUTPUT -d 192.168.1.0/24 -o ovpn+ -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
+  iptables -t filter -I INPUT -s 192.168.1.0/24 -i ovpn+ -m state --state RELATED,ESTABLISHED -j ACCEPT
+  iptables -t filter -I FORWARD -s 192.168.1.0/24 -i ovpn+ -m state --state RELATED,ESTABLISHED -j ACCEPT
 fi
 \end{minted}
 
-\begin{minted}{bash}
-#! /bin/bash
-
+\begin{minted}[breaklines]{bash}
 # /etc/openvpn/ovpn1/cs/client-down.sh
+
+#! /bin/bash
 
 if [ "$common_name" == "office1.company.org" ]; then
   ip route add 192.168.1.0/24 via 10.7.0.1
   iptables -t nat -D POSTROUTING -d 192.168.1.0/24 -j MASQUERADE
 
   # verranno spiegate in seguito
-  iptables -t filter -D OUTPUT -d 192.168.1.0/24 -o ovpn+ \
-  -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
-  iptables -t filter -D INPUT -s 192.168.1.0/24 -i ovpn+ \
-  -m state --state RELATED,ESTABLISHED -j ACCEPT
-  iptables -t filter -D FORWARD -s 192.168.1.0/24 -i ovpn+ \
-  -m state --state RELATED,ESTABLISHED -j ACCEPT
+  iptables -t filter -D OUTPUT -d 192.168.1.0/24 -o ovpn+ -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
+  iptables -t filter -D INPUT -s 192.168.1.0/24 -i ovpn+ -m state --state RELATED,ESTABLISHED -j ACCEPT
+  iptables -t filter -D FORWARD -s 192.168.1.0/24 -i ovpn+ -m state --state RELATED,ESTABLISHED -j ACCEPT
 fi
 \end{minted}
 Il file \texttt{/etc/openvpn/ovpn1/ccd/office1.company.org}:
@@ -211,34 +205,25 @@ ed ogni IP della rete originale viene mappato nella nuova rete nel seguente
 modo: $\texttt{192.168.100.1} \leftrightarrow \texttt{192.168.1.1}$, e così via
 fino a $\texttt{192.168.100.254} \leftrightarrow \texttt{192.168.1.254}$.
 Si produce quindi uno script di comandi per \texttt{iptables} così composto:
-\begin{minted}{bash}
+\begin{minted}[breaklines]{bash}
 # !/bin/bash
 
 # ip mapping, changing destination addresses
 # (done for request packets)
-iptables -t nat -A PREROUTING -d 192.168.1.1 -s 10.7.0.0/24 \
--j DNAT --to-destination 192.168.100.1
-iptables -t nat -A PREROUTING -d 192.168.1.2 -s 10.7.0.0/24 \
--j DNAT --to-destination 192.168.100.2
-iptables -t nat -A PREROUTING -d 192.168.1.3 -s 10.7.0.0/24 \
--j DNAT --to-destination 192.168.100.3
+iptables -t nat -A PREROUTING -d 192.168.1.1 -s 10.7.0.0/24 -j DNAT --to-destination 192.168.100.1
+iptables -t nat -A PREROUTING -d 192.168.1.2 -s 10.7.0.0/24 -j DNAT --to-destination 192.168.100.2
+iptables -t nat -A PREROUTING -d 192.168.1.3 -s 10.7.0.0/24 -j DNAT --to-destination 192.168.100.3
 # ...
-iptables -t nat -A PREROUTING -d 192.168.1.254 -s 10.7.0.0/24 \
--j DNAT --to-destination 192.168.100.254
+iptables -t nat -A PREROUTING -d 192.168.1.254 -s 10.7.0.0/24 -j DNAT --to-destination 192.168.100.254
 
 # 'reverse NAT'
-iptables -t nat -A POSTROUTING -d 192.168.1.0/24 -s 10.7.0.0/24 \
--j MASQUERADE
+iptables -t nat -A POSTROUTING -d 192.168.1.0/24 -s 10.7.0.0/24 -j MASQUERADE
 
 # ip mapping, changing source addresses
 # (done for response packets)
-iptables -t nat -A POSTROUTING -s 192.168.100.1 -d 10.7.0.0/24 \
--j SNAT --to-source 192.168.1.1
-iptables -t nat -A POSTROUTING -s 192.168.100.2 -d 10.7.0.0/24 \
--j SNAT --to-source 192.168.1.2
-iptables -t nat -A POSTROUTING -s 192.168.100.3 -d 10.7.0.0/24 \
--j SNAT --to-source 192.168.1.3
+iptables -t nat -A POSTROUTING -s 192.168.100.1 -d 10.7.0.0/24 -j SNAT --to-source 192.168.1.1
+iptables -t nat -A POSTROUTING -s 192.168.100.2 -d 10.7.0.0/24 -j SNAT --to-source 192.168.1.2
+iptables -t nat -A POSTROUTING -s 192.168.100.3 -d 10.7.0.0/24 -j SNAT --to-source 192.168.1.3
 # ...
-iptables -t nat -A POSTROUTING -s 192.168.100.254 -d 10.7.0.0/24 \
--j SNAT --to-source 192.168.1.254
+iptables -t nat -A POSTROUTING -s 192.168.100.254 -d 10.7.0.0/24 -j SNAT --to-source 192.168.1.254
 \end{minted}

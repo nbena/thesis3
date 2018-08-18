@@ -268,15 +268,15 @@ Si supponga di avere la seguente configurazione:
   \item indirizzo IP scheda di rete virtuale VPN client: \texttt{10.7.0.2}
   \item \texttt{CommonName} del VPN client: \texttt{client1}
   \item target da analizzare ($OTI \in OTN$): \texttt{192.168.1.254}
-  \item target mappato: $MTI \in MTN=map\_address(\texttt{192.168.100.254},
-  \texttt{192.168.100.0/24},\\
-  \texttt{192.168.1.0/24})$=\texttt{192.168.1.254}
+  \item target mappato: $MTI \in MTN=map\_address(\texttt{192.168.100.254},\\
+  \texttt{192.168.100.0/24},
+  \texttt{192.168.1.0/24})=\texttt{192.168.1.254}$
 \end{itemize}
 Le reti mappate sostituiscono le reti originali nella configurazione delle rotte lato
 MoonCloud. Quindi si mostra un estratto dei file \texttt{client-up.sh} e
 \texttt{client-down.sh}, come si può vedere, la rotte aggiunte e rimosse sono
 quelle mappate.
-\begin{minted}{bash}
+\begin{minted}[breaklines]{bash}
 #! /bin/bash
 
 # /etc/openvpn/server/cs/client-up.sh
@@ -287,7 +287,7 @@ if [ "$common_name" == "client1" ]; then
   iptables -t nat -A POSTROUTING -d 192.168.1.0/24 -j MASQUERADE
 fi
 \end{minted}
-\begin{minted}{bash}
+\begin{minted}[breaklines]{bash}
 #! /bin/bash
 
 # /etc/openvpn/server/cs/client-down.sh
@@ -343,7 +343,7 @@ Si noti che in questo comando la rete di destinazione è la \textit{rete origina
   \item in un modo che poi verrà descritto, il sistema operativo di \texttt{Client100}
   applica la seguente funzione
   per ottenere $OTI=RTI$ cioè l'indirizzo IP effettivo del target: $OTI=remap\_address(
-  \texttt{192.168.1.254}, \texttt{192.168.1.0/24}, \texttt{192.168.100.254})$, il
+  \texttt{192.168.1.254}, \texttt{192.168.1.0/24},\\ \texttt{192.168.100.254})$, il
   risultato è \texttt{192.168.100.254}, il quale ovviamente corrisponde all'indirizzo IP
   specificato dal cliente come target dell'analisi.
   \item Si modifica l'indirizzo IP destinazione del pacchetto, inserendo come destinazione
@@ -363,7 +363,7 @@ Si noti che in questo comando la rete di destinazione è la \textit{rete origina
   pacchetto, andando a specificare che l'indirizzo IP sorgente non è più
   \texttt{192.168.100.254} (IP originale -- $OTI$), ma \texttt{192.168.1.254}
   (IP mappato -- $MTI$). Per farlo, applica:
-  $source=map\_address(\texttt{192.168.100.254}, \texttt{192.168.100.0/24},
+  $source=map\_address(\texttt{192.168.100.254}, \texttt{192.168.100.0/24},\\
   \texttt{192.168.1.0/24})$
   ; a questo il pacchetto è conforme a quello inviato da OpenVPN server dopo il
   \textit{NAT lato server}, poiché l'indirizzo IP sorgente è quello mappato, cioè quello

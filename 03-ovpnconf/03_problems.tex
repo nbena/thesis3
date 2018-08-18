@@ -92,9 +92,8 @@ fosse la rete \textit{esterna} verso la quale il NAT è tipicamente eseguito. Qu
 configurazione di NAT viene qui chiamata ``\textit{NAT al contrario}'', ed è eseguita con
 \texttt{iptables}.\\
 In questo caso, un singolo comando ad \texttt{iptables} risolve tutto questo problema:
-\begin{minted}{bash}
-iptables -t nat -A POSTROUTING -d 192.168.100.0/24 -s 192.168.200.0 \
--j MASQUERADE
+\begin{minted}[breaklines]{bash}
+iptables -t nat -A POSTROUTING -d 192.168.100.0/24 -s 192.168.200.0 -j MASQUERADE
 \end{minted}
 Utilizzare il NAT introduce però appartenente un'altra problematica, ovvero il fatto che
 solo risposte a richieste provenienti da \texttt{192.168.200.0/24} possono ``passare''
@@ -173,7 +172,7 @@ client, chiamato ``\texttt{client50}'' responsabile per la rete \texttt{192.168.
 OpenVPN rilegge i due script ad ogni connessione/disconnessione, pertanto è possibile
 aggiornarli mentre esso è in esecuzione.
 Ecco come si presentano i due file:
-\begin{minted}{bash}
+\begin{minted}[breaklines]{bash}
 #! /bin/bash
 
 # /etc/openvpn/server/cs/client-up.sh
@@ -186,7 +185,7 @@ if [ "$common_name" == "client50" ]; then
   ip route add 192.168.50.0/24 via 10.7.0.1
 fi
 \end{minted}
-\begin{minted}{bash}
+\begin{minted}[breaklines]{bash}
 #! /bin/bash
 
 # /etc/openvpn/server/cs/client-down.sh
@@ -274,7 +273,7 @@ Lato server si usa
 NAT con \texttt{iptables}, ed i comandi sono ancora una volta presenti
 nei file specificati nelle direttive ``\texttt{client-disconnect}'' e ``\texttt{client-disconnect}'';
 nel seguente modo:
-\begin{minted}{bash}
+\begin{minted}[breaklines]{bash}
 #! /bin/bash
 
 # /etc/openvpn/server/cs/client-up.sh
@@ -289,7 +288,7 @@ if [ "$common_name" == "client50" ]; then
   iptables -t nat -A POSTROUTING -d 192.168.50.0/24 -j MASQUERADE
 fi
 \end{minted}
-\begin{minted}{bash}
+\begin{minted}[breaklines]{bash}
 #! /bin/bash
 
 # /etc/openvpn/server/cs/client-down.sh
