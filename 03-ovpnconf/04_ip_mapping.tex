@@ -305,7 +305,7 @@ iroute 192.168.1.0 255.255.255.0
 \end{minted}
 Infine, per applicare la soluzione di \textit{NAT al contrario}, sul device client
 sarà eseguito il comando \texttt{iptables}:
-\begin{minted}{bash}
+\begin{minted}[breaklines]{bash}
 iptables -t nat -A POSTROUTING -d 192.168.100.0/24 -s 10.7.0.0/24 -j MASQUERADE
 \end{minted}
 Si noti che in questo comando la rete di destinazione è la \textit{rete originale}.\\
@@ -363,7 +363,8 @@ Si noti che in questo comando la rete di destinazione è la \textit{rete origina
   pacchetto, andando a specificare che l'indirizzo IP sorgente non è più
   \texttt{192.168.100.254} (IP originale -- $OTI$), ma \texttt{192.168.1.254}
   (IP mappato -- $MTI$). Per farlo, applica:
-  $source=map\_address(\texttt{192.168.100.254}, \texttt{192.168.100.0/24}, \texttt{192.168.1.0/24})$
+  $source=map\_address(\texttt{192.168.100.254}, \texttt{192.168.100.0/24},
+  \texttt{192.168.1.0/24})$
   ; a questo il pacchetto è conforme a quello inviato da OpenVPN server dopo il
   \textit{NAT lato server}, poiché l'indirizzo IP sorgente è quello mappato, cioè quello
   che MoonCloud conosce.
@@ -398,7 +399,6 @@ dalle altre, pertanto è possibile che due server VPN abbiano due reti target ma
 uguali, ma questo non crea conflitto perché i due server sono isolati tra loro.
 Allo stesso modo, un server è ovviamente in grado di gestire più clienti
 contamporaneamente, poiché l'univocità delle reti mappate è garantita \textit{per-server}.
-La figura \ref{fig:mooncloud-multi-net} illustra ciò che è stato appena scritto.
 
 
 L'ultima cosa che rimane da capire è come effettuare mappaggio e rimappaggio lato client;
@@ -416,11 +416,9 @@ In generale, supponendo di voler fare NAT (quindi mappaggio e rimappaggio) da
 con pacchetti provenienti dalla subnet \texttt{10.7.0.0/24}, è possibile
 utilizzare i seguenti
 due comandi:
-\begin{minted}{bash}
-iptables -t nat -A PREROUTING -d 192.168.1.254 -s 10.7.0.0/24 \
--j DNAT --to-destination 192.168.100.254
-iptables -t nat -A POSTROUTING -s 192.168.100.254 -d 10.7.0.0/24 \
--j SNAT --to-source 192.168.1.254
+\begin{minted}[breaklines]{bash}
+iptables -t nat -A PREROUTING -d 192.168.1.254 -s 10.7.0.0/24 -j DNAT --to-destination 192.168.100.254
+iptables -t nat -A POSTROUTING -s 192.168.100.254 -d 10.7.0.0/24 -j SNAT --to-source 192.168.1.254
 \end{minted}
 Il primo comando viene utilizzato per modificare l'indirizzo IP destinazione,
 da quello mappato noto a MoonCloud ($MTI$) a quello originale ($OTI$); il secondo
@@ -443,3 +441,24 @@ nel kernel Linux.
     \item modifice IP sorgente (\textit{hook} \texttt{POSTROUTING})
   \end{enumerate}
 \end{itemize}
+
+\begin{figure} 
+  \includegraphics[scale=0.7]{img/ip_mapping_send}
+  \label{fig:ip-mapping-send}
+  \caption[IP Mapping: MoonCloud $\rightarrow$ Target]{
+    IP Mapping: MoonCloud $\rightarrow$ Target. Si mostra un esempio di ciò che
+    accade nel VPN client quando si riceve un pacchetto tramite la VPN.
+    Per essere rigorosi occorre notare che una volta che OpenVPN invia qualcosa
+    su un socker, il controllo passa di nuovo al sistema operativo che scrive
+    quindi il pacchetto sulla scheda di rete fisica, ma questo non è di interesse
+    per il problema in questione.}
+\end{figure}
+
+\begin{figure}
+  \includegraphics[scale=0.7]{img/ip_mapping_recv}
+  \label{fig:ip-mapping-recv}
+  \caption[IP Mapping: Target $\rightarrow$ MoonCloud]{
+    IP Mapping: Target $\rightarrow$ MoonCloud. In questo caso si mostra
+    cosa succede con i pacchetti in risposta a richieste provenienti
+    da MoonCloud lungo la VPN.}
+\end{figure}

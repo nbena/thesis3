@@ -32,7 +32,7 @@ ovpn_files := $(ovpn_directory)/index.tex
 ovpn_files += $(ovpn_directory)/01_softether.tex
 ovpn_files += $(ovpn_directory)/02_ovpn_intro.tex
 ovpn_files += $(ovpn_directory)/03_problems.tex
-ovpn_files += $(ovpn_directory)/04_ip_remapping.tex
+ovpn_files += $(ovpn_directory)/04_ip_mapping.tex
 ovpn_files += $(ovpn_directory)/05_recap.tex
 ovpn_files += $(ovpn_directory)/06_ending.tex
 ovpn_files += $(ovpn_directory)/07_test.tex
@@ -88,6 +88,9 @@ img_files += $(img_directory)/NetfilterIngress.png
 img_files += $(img_directory)/ls.pdf
 img_files += $(img_directory)/rsmc.pdf
 img_files += $(img_directory)/rssc.pdf
+
+img_files += $(img_directory)/ip_mapping_send.pdf
+img_files += $(img_directory)/ip_mapping_recv.pdf
 
 aux_files := *.aux
 
