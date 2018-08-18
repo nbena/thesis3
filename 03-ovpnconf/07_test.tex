@@ -61,7 +61,7 @@ di verificare se OpenVPN fosse in grado di passarli. Riporto quindi i comandi
 \texttt{iptables} utilizzati (essi sono gli stessi per entrambi i firewall):
 \begin{minted}[breaklines]{bash}
 #!/bin/ash
-# ash is the default shell on Alpine
+# ash è la shell di Alpine
 
 # natting
 iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
@@ -82,7 +82,7 @@ Sia i client sia il server sono stati configurati come indicato nel capitolo
 precedente. Qui di seguito sono mostrati i file di configurazione, a cominciare
 dal server, poi client in \texttt{net50}, infine quello in \texttt{net200}.
 \begin{minted}{squidconf}
-# on remote server
+# server remoto
 
 mode server
 tls-server
@@ -97,22 +97,20 @@ persist-key
 
 port 443
 
-# vpn subnet
+# VPN subnet
 server 10.7.0.0 255.255.255.0
 
 topology subnet
 
-# client-specific config
 client-config-dir /etc/openvpn/server-single/ccd
 
-# tls configuration
+# TLS configuration
 remote-cert-eku "TLS Web Client Authentication"
 tls-version-min 1.2
-
 tls-cipher TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384
 cipher AES-256-GCM
 
-# keys and certs
+# chiavi e certificati
 ca /etc/openvpn/certs/ca.crt
 cert /etc/openvpn/server-single/certs/server-single.crt
 key /etc/openvpn/server-single/certs/server-single.key
@@ -179,11 +177,8 @@ Di seguito invece file di configurazione del client VPN in \texttt{net50}, il cu
 \begin{minted}{squidconf}
 # /etc/openvpn/client50.conf
 
-# client
 client
-tls-client
 
-# proto tcp-client
 proto tcp
 
 remote ec2-52-15-172-187.us-east-2.compute.amazonaws.com 443
@@ -197,13 +192,13 @@ persist-key
 group nogroup
 user nobody
 
-# tls configuration
+# TLS configuration
 remote-cert-eku "TLS Web Server Authentication"
 tls-version-min 1.2
 tls-cipher TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384
 cipher AES-256-GCM
 
-# keys and certs
+# chiavi e certificati
 ca /etc/openvpn/certs/ca.crt
 cert /etc/openvpn/client50/certs/client50.crt
 key /etc/openvpn/client50/certs/client50.key
@@ -218,11 +213,8 @@ Infine, il file del client in \texttt{net200}, dal \texttt{Common Name}:
 \begin{minted}{squidconf}
 # /etc/openvpn/client200.conf
 
-# client
 client
-tls-client
 
-# proto tcp-client
 proto tcp
 
 remote ec2-52-15-172-187.us-east-2.compute.amazonaws.com 443
@@ -236,13 +228,13 @@ persist-key
 group nogroup
 user nobody
 
-# tls configuration
+# TLS configuration
 remote-cert-eku "TLS Web Server Authentication"
 tls-version-min 1.2
 tls-cipher TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384
 cipher AES-256-GCM
 
-# keys and certs
+# chiavi e certificati
 ca /etc/openvpn/certs/ca.crt
 cert /etc/openvpn/client200/certs/client200.crt
 key /etc/openvpn/client200/certs/client200.key
@@ -298,3 +290,5 @@ sui tre host target.
   {L'output di \texttt{curl} su \texttt{192.168.200.30} (mappato)}
   \label{fig:alpine-internal-client-net200}
 \end{figure}
+
+TODO TEST2

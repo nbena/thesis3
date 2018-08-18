@@ -277,10 +277,9 @@ MoonCloud. Quindi si mostra un estratto dei file \texttt{client-up.sh} e
 \texttt{client-down.sh}, come si può vedere, la rotte aggiunte e rimosse sono
 quelle mappate.
 \begin{minted}[breaklines]{bash}
-#! /bin/bash
-
 # /etc/openvpn/server/cs/client-up.sh
 
+#! /bin/bash
 
 if [ "$common_name" == "client1" ]; then
   ip route add 192.168.1.0/24 via 10.7.0.1
@@ -288,9 +287,9 @@ if [ "$common_name" == "client1" ]; then
 fi
 \end{minted}
 \begin{minted}[breaklines]{bash}
-#! /bin/bash
-
 # /etc/openvpn/server/cs/client-down.sh
+
+#! /bin/bash
 
 
 if [ "$common_name" == "client1" ]; then

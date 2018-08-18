@@ -274,9 +274,9 @@ NAT con \texttt{iptables}, ed i comandi sono ancora una volta presenti
 nei file specificati nelle direttive ``\texttt{client-disconnect}'' e ``\texttt{client-disconnect}'';
 nel seguente modo:
 \begin{minted}[breaklines]{bash}
-#! /bin/bash
-
 # /etc/openvpn/server/cs/client-up.sh
+
+#!/bin/bash
 
 
 if [ "$common_name" == "client100" ]; then
@@ -289,9 +289,9 @@ if [ "$common_name" == "client50" ]; then
 fi
 \end{minted}
 \begin{minted}[breaklines]{bash}
-#! /bin/bash
-
 # /etc/openvpn/server/cs/client-down.sh
+
+#!/bin/bash
 
 
 if [ "$common_name" == "client100" ]; then

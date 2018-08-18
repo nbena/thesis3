@@ -31,40 +31,40 @@ e sono descritte nel prossimo capitolo.
 \subsection{Configurazione del server}
 Al momento della creazione di un nuovo server, viene generato il seguente file
 di configurazione:
-\begin{minted}{squidconf}
+\begin{minted}[breaklines]{squidconf}
 # /etc/openvpn/ovpn1.conf
 
-# role
+# ruolo
 mode server
 tls-server
 
-# L4 protocol
+# protocllo L4
 proto tcp
 
-# virtual NIC configuration
+# configurazione NIC
+# virtuale
 dev-type tun
 dev ovpn-1
 
 persist-tun
 persist-key
 
-# listening on port 443
+# porta di ascolto 443
 port 443
 
-# vpn subnet
+# VPN subnet
 server 10.7.0.0 255.255.255.0
 
 topology subnet
 
-# where client-specific file will be
+# path per client-specific file
 client-config-dir /etc/openvpn/ovpn1/ccd
 
-# tls configuration
+# TLS configuration
 remote-cert-eku "TLS Web Client Authentication"
 tls-version-min 1.2
-# newline(s) are not allowed, used here just for space reason
-tls-cipher TLS-ECDHE-ECDSA-WITH-AES-256-GCM-SHA384:\
-TLS-ECDHE-ECDSA-WITH-CHACHA20-POLY1305-SHA256
+
+tls-cipher TLS-ECDHE-ECDSA-WITH-AES-256-GCM-SHA384:TLS-ECDHE-ECDSA-WITH-CHACHA20-POLY1305-SHA256
 cipher AES-256-GCM
 
 # keys and certs
@@ -72,10 +72,10 @@ ca /etc/openvpn/certs/ca.crt
 key /etc/openvpn/ovpn1/certs/ovpn1.key
 cert /etc/openvpn/ovpn1/certs/ovpn1.crt
 
-# for ECDH
+# per ECDH
 dh none
 
-# reneg keys every 20 minutes
+# nuove chiavi ogni 20 minuti
 reneg-sec 1200
 
 # log configuration
@@ -90,7 +90,7 @@ script-security-level 2
 client-connect /etc/openvpn/ovpn1/cs/client-up.sh
 client-disconnect /etc/openvpn/ovpn1/cs/client-down.sh
 
-# 'ping' options
+# opzioni 'ping'
 keepalive 10 60
 \end{minted}
 Si può notare che non vi è nessuna direttiva ulteriore che non è stata spiegata in
@@ -167,15 +167,13 @@ persist-key
 group nogroup
 user nobody
 
-# tls configuration
+# TLS configuration
 remote-cert-eku "TLS Web Server Authentication"
 tls-version-min 1.2
-# newline(s) are not allowed, used here just for space reason
-tls-cipher TLS-ECDHE-ECDSA-WITH-AES-256-GCM-SHA384:\
-TLS-ECDHE-ECDSA-WITH-CHACHA20-POLY1305-SHA256
+tls-cipher TLS-ECDHE-ECDSA-WITH-AES-256-GCM-SHA384:TLS-ECDHE-ECDSA-WITH-CHACHA20-POLY1305-SHA256
 cipher AES-256-GCM
 
-# keys and certs
+# chiavi e certificati
 ca /etc/openvpn/certs/ca.crt
 key /etc/openvpn/office1/certs/office1.key
 cert /etc/openvpn/office1/certs/office1.crt
