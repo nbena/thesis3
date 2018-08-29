@@ -1,8 +1,8 @@
 # My thesis
 
-Each directory is a chpater, excluding of course `img` and `.vscode`.
+Each directory is a chapter, excluding of course `img` and `.vscode`.
 
-The `Makefile` works fully on Linux, but it should (only) compile well on Windows too by specifying another LaTeX compiler.
+The `Makefile` works fine on Linux, but it should (only) compile well on Windows too specifying another LaTeX compiler.
 
 You can build it running:
 

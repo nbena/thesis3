@@ -1,1 +1,99 @@
 \section{Dettagli}
+
+\subsection{Certificate Management}
+
+\subsection{IP Mapping}
+
+\subsection{Trasferimento file}
+Vi sono diverse situazioni che richiedono il trasferimento di file
+verso i VPN server di MoonCloud.
+\begin{description}
+	\item[Creazione di un nuovo server]Si trasferiscono sul server il file
+	di configurazione principale di OpenVPN, la relativa chiave privata e certificato,
+	la chiave pubblica della CA, la CRL.
+	Vengono trasferiti anche due script:
+	\begin{itemize}
+		\item \texttt{move-files-server.sh}: dopo aver trasferito i file appena elencati
+		      in una cartella sul server, viene lanciato questo script, il quale legge il file
+		      di configurazione principale e da esso deduce la struttura di directory e file
+		      richiesta, e quindi la crea.
+		      Poiché le operazioni che lo script deve compiere non sono poche, si è
+		      preferito scegliere questa strada anziché invocare direttamente $n$ commandi 
+		      lungo la connessione SSH per ridurre l'I/O e quindi aumentare le prestazioni.
+		\item \texttt{deleclient.py}. Quando si revoca un client, esso deve essere
+		      \textit{totalmente eliminato}, ciò si traduce anche nell'eliminare ogni riferimento
+		      ad esso dai file \texttt{client-up.sh} e \texttt{client-down.sh}, quindi eliminare
+		      il corpo degli \texttt{if} all'interno dei due file. Questa operazione viene
+		      svolta direttamente sui server, mediante l'invocazione di questo script.
+		      Analogamente a quanto detto per lo script precedente, e a maggior ragione in questo
+		      caso, eseguire \texttt{deleclient.py} direttamente sul server riduce di molto l'I/O:
+		      se non si fosse scelta questa opzione sarebbe stato necessario trasferire i due file,
+		      modificarli, e di nuovo caricarli sul server.
+	\end{itemize}
+	\item[Creazione di un nuovo client]E' necessario creare un file con lo stesso
+	nome del \texttt{CommonName} presente nel certificato del client, il cui
+	contenuto è la direttiva ``\texttt{iroute}''\footnote{Si rimanda al capitolo dedicato
+	alle configurazioni di OpenVPN.}. Esso deve essere quindi trasferito in una cartella
+	specifica nel VPN server. Oltre a tale file, è necessario modificare gli script
+	\texttt{client-up.sh} e \texttt{client-down.sh}, aggiungendo un nuovo ramo
+	\texttt{if} specifico per questo client.
+	\item[Rinnovo certificato server]L'unico trasferimento da effettuare è il nuovo
+	certificato e chiave pubblica, i quali devono essere spostati nella directory
+	specificata, ancora una volta, nel file di configurazione di OpenVPN nel server.
+	Rimane comunque la necessità di riavviare il server affinché questi cambiamenti abbiano
+	effetto.
+	\item[Rinnovo certificato client]E' necessario revocare il certificato precedente,
+	quindi propagare la nuova CRL ad ogni server di MoonCloud.
+	\item[Revoca certificato client]Similmenete al punto precedente, per ciò che concerne
+	il trasferimento file, l'unica azione da effettuare è propagare la nuova
+	CRL ai VPN server.
+\end{description}
+
+Il trasferimento dei file verso i server è una parte fondamentale del microservizio,
+pertanto deve essere il più possibile robusto.
+Il modo in cui viene effettuato è stato chiamato \textbf{\textit{asynchronous transferring}},
+perché è svolto da un thread specifico a questo scopo, separato dagli altri thread di
+esecuzione, implementato dalla classe \texttt{SSHBackgroundWorker}.
+Il modulo \texttt{controllers} organizza i trasferimenti da effettuare e crea degli
+oggetti (\textit{dizionari} Python) e li mette su una coda condivisa con il thread di
+trasferimento.
+La computazione \texttt{SSHBackgroundWorker} è composta da un loop infinito, dentro
+il quale si estraggono elementi dalla coda: ciascun elemento contiene tutte le informazioni
+che servono per trasferirlo sul server (o sui server) correttamente. I trasferimenti
+quindi sono eseguiti serialmente, nell'ordine con cui sono stati inseriti
+nella coda (\textit{FIFO}).
+Ogni volta che si deposita un nuovo job sulla coda, si riceve un \texttt{WorkID}, il quale,
+a secondo del tipo di job, può essere numerico, oppure alfanumerico. In quest'ultimo
+caso, l'ID è generato in maniera pseudocasuale mediante del materiale
+prelevato dal generatore pseudocasuale del sistema operativo.
+Parallelamente alla coda infatti, \texttt{SSHBackgroundWorker} mantiene anche un \textit{dizionario}
+(detto \texttt{shared\_dict})
+nel quale si mantengono a loro volta dei dizionari, ciascuno con le seguenti informazioni:
+\begin{itemize}
+    \item ID del job
+    \item tipo (es: \textit{trasferimento server}, \textit{rinnovo certificato}, ecc\ldots)
+    \item stato, gli stati possibili sono: \texttt{Completato},\texttt{Pendente},\texttt{In corso},
+    \texttt{Concluso con errore}
+    \item ulteriori informazioni, come una descrizione in caso di errore
+\end{itemize}
+Ogni volta che si inserisce un nuovo lavoro nella coda, si aggiunge un corrispondente oggetto
+nello \texttt{shared\_dict}. L'accesso ad esso è protetto da lock.
+
+Una volta che il job è stato depositato nella coda, si ritorna immediatamente una risposta HTTP
+al chiamante. Il body della risposta conterrà, tra le altre cose, anche il \texttt{WorkID}.
+Il chiamante può quindi fare del \textit{polling} per sapere lo stato di un certo lavoro: dietro
+le quindi si accede allo \texttt{shared\_dict}.
+
+La ragione per cui il trasferimento segue questo paradigma non è prestazionale, bensì è per
+garantire l'integrità dei file sui server.
+Si pensi ad un semplice esempio, per cui si fanno due richieste a questo microservizio nello stesso
+momento, ed entrambe richiedono di aggiungere un nuovo client allo stesso server.
+Si supponga che vi siano due thread, ciascuno che gestisce una delle due risposte. Essi quindi
+accedono al file \texttt{client-down.sh} sul server, lo modificano aggiungendo informazioni
+relative solo al proprio client, quindi il primo thread trasferisce il file, immediatamente dopo
+il secondo trasferisce la propria versione, ed ecco che la modifica fatta dal primo viene
+sovrascritta.
+Un'esecuzione seriale mette al sicuro da questi problemi. Anche con quando il numero di server
+si farà potenzialmente alto, un thread è stato ritenuto sufficiente perché i file trasferiti
+sono sempre testuali e relativamente brevi. L'utilizzo di certificati su curva ellittica
+ha l'effetto di avere anche tali file di dimensioni contenute.
