@@ -1,28 +1,38 @@
 \section{Requisiti}
-Il mio microservizio implementa delle API REST per le seguenti funzionalità:
-\begin{itemize}
-  \item creazione di tutti i file di configurazione e strutture di directory
-  necessarie per creare un nuovo OpenVPN server
-  \item creazione di tutti i file di configurazione necessari per un nuovo client VPN
-  \item creazione di coppie di chiavi e certificati sia per server sia per client VPN
-  \item gestione dell'IP mapping:
+Il microservizio implementa delle API REST per le seguenti funzionalità:
+\begin{description}
+  \item[Configurazione VPN server]Creazione di tutti i file di configurazione
+  necessari ad OpenVPN server per funzionare.
+  \item[Configurazione device client]Creazione di tutti i file richiesti al
+  device VPN client, compresi quelli necessari ad OpenVPN ed il file per nftables.
+  \item[Gestione dei certificati]Client e server hanno bisogno di certificati
+  X509 per poter stabilire un collegamento VPN. E' richiesto di creare tali
+  certificati, sia per client sia per server, e di gestirne il loro ciclo di vita,
+  compreso di rinnovo ed eventuale revoca.
+  \item[Trasferimento file]Una volta che file di configurazione e certificati
+  sono stati creati, devono essere trasferiti sul VPN server in maniera \textit{sicura}.
+  Allo stesso modo, ogni volta che si crea un nuovo client, occorre aggiornare
+  la configurazione del server a cui si connetterà (si pensi ai file \texttt{client-up.sh}
+  e \texttt{client-down.sh}). Questo trasferimento deve inoltre preservare l'integrità
+  della configurazione del server.
+  \item[Visualizzare informazioni]Devono essere disponbili delle API che ritornino informazioni
+  su specifici client e server, incluse anche informazioni sui certificati.
+  \item[Gestione dell'IP mapping]Questa attività si scompone in:
   \begin{itemize}
     \item ogni volta che si crea un nuovo client VPN, allocare ad esso $n$ reti mappate
-    univoche
-    \item implementazione di una API che dato un indirizzo IP originale restituisca
-    l'indirizzo IP mappato
-    \item gestione di blacklist di indirizzi IP, reti, nomi di dominio che non
-    possono essere assegnati a reti mappate
+    univoche per il server al quale esso si collegherà
+    \item dato un indirizzo IP originale di un certo client, ritornare l'IP mappato
+    \item \textit{Blacklisting}: deve essere possibile specificare che alcuni indirizzi
+    IP (indirizzi di host o indirizzi di rete) o nomi di dominio\footnote{Si intende
+    l'indirizzo IP corrispondente a tale nome di dominio.} non devono essere mai assegnati
+    a reti mappate.
   \end{itemize}
-  \item trasferimento dei file necessari ai server VPN
-  \item revoca dei client, essa riguarda:
-  \begin{itemize}
-    \item cancellazione del mapping, se si richiede l'IP mappato per tale client
-    l'API dovrà rispondere che non vi sono mappaggi disponibili
-    \item revoca del certificato propagata a tutti i VPN server: se tale client
-    provasse a connettersi in VPN i server rifiuterebbero la connessione
-  \end{itemize}
-\end{itemize}
+  \item[Revocare client]Per vari ragioni, deve essere necessario poter revocare un
+  client. Questa attività si traduce nell'invalidare il certificato ad esso relativo
+  ed alla cancellazione del mappaggio dal database.
+  La revoca deve essere propagata ad ogni server in modo che esso non riesca per nessun
+  motivo a connettersi nuovamente alla VPN di MoonCloud.
+\end{description}
 
 Attualmente, l'intero deployment del mio microservizio si compone di un container
 su cui è in esecuzione Django, cioè il server web che espone le API REST, e
@@ -34,6 +44,15 @@ difficile poiché ho cercato di mantenere il più possibile separate ed independ
 tra loro le singole componenti (\textit{Low Coupling}).
 
 \section{Architettura}
+Il microservizio è composto da diversi moduli, ciascuno dei quali ben
+specializzato per una certa funzionalità, ad esempio: creazione file di configurazione
+server, creazione file per nftables, trasferimento file, ecc\ldots
+Il modulo \texttt{controllers.py}  definisce
+una serie di funzioni che, tramite \texttt{views.py} risponde direttamente alle
+chiamate alle API del servizio. Si cura di chiamare i metodi delle classi di tutti
+gli altri moduli.
+La figura \ref{fig:microservice-archi} mostra in maniera grafica i diversi di cui
+si compone il microservizio, i quali sono descritti in maggior dettaglio di seguito.
 
 %\subsection{Singole componenti}
 
