@@ -37,22 +37,24 @@ ovpn_files += $(ovpn_directory)/05_recap.tex
 ovpn_files += $(ovpn_directory)/06_ending.tex
 ovpn_files += $(ovpn_directory)/07_test.tex
 
-microservice_files := $(microservice_directory)/index.tex
-microservice_files += $(microservice_directory)/01_req.tex
+nftables_files := $(nftables_directory)/index.tex
+nftables_files += $(nftables_directory)/01_intro.tex
+nftables_files += $(nftables_directory)/02_critics.tex
+nftables_files += $(nftables_directory)/03_nftables.tex
+nftables_files += $(nftables_directory)/04_how_used.tex
 
 security_files := $(security_directory)/index.tex
 security_files += $(security_directory)/01_openvpn_proto.tex
 security_files += $(security_directory)/02_openvpn_conf.tex
 security_files += $(security_directory)/03_openvpn_unused.tex
 security_files += $(security_directory)/04_firewall_rules.tex
-
 security_files += $(security_directory)/05_attacks.tex
 
-nftables_files := $(nftables_directory)/index.tex
-nftables_files += $(nftables_directory)/01_intro.tex
-nftables_files += $(nftables_directory)/02_critics.tex
-nftables_files += $(nftables_directory)/03_nftables.tex
-nftables_files += $(nftables_directory)/04_how_used.tex
+microservice_files := $(microservice_directory)/index.tex
+microservice_files += $(microservice_directory)/01_req.tex
+microservice_files += $(microservice_directory)/02_archi.tex
+microservice_files += $(microservice_directory)/03_details.tex
+microservice_files += $(microservice_directory)/04_api.tex
 
 bib_file = bib.tex
 
