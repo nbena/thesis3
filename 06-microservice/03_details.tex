@@ -1,14 +1,54 @@
 \section{Dettagli}
 
 \subsection{Certificate Management}
-L'esempio di codice mostrato di seguito è una versione leggermente modificata del codice reale,
-e mostra come si crea un certificato ed una CRL vuota (metodo
+Requisiti fondamentale per il funzionamento di OpenVPN è che il client e server dispongano
+di certificati X509 firmati da una stessa CA.
+A tale scopo, si dispone di una CA interna, la cui chiave pubblica e privata è deployata
+assieme a questo servizio\footnote{In futuro si potrebbero maggiori di protezione per la
+chiave privata, oltre alla protezione \textit{fisica} (es: regole di firewall) dell'accesso
+al servizio.}. Attualmente il certificato è self-signed, in futuro potrebbe non essere così.
+
+OpenVPN richiede, sia per client sia per server, che siano settati alcuni attributi
+specifici nei certificati, da cui poi derivano le direttive
+``\texttt{remote-cert-eku "TLS Web Server/Client
+Authentication"}''. Ogni certificato ha un seriale univoco, il quale viene generato
+in maniera pseudocasuale usando una funzione preposta dalla libreria che viene
+utilizzata.
+
+Il microservizio mantiene anche una CRL -- \textit{Certificate Revocation List}, la quale
+contiene l'elenco dei seriali dei certificati revocati, la ragione (nel cui caso è ``\texttt{unspecified}''),
+ed è firmata digitalmente dalla chiave privata della CA.\\
+Ogni volta che si revoca un nuovo client, occorre creare una nuova CRL inserendo tutti i
+precedenti certificati revocati aggiungendo quello nuovo. La CRL deve poi essere distribuita 
+a tutti i server, ma questo è compito di un altro modulo.
+
+I certificati sono generati utilizzando l'algoritmo \texttt{ECDSA}, con livello di sicurezza
+128 bit per client e server. Secondo le raccomandazioni del NIST, un livello di sicurezza di
+128 è sicuro fino al 2030 \ref{add fucking ref}. Si può passare senza
+problemi ad un livello di sicurezza maggiore (192 o 256), semplicemente modificando i settaggi
+del microservizio.
+
+Per il certificato della CA, si utilizza invece una curva ellittica con livello di sicurezza
+di 256.
+
+
+Tutto il codice per la gestione di queste funzionalità è implementato nel modulo \texttt{openssl}
+mediante il file \texttt{openssl.py}, di cui di seguito si mostra un estratto leggermente
+modificato.
+Si può vedere come si crea un certificato ed una CRL vuota (metodo
 ``\texttt{create\_empty\_crl}'', per la quale vi
 si aggiunge un certificato fake il cui numero seriale vale 1.
 Il tipo di certificato (client o server), dipende dai parametri con cui si chiama il metodo
 ``\texttt{create\_keys\_and\_cert}''.
 Alcuni metodi sono omessi per brevità, tra essi il costruttore.
 \begin{minted}{python}
+import cryptography.hazmat.backends as backends
+import cryptography.hazmat.primitives.asymmetric.ec as ec
+import cryptography.hazmat.primitives.hashes as hashes
+import cryptography.hazmat.primitives.serialization as serialization
+import cryptography.x509 as x509
+
+
 class OpenSSL(object):
 
     def __get_ca_private_key(self):
