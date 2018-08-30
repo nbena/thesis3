@@ -5,7 +5,7 @@ Requisiti fondamentale per il funzionamento di OpenVPN è che il client e server
 di certificati X509 firmati da una stessa CA.
 A tale scopo, si dispone di una CA interna, la cui chiave pubblica e privata è deployata
 assieme a questo servizio\footnote{In futuro si potrebbero maggiori di protezione per la
-chiave privata, oltre alla protezione \textit{fisica} (es: regole di firewall) dell'accesso
+	chiave privata, oltre alla protezione \textit{fisica} (es: regole di firewall) dell'accesso
 al servizio.}. Attualmente il certificato è self-signed, in futuro potrebbe non essere così.
 
 OpenVPN richiede, sia per client sia per server, che siano settati alcuni attributi
@@ -42,249 +42,330 @@ Il tipo di certificato (client o server), dipende dai parametri con cui si chiam
 ``\texttt{create\_keys\_and\_cert}''.
 Alcuni metodi sono omessi per brevità, tra essi il costruttore.
 \begin{minted}{python}
-import cryptography.hazmat.backends as backends
-import cryptography.hazmat.primitives.asymmetric.ec as ec
-import cryptography.hazmat.primitives.hashes as hashes
-import cryptography.hazmat.primitives.serialization as serialization
-import cryptography.x509 as x509
-
-
-class OpenSSL(object):
-
-    def __get_ca_private_key(self):
-        if self.__root_ca_key_path is None:
-            raise Exception('You should have provided the ca\'s key')
-
-        ca_priv_key_file = open(self.__root_ca_key_path, 'rb')
-
-        ca_private_key = serialization.load_pem_private_key(
-            data=ca_priv_key_file.read(),
-            backend=backends.default_backend(),
-            password=None,
-        )
-
-        ca_priv_key_file.close()
-        return ca_private_key
-
-
-    def _get_revoked(self, serial):
-        return x509.RevokedCertificateBuilder(
-        ).serial_number(
-            int(serial)
-        ).revocation_date(
-            datetime.datetime.today()
-        ).add_extension(
-            x509.CRLReason(x509.ReasonFlags.unspecified),
-            critical=False
-        ).build(backend=backends.default_backend())
-
-
-    def _get_crl_builder(self, issuer_name, crl_number, last_update):
-        return x509.CertificateRevocationListBuilder(
-        ).issuer_name(
-            issuer_name
-        ).last_update(
-            last_update
-        ).next_update(
-            last_update + self.NEXT_UPDATE
-        ).add_extension(
-            x509.CRLNumber(crl_number),
-            critical=False
-        )    
-
-
-    def create_empty_crl(self):
-        """
-        Generates a certification revocation list (CRL) with
-        a single revoked cert with serial = 1.
-
-        :rtype  str the path to the CRL.
-        """
-
-        cert = self.__get_ca_cert()
-        if self.__crl_path is None or self.__crl_path == '':
-            self.__crl_path = os.path.abspath(os.path.join(
-                self.__directory, 'crl.pem'))
-
-        crl_builder = self._get_crl_builder(
-            issuer_name=cert.issuer,
-            crl_number=1,
-            last_update=datetime.datetime.today()
-        )
-
-        revoked = self._get_revoked(1)
-        crl_builder = crl_builder.add_revoked_certificate(revoked)
-
-        crl = crl_builder.sign(
-            private_key=self.__get_ca_private_key(),
-            algorithm=hashes.SHA512(),
-            backend=backends.default_backend()
-        )
-
-        self.__write_public_bytes(self.__crl_path, crl)
-        return self.__crl_path
-
-    def _basic_cert_setup(self, data, cert_type, serial=None):
-        """
-        Does a basic setup for the certificate.
-
-        -   deciding which curve to use
-        -   settings all of the attributes of the cert
-        -   generate a serial if it's not given
-
-        :rtype  tuple:
-            -   tuple[0]    private_key
-            -   tuple[1]    public_key
-            -   tuple[2]    str serial
-            -   tuple[3]    x509.CertificateBuilder the cert builder
-            -   tuple[4]    datetime.datetime   issuing date
-            -   tuple[4]    datetime.datetime   expiration date
-        """
-        common_name = data['CommonName']
-        days = data.get('Days', 365)
-        email = data['Email']
-        organization_name = data['OrganizationName']
-
-        self.__current_security_level =\
-            self.__get_current_security_level(cert_type)
-
-        curve, curve_str =\
-            self.__get_curve(self.__current_security_level)
-
-        self.__curve = curve_str
-
-        private_key, public_key = self.__gen_keys_pair(curve)
-
-        cert_attributes = x509.Name([
-            x509.NameAttribute(x509.oid.NameOID.COUNTRY_NAME, 'IT'),
-            x509.NameAttribute(x509.oid.NameOID.ORGANIZATION_NAME,
-                               organization_name),
-            x509.NameAttribute(x509.oid.NameOID.COMMON_NAME,
-                               common_name),
-            x509.NameAttribute(x509.oid.NameOID.EMAIL_ADDRESS,
-                               email),
-        ])
-
-        if serial is None:
-            serial = gen_random_serial()
-
-        issuing_date = datetime.datetime.now(datetime.timezone.utc)
-        expiration_date = issuing_date + datetime.timedelta(days=days)
-
-        builder = x509.CertificateBuilder(
-        ).subject_name(
-            cert_attributes
-        ).not_valid_before(
-            issuing_date
-        ).not_valid_after(
-            expiration_date
-        ).public_key(
-            public_key
-        ).serial_number(
-            serial
-        )
-
-        return (private_key, public_key, serial, builder,
-                issuing_date, expiration_date)        
-
-    def __gen_keys_pair(self, curve):
-        private_key = ec.generate_private_key(
-            curve=curve,
-            backend=backends.default_backend())
-        public_key = private_key.public_key()
-
-    def create_keys_and_cert(self, data, cert_type, serial=None):
-        """
-        Does the following:
-        -   generates a key pair using ECDSA
-        -   generates a certificate for that public key
-        -   save to two files the certificate and the private key
-
-        :param  data    dict, keys:
-            -   `CommonName`   str the `CommonName` to insert into
-                the cert
-            -   `Email` str the `email` to insert into the cert
-            -   `Days`  int the days for which the cert is valid
-                starting from now
-            -   `OrganizationName`  str the `OrganizationName` to
-                insert into the cert
-        :param  cert_type   enum of `CertType`
-        :param  serial  str the optional serial to insert into the
-                certificate.
-                If `None`, a brand new one is generated using
-                randomness.
-
-        :note   `serial`, if is not `None`, should be pseudorandom.
-
-        :rtype  tuple, as follows:
-            -   tuple[0] = (path-to-cert, path-to-privkey-file)
-            -   tuple[1] = (serial, issuing date, expiration date)
-
-        :raises ValueError if `serial == 1`
-        """
-
-        if serial is not None and (serial == 1 or serial == '1'):
-            raise ValueError('serial cant be = 1')
-
-        truncated_name = utils.get_truncated_name(data['CommonName'])
-
-        self.__key_file_name = os.path.abspath(os.path.join(
-            self.__directory, truncated_name+'.key'))
-
-        self.__cert_file_name = os.path.abspath(os.path.join(
-            self.__directory, truncated_name+'.crt'))
-
-        result = self._basic_cert_setup(data, cert_type, serial)
-
-        private_key = result[0]
-        # public_key = result[1]
-        serial = result[2]
-        cert_builder = result[3]
-        issuing_date = result[4]
-        expiration_date = result[5]
-
-        extensions = None
-        if cert_type == CertType.server:
-            extensions = x509.ExtendedKeyUsage(
-                [x509.oid.ExtendedKeyUsageOID.SERVER_AUTH])
-        elif cert_type == CertType.client:
-            extensions = x509.ExtendedKeyUsage(
-                [x509.oid.ExtendedKeyUsageOID.CLIENT_AUTH])
-
-        cert_builder = cert_builder.add_extension(extensions,
-            critical=False)
-
-        ca_private_key = self.__get_ca_private_key()
-        ca_cert = self.__get_ca_cert()
-
-        cert_builder = cert_builder.issuer_name(
-            ca_cert.subject)
-
-        cert = cert_builder.sign(private_key=ca_private_key,
-                                 algorithm=hashes.SHA512(),
-                                 backend=backends.default_backend())
-
-        ca_private_key = None
-
-        private_key_output = open(self.__key_file_name, 'wb')
-        private_key_output.write(private_key.private_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.TraditionalOpenSSL,
-            encryption_algorithm=serialization.NoEncryption()
-        ))
-        private_key_output.close()
-        private_key = None
-
-        self.__write_public_bytes(self.__cert_file_name, cert)
-
-        return (self.__cert_file_name,
-                self.__key_file_name), (serial,
-                                        issuing_date,
-                                        expiration_date)
+	import cryptography.hazmat.backends as backends
+	import cryptography.hazmat.primitives.asymmetric.ec as ec
+	import cryptography.hazmat.primitives.hashes as hashes
+	import cryptography.hazmat.primitives.serialization as serialization
+	import cryptography.x509 as x509
+	
+	
+	class OpenSSL(object):
+	
+	def __get_ca_private_key(self):
+	if self.__root_ca_key_path is None:
+	raise Exception('You should have provided the ca\'s key')
+	
+	ca_priv_key_file = open(self.__root_ca_key_path, 'rb')
+	
+	ca_private_key = serialization.load_pem_private_key(
+	data=ca_priv_key_file.read(),
+	backend=backends.default_backend(),
+	password=None,
+	)
+	
+	ca_priv_key_file.close()
+	return ca_private_key
+	
+	
+	def _get_revoked(self, serial):
+	return x509.RevokedCertificateBuilder(
+	).serial_number(
+	int(serial)
+	).revocation_date(
+	datetime.datetime.today()
+	).add_extension(
+	x509.CRLReason(x509.ReasonFlags.unspecified),
+	critical=False
+	).build(backend=backends.default_backend())
+	
+	
+	def _get_crl_builder(self, issuer_name, crl_number, last_update):
+	return x509.CertificateRevocationListBuilder(
+	).issuer_name(
+	issuer_name
+	).last_update(
+	last_update
+	).next_update(
+	last_update + self.NEXT_UPDATE
+	).add_extension(
+	x509.CRLNumber(crl_number),
+	critical=False
+	)    
+	
+	
+	def create_empty_crl(self):
+	"""
+	Generates a certification revocation list (CRL) with
+	a single revoked cert with serial = 1.
+	
+	:rtype  str the path to the CRL.
+	"""
+	
+	cert = self.__get_ca_cert()
+	if self.__crl_path is None or self.__crl_path == '':
+	self.__crl_path = os.path.abspath(os.path.join(
+	self.__directory, 'crl.pem'))
+	
+	crl_builder = self._get_crl_builder(
+	issuer_name=cert.issuer,
+	crl_number=1,
+	last_update=datetime.datetime.today()
+	)
+	
+	revoked = self._get_revoked(1)
+	crl_builder = crl_builder.add_revoked_certificate(revoked)
+	
+	crl = crl_builder.sign(
+	private_key=self.__get_ca_private_key(),
+	algorithm=hashes.SHA512(),
+	backend=backends.default_backend()
+	)
+	
+	self.__write_public_bytes(self.__crl_path, crl)
+	return self.__crl_path
+	
+	def _basic_cert_setup(self, data, cert_type, serial=None):
+	"""
+	Does a basic setup for the certificate.
+	
+	-   deciding which curve to use
+	-   settings all of the attributes of the cert
+	-   generate a serial if it's not given
+	
+	:rtype  tuple:
+	-   tuple[0]    private_key
+	-   tuple[1]    public_key
+	-   tuple[2]    str serial
+	-   tuple[3]    x509.CertificateBuilder the cert builder
+	-   tuple[4]    datetime.datetime   issuing date
+	-   tuple[4]    datetime.datetime   expiration date
+	"""
+	common_name = data['CommonName']
+	days = data.get('Days', 365)
+	email = data['Email']
+	organization_name = data['OrganizationName']
+	
+	self.__current_security_level =\
+	self.__get_current_security_level(cert_type)
+	
+	curve, curve_str =\
+	self.__get_curve(self.__current_security_level)
+	
+	self.__curve = curve_str
+	
+	private_key, public_key = self.__gen_keys_pair(curve)
+	
+	cert_attributes = x509.Name([
+		x509.NameAttribute(x509.oid.NameOID.COUNTRY_NAME, 'IT'),
+		x509.NameAttribute(x509.oid.NameOID.ORGANIZATION_NAME,
+		organization_name),
+		x509.NameAttribute(x509.oid.NameOID.COMMON_NAME,
+		common_name),
+		x509.NameAttribute(x509.oid.NameOID.EMAIL_ADDRESS,
+		email),
+	])
+	
+	if serial is None:
+	serial = gen_random_serial()
+	
+	issuing_date = datetime.datetime.now(datetime.timezone.utc)
+	expiration_date = issuing_date + datetime.timedelta(days=days)
+	
+	builder = x509.CertificateBuilder(
+	).subject_name(
+	cert_attributes
+	).not_valid_before(
+	issuing_date
+	).not_valid_after(
+	expiration_date
+	).public_key(
+	public_key
+	).serial_number(
+	serial
+	)
+	
+	return (private_key, public_key, serial, builder,
+	issuing_date, expiration_date)        
+	
+	def __gen_keys_pair(self, curve):
+	private_key = ec.generate_private_key(
+	curve=curve,
+	backend=backends.default_backend())
+	public_key = private_key.public_key()
+	
+	def create_keys_and_cert(self, data, cert_type, serial=None):
+	"""
+	Does the following:
+	-   generates a key pair using ECDSA
+	-   generates a certificate for that public key
+	-   save to two files the certificate and the private key
+	
+	:param  data    dict, keys:
+	-   `CommonName`   str the `CommonName` to insert into
+	the cert
+	-   `Email` str the `email` to insert into the cert
+	-   `Days`  int the days for which the cert is valid
+	starting from now
+	-   `OrganizationName`  str the `OrganizationName` to
+	insert into the cert
+	:param  cert_type   enum of `CertType`
+	:param  serial  str the optional serial to insert into the
+	certificate.
+	If `None`, a brand new one is generated using
+	randomness.
+	
+	:note   `serial`, if is not `None`, should be pseudorandom.
+	
+	:rtype  tuple, as follows:
+	-   tuple[0] = (path-to-cert, path-to-privkey-file)
+	-   tuple[1] = (serial, issuing date, expiration date)
+	
+	:raises ValueError if `serial == 1`
+	"""
+	
+	if serial is not None and (serial == 1 or serial == '1'):
+	raise ValueError('serial cant be = 1')
+	
+	truncated_name = utils.get_truncated_name(data['CommonName'])
+	
+	self.__key_file_name = os.path.abspath(os.path.join(
+	self.__directory, truncated_name+'.key'))
+	
+	self.__cert_file_name = os.path.abspath(os.path.join(
+	self.__directory, truncated_name+'.crt'))
+	
+	result = self._basic_cert_setup(data, cert_type, serial)
+	
+	private_key = result[0]
+	# public_key = result[1]
+	serial = result[2]
+	cert_builder = result[3]
+	issuing_date = result[4]
+	expiration_date = result[5]
+	
+	extensions = None
+	if cert_type == CertType.server:
+	extensions = x509.ExtendedKeyUsage(
+	[x509.oid.ExtendedKeyUsageOID.SERVER_AUTH])
+	elif cert_type == CertType.client:
+	extensions = x509.ExtendedKeyUsage(
+	[x509.oid.ExtendedKeyUsageOID.CLIENT_AUTH])
+	
+	cert_builder = cert_builder.add_extension(extensions,
+	critical=False)
+	
+	ca_private_key = self.__get_ca_private_key()
+	ca_cert = self.__get_ca_cert()
+	
+	cert_builder = cert_builder.issuer_name(
+	ca_cert.subject)
+	
+	cert = cert_builder.sign(private_key=ca_private_key,
+	algorithm=hashes.SHA512(),
+	backend=backends.default_backend())
+	
+	ca_private_key = None
+	
+	private_key_output = open(self.__key_file_name, 'wb')
+	private_key_output.write(private_key.private_bytes(
+	encoding=serialization.Encoding.PEM,
+	format=serialization.PrivateFormat.TraditionalOpenSSL,
+	encryption_algorithm=serialization.NoEncryption()
+	))
+	private_key_output.close()
+	private_key = None
+	
+	self.__write_public_bytes(self.__cert_file_name, cert)
+	
+	return (self.__cert_file_name,
+	self.__key_file_name), (serial,
+	issuing_date,
+	expiration_date)
 \end{minted}
 
 
 \subsection{IP Mapping}
+L'IP mapping è una funzionalità fondamentale per poter far sì che un VPN server possa
+gestire il maggior numero di reti target diverse.
+Durante l'analisi dei requisiti è stato osservato che
+gli Execution Manager dedicati all'analisi di reti target sono posti
+ciascuno in una rete isolata rispetto al resto di MoonCloud, ciò ha portato
+alle seguenti osservazioni:
+\begin{itemize}
+	\item è possibile assegnare più volte la stessa rete mappata a diversi client,
+	      a patto che siano collegati a VPN server diversi, e quindi Execution Manager.
+	\item è possibile assegnare \textit{qualsiasi} indirizzo IP, non solo quell
+	      indicati come \textit{privati}, questo perché tali indirizzi sono utilizzati
+	      sono nel contesto degli Execution Manager. Per evitare eventuali conflitti,
+	      come ad esempio assegnare una rete mappata che contiene l'indirizzo IP
+	      di una repository Linux, deve essere possibile poter escludere degli indirizzi,
+	      reti, nomi di dominio.
+\end{itemize}
+
+\subsubsection{Assegnamento reti}
+Il grafico \ref{fig:ip-mapping-sequence} rappresenta, mediante la notazione UML per
+i diagrammi di sequenza, quali azioni sono svolte per l'assegnamento delle reti, che
+qui viene descritto a parole.
+\begin{enumerate}
+	\item Per ciascuna rete in input da mappare, si crea un corrispondente oggetto (detto
+	      ``\textit{rete canonica}'') che
+	      ha come subnet mask una subnet mask \textit{classful} in grado di contenere tutti
+	      gli indirizzi della rete in input. Ad esempio, se in input vi è una rete con subnet
+	      mask a 26 bit, il corrispettivo oggetto è una rete con lo stesso NET ID e con
+	      subnet mask a 24 bit.
+	\item Si raggruppano tutte le reti canoniche per subnet mask.
+	\item Per ciascun gruppo, si richiede al databse un numero di reti mappate pari
+	      al numero di reti che costituiscono ciascun gruppo.
+	\item Si utilizza una funzione
+	      (il DBMS PostgreSQL consente di farlo) salvata nel database per questa operazione,
+	      poiché si devono effettuare numerose query. Facendo tutto con una funzione nel database,
+	      si richiede meno I/O. La funzione garantisce che le reti mappate che vengono
+	      infine ritornate non siano nella blacklist. Si noti che grazie ai tipi di dati
+	      \texttt{INET}  e \texttt{CIDR}, certe interrogazioni sono molto efficienti
+	      (ad esempio esiste un operatore per valutare se un indirizzo IP è contenuto in una
+	      rete).
+	\item Si \textit{allineano} le reti in input con le reti mappate, e le si salvano
+	      nel database.
+	\item Si effettua un secondo allineamento tra le reti mappate e quelli in input,
+	      ritornando infine una lista di oggetti che contengono tutte le informazioni
+	      per creare il file di script per nftables.
+\end{enumerate}
+Si noti che nel database si salvano, di fatto, delle coppie \texttt{Rete Originale -- Rete Mappata}.
+Si può vedere un indirizzo IP originale nel come l'offset tra esso e il NET ID, ed
+allo steso modo, il corrispondente indirizzo mappato si calcola sommando l'offset dell'IP
+originale al NET ID mappato.
+
+\subsubsection{Ritornare indirizzo IP mappato}
+Quando un client specifica un target per un'analisi, egli lo fà inserendo l'indirizzo
+IP originale, per lui la questione dell'IP mapping è completamente trasparente. Ciò
+significa che occorre una funzione che, dato un indirizzo IP originale di un
+certo VPN client, ritorni quello mappato, poiché esso è l'unico noto a MoonCloud.
+Tale funzione viene quindi implementata dal mio microservizio, ed è molto performante.
+I passi da compiere sono:
+\begin{itemize}
+	\item fare una query al database e ritornare la rete mappata cui corrisponde
+	      la rete originale a cui appartiene l'indirizzo IP richiesto in input.
+	      Anche in questo caso si sfruttano gli operatori specifici messi a disposizione
+	      dal DBMS.
+	\item Il corrispondente IP mappato si calcola con i seguenti step:
+	      \begin{itemize}
+	      	\item applicare la subnet mask al NET ID originale ed all'IP originale,
+	      	      la subnet mask è memorizzata nel database.
+	      	\item Applicare la subnet mask al NET ID mappato o al primo indirizzo IP
+	      	      della rete mappata in caso non sia il NET ID (ad esempio: il mapping
+	      	      parte da \texttt{192.168.100.10} anziché \texttt{192.168.100.0}).
+	      	\item Calcolare l'offset dell'indirizzo IP originale sottraendo
+	      	      l'IP originale con la subnet mask applicata al NET ID originale
+	      	      con la subnet mask applicata.
+	      	\item Sommare l'offset all'indirizzo IP mappato di partenza con
+	      	      la subnet mask applicata.
+	      \end{itemize}
+\end{itemize}
+Le operazioni potrebbero essere effettuate anche senza l'applicazione della
+subnet mask, si tenga comunque conto che applicare una subnet mask
+ad indirizzo IP equivale ad un AND logico, quindi un'istruzione in ogni
+caso molto veloce.
+
 
 \subsection{Trasferimento file}
 Vi sono diverse situazioni che richiedono il trasferimento di file
@@ -352,11 +433,11 @@ Parallelamente alla coda infatti, \texttt{SSHBackgroundWorker} mantiene anche un
 (detto \texttt{shared\_dict})
 nel quale si mantengono a loro volta dei dizionari, ciascuno con le seguenti informazioni:
 \begin{itemize}
-    \item ID del job
-    \item tipo (es: \textit{trasferimento server}, \textit{rinnovo certificato}, ecc\ldots)
-    \item stato, gli stati possibili sono: \texttt{Completato},\texttt{Pendente},\texttt{In corso},
-    \texttt{Concluso con errore}
-    \item ulteriori informazioni, come una descrizione in caso di errore
+	\item ID del job
+	\item tipo (es: \textit{trasferimento server}, \textit{rinnovo certificato}, ecc\ldots)
+	\item stato, gli stati possibili sono: \texttt{Completato},\texttt{Pendente},\texttt{In corso},
+	      \texttt{Concluso con errore}
+	\item ulteriori informazioni, come una descrizione in caso di errore
 \end{itemize}
 Ogni volta che si inserisce un nuovo lavoro nella coda, si aggiunge un corrispondente oggetto
 nello \texttt{shared\_dict}. L'accesso ad esso è protetto da lock.
