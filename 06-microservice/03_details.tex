@@ -65,6 +65,14 @@ Alcuni metodi sono omessi per brevità, tra essi il costruttore.
 \inputminted[tabsize=4]{python}{code_samples/openssl.py}
 
 
+Nel database si memorizzano anche informazioni relative ai certificati, come il
+\texttt{CommonName}, il seriale. Questa tabella è quindi referenziata dalla relativa
+tabella che rappresenta i VPN server ed i VPN device client.
+
+Si mantiene anche un tabella con informazioni relative alla CRL, come la data di ultima
+modifica.
+
+
 \subsection{IP Mapping}
 L'IP mapping è una funzionalità fondamentale per poter far sì che un VPN server possa
 gestire il maggior numero di reti target diverse.
@@ -157,7 +165,8 @@ Vi sono diverse situazioni che richiedono il trasferimento di file
 verso i VPN server di MoonCloud. Qualsiasi sia il caso, esso viene effettuato
 lungo il protocollo SSH, mediante il quale si possono sia inviare comandi remoti
 o trasferire file con il sottosistema SCP -- Secure File Copy. Si sfruttano
-delle librerie Python a tale scopo.
+delle librerie Python a tale scopo. L'autenticazione viene fatta mediante chiave
+pubblica.
 Il trasferimento è richiesto nelle seguenti situazioni:
 \begin{description}
 	\item[Creazione di un nuovo server]Si trasferiscono sul server il file
@@ -249,3 +258,21 @@ Un'esecuzione seriale mette al sicuro da questi problemi. Anche con quando il nu
 si farà potenzialmente alto, un thread è stato ritenuto sufficiente perché i file trasferiti
 sono sempre testuali e relativamente brevi. L'utilizzo di certificati su curva ellittica
 ha l'effetto di avere anche tali file di dimensioni contenute.
+
+
+\subsection{Registrazione server}
+Registare un nuovo server significa che è stata già deployata in MoonCloud una VM dedicata
+esclusivamente ad essere un VPN server, ed esso è raggiungibile anche dal Docker container su
+cui si trova il microservizio \texttt{MoonCloud\_VPN}.
+Viene messa a disposizione una API per questo scopo; i passi per creare un server sono:
+\begin{enumerate}
+    \item verificare che la chiave SSH fornita sia valida
+    \item creare una nuova istanza nel database per il nuovo server
+    \item creare i certificati ed i file di configurazione
+    \item registrare nel database le informazioni relative al nuovo certificato
+    \item mettere sulla coda di trasferimento un nuovo job, ovvero quello di
+    trasferire sul nuovo server tutti i file necessari.
+\end{enumerate}
+L'estratto di codice che si presenta ora è una versione leggermente modificata di ciò che
+\texttt{controllers} fà.
+\inputminted[tabsize=4, breaklines]{python}{code_samples/controllers_create_server.py}

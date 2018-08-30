@@ -59,6 +59,7 @@ microservice_files += $(microservice_directory)/04_api.tex
 
 code_files += $(code_samples_directory)/openssl.py
 code_files += $(code_samples_directory)/nftables.py
+code_files += $(code_samples_directory)/controllers_create_server.py
 
 bib_file = bib.tex
 
