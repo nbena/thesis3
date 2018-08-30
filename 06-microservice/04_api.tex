@@ -1,5 +1,165 @@
 \section{API}
-Questa sezione provvede a dare una rapida overview delle principali API REST
-esposte. Per questioni di spazio, vengono riportate solo le API più importanti,
-e di ciascuna si dà una breve descrizione (questo documento \textit{non} è
-la documetazione per \texttt{MoonCloud\_VPN}).
+In questa sezione si descrivono le API REST messe a disposizione da \texttt{MoonCloud\_VPN}.
+
+\begin{description}
+    \item[Creazione server]\texttt{POST /server}
+    \begin{itemize}
+        \item Descrizione
+        \item Input
+        \item Output
+    \end{itemize}
+
+    \item[Stato creazione server]\texttt{GET /server/creation/work-id>}
+    \begin{itemize}
+        \item Descrizione
+        \item Input
+        \item Output
+    \end{itemize}
+
+    \item[Dettagli server]\texttt{GET /server/<server-id>}
+    \begin{itemize}
+        \item Descrizione
+        \item Input
+        \item Output
+    \end{itemize}
+
+    \item[Rinnovo certificato server]\texttt{PUT /server/<server-id>/renew}
+    \begin{itemize}
+        \item Descrizione
+        \item Input
+        \item Output
+    \end{itemize}
+
+    \item[Stato rinnovo certificato server]\texttt{GET /server/renew/<work-id>}
+    \begin{itemize}
+        \item Descrizione
+        \item Input
+        \item Output
+    \end{itemize}
+
+    \item[Creazione client]\texttt{POST /client}
+    \begin{itemize}
+        \item Descrizione
+        \item Input
+        \item Output
+    \end{itemize}
+
+    \item[Stato creazione client]\texttt{GET /client/creation/work-id>}
+    \begin{itemize}
+        \item Descrizione
+        \item Input
+        \item Output
+    \end{itemize}
+
+    \item[Dettagli client]\texttt{GET /client/<client-id>}
+    \begin{itemize}
+        \item Descrizione
+        \item Input
+        \item Output
+    \end{itemize}
+
+    \item[Rinnovo certificato client]\texttt{PUT /client/<client-id>/renew}
+    \begin{itemize}
+        \item Descrizione
+        \item Input
+        \item Output
+    \end{itemize}
+
+    \item[Stato rinnovo certificato client]\texttt{GET /client/renew/<work-id>}
+    \begin{itemize}
+        \item Descrizione
+        \item Input
+        \item Output
+    \end{itemize}
+
+    \item[Revoca client]\texttt{DELETE /client/<client-id>/}
+    \begin{itemize}
+        \item Descrizione
+        \item Input
+        \item Output
+    \end{itemize}
+
+    \item[Stato revoca client]\texttt{GET /revocation/<work-id>}
+    \begin{itemize}
+        \item Descrizione
+        \item Input
+        \item Output
+    \end{itemize}
+
+    \item[Aggiunta di un'esclusione]\texttt{POST /blacklist/add}
+    \begin{itemize}
+        \item Descrizione
+        \item Input
+        \item Output
+    \end{itemize}
+
+    \item[Elenco blacklist]\texttt{GET /blacklist/all}
+    \begin{itemize}
+        \item Descrizione
+        \item Input
+        \item Output
+    \end{itemize}
+
+    \item[Aggiornare blacklist]\texttt{PUT /blacklist/update}
+    \begin{itemize}
+        \item Descrizione
+        \item Input
+        \item Output
+    \end{itemize}
+
+    \item[Vedere specifiche esclusioni]\texttt{GET /blacklist/dns/internal|external|all}
+    \begin{itemize}
+        \item Descrizione
+        \item Input
+        \item Output
+    \end{itemize}
+
+    \item[Dettagli esclusione]\texttt{GET /blacklist/<blacklist-id>}
+    \begin{itemize}
+        \item Descrizione
+        \item Input
+        \item Output
+    \end{itemize}
+
+    \item[Cancellare esclusione]\texttt{DELETE /blacklist/<blacklist-id>}
+    \begin{itemize}
+        \item Descrizione
+        \item Input
+        \item Output
+    \end{itemize}
+
+    \item[Specificare il supporto a ChaCha20]\texttt{PUT /chachasupport/true|false}
+    \begin{itemize}
+        \item Descrizione
+        \item Input
+        \item Output
+    \end{itemize}
+
+    \item[Refresh CRL]\texttt{PUT /crl}
+    \begin{itemize}
+        \item Descrizione
+        \item Input
+        \item Output
+    \end{itemize}
+
+    \item[Ultimi aggiornamenti alla CRL]\texttt{GET /crl}
+    \begin{itemize}
+        \item Descrizione
+        \item Input
+        \item Output
+    \end{itemize}
+
+    \item[Far ripartire un job]\texttt{PUT /<work-id>}
+    \begin{itemize}
+        \item Descrizione
+        \item Input
+        \item Output
+    \end{itemize}
+
+    \item[Elenco job da eseguire]\texttt{GET /all-works}
+    \begin{itemize}
+        \item Descrizione
+        \item Input
+        \item Output
+    \end{itemize}
+\end{description}
