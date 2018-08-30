@@ -14,6 +14,7 @@ nftables_directory := 04-nftables
 security_directory := 05-security
 microservice_directory := 06-microservice
 img_directory := img
+code_samples_directory := code_samples
 
 mooncloud_files := $(mooncloud_directory)/index.tex
 mooncloud_files += $(mooncloud_directory)/01_overview.tex
@@ -56,6 +57,8 @@ microservice_files += $(microservice_directory)/02_archi.tex
 microservice_files += $(microservice_directory)/03_details.tex
 microservice_files += $(microservice_directory)/04_api.tex
 
+code_files += $(code_samples_directory)/openssl.py
+
 bib_file = bib.tex
 
 files := $(mooncloud_files)
@@ -65,6 +68,7 @@ files += $(nftables_files)
 files += $(security_files)
 files += $(microservice_files)
 files += $(bib_file)
+files += $(code_files)
 files += thesis.tex # thesis.pdf
 # need to exclude thesis.pdf because it is a circular dependency,
 # $(deps) is used as a dependency for thesis.pdf
@@ -97,7 +101,7 @@ img_files += $(img_directory)/ip_mapping_recv.pdf
 img_files += $(img_directory)/openvpn_test1.pdf
 img_files += $(img_directory)/openvpn_test2.pdf
 
-aux_files := *.aux
+# aux_files := *.aux
 
 # deps := $(files)
 all_deps := $(files) $(img_files)
@@ -125,12 +129,10 @@ open:
 tarr: $(tar_dest)
 
 clean:
-	# rm -f *.aux
-	rm -f $(aux_files)
+	rm -f *.aux
 	rm -f *.log
 	rm -f *.toc
 	rm -f *.out
 	rm -f *.nav
 	rm -f *.idx
-	rm -rf _minted-thesis
-	# rm -f *.snm
+	rm -f *.pyg
