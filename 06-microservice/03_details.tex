@@ -116,6 +116,10 @@ Si può vedere un indirizzo IP originale nel come l'offset tra esso e il NET ID,
 allo steso modo, il corrispondente indirizzo mappato si calcola sommando l'offset dell'IP
 originale al NET ID mappato.
 
+La creazione del mapping è abbastanza complessa, pertanto si inserisce come codice d'esempio
+la creazione del file di script per nftables, il quale è più breve.
+\inputminted[tabsize=4, breaklines]{python}{code_samples/nftables.py}
+
 \subsubsection{Ritornare indirizzo IP mappato}
 Quando un client specifica un target per un'analisi, egli lo fà inserendo l'indirizzo
 IP originale, per lui la questione dell'IP mapping è completamente trasparente. Ciò
