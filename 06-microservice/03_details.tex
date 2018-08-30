@@ -1,4 +1,25 @@
 \section{Dettagli}
+In questa sezione si affrontano in maniera più dettagliata le principali funzionalità
+offerte dal microservizio. In letteratura vi è un ampio dibattito su quale sia
+l'effettiva dimensione di un microservizio, e di fatto il risultato è che un esso
+dovrebbe fare una cosa ed una soltanto. Si potrebbe quindi dire che questo principio
+non è completamente rispettato in \texttt{MoonCloud\_VPN}. A tale proposito, vanno fatte
+le seguenti osservazioni:
+\begin{itemize}
+    \item il microservizio nella sua interezza non è particolarmente complesso, anche
+    dal punto di vista algoritmico, a parte il trasferimento file ed il mappaggio
+    delle reti il codice è abbastanza semplice. 
+    Si tratta di circa 4000 righe di codice Python, escludendo i test ed ulteriori script,
+    che è una dimensione ragionevole.
+    \item Il microservizio svolge una precisa funzionalità, ovvero gestire tutto ciò
+    che riguarda la configurazione di OpenVPN  per MoonCloud.
+    \item Separare alcune parti, come ad esempio i moduli che si occupano solo di generare
+    file di configurazione, renderebbe le cose più complicate, perché dovrebbero essere
+    comunque trasferiti localmente una prima volta, per poter quindi essere spostati
+    sui server. 
+\end{itemize}
+Queste considerazioni hanno portato a lasciare questo microservizio come un \textit{unico}
+microservizio.
 
 \subsection{Certificate Management}
 Requisiti fondamentale per il funzionamento di OpenVPN è che il client e server dispongano
@@ -369,7 +390,11 @@ caso molto veloce.
 
 \subsection{Trasferimento file}
 Vi sono diverse situazioni che richiedono il trasferimento di file
-verso i VPN server di MoonCloud.
+verso i VPN server di MoonCloud. Qualsiasi sia il caso, esso viene effettuato
+lungo il protocollo SSH, mediante il quale si possono sia inviare comandi remoti
+o trasferire file con il sottosistema SCP -- Secure File Copy. Si sfruttano
+delle librerie Python a tale scopo.
+Il trasferimento è richiesto nelle seguenti situazioni:
 \begin{description}
 	\item[Creazione di un nuovo server]Si trasferiscono sul server il file
 	di configurazione principale di OpenVPN, la relativa chiave privata e certificato,
@@ -383,7 +408,7 @@ verso i VPN server di MoonCloud.
 		      Poiché le operazioni che lo script deve compiere non sono poche, si è
 		      preferito scegliere questa strada anziché invocare direttamente $n$ commandi 
 		      lungo la connessione SSH per ridurre l'I/O e quindi aumentare le prestazioni.
-		\item \texttt{deleclient.py}. Quando si revoca un client, esso deve essere
+		\item \texttt{deleteclient.py}. Quando si revoca un client, esso deve essere
 		      \textit{totalmente eliminato}, ciò si traduce anche nell'eliminare ogni riferimento
 		      ad esso dai file \texttt{client-up.sh} e \texttt{client-down.sh}, quindi eliminare
 		      il corpo degli \texttt{if} all'interno dei due file. Questa operazione viene
