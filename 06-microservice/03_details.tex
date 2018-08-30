@@ -246,6 +246,8 @@ al chiamante. Il body della risposta conterrà, tra le altre cose, anche il \tex
 Il chiamante può quindi fare del \textit{polling} per sapere lo stato di un certo lavoro: dietro
 le quindi si accede allo \texttt{shared\_dict}.
 
+Quando si richiede lo stato di un lavoro ed esso è stato completato, viene rimosso dallo \texttt{shared\_dict}.
+
 La ragione per cui il trasferimento segue questo paradigma non è prestazionale, bensì è per
 garantire l'integrità dei file sui server.
 Si pensi ad un semplice esempio, per cui si fanno due richieste a questo microservizio nello stesso
@@ -255,10 +257,21 @@ accedono al file \texttt{client-down.sh} sul server, lo modificano aggiungendo i
 relative solo al proprio client, quindi il primo thread trasferisce il file, immediatamente dopo
 il secondo trasferisce la propria versione, ed ecco che la modifica fatta dal primo viene
 sovrascritta.
+
+Un altro problema a cui si può pensare è il seguente: si fà una richiesta di revoca di un certificato,
+la CRL viene quindi modificata ed inizia la propagazione verso tutti i server.
+Poi si fà una richiesta di refresh, quindi la si ricrea ed inzila la distribuzione\ldots Qua c'è il
+problema. Se si suppone che in totale vi siano 100 server e che la seconda richiesta sia arrivata
+mentre si concludeva il trasferimento verso il 50esimo, a quel punto si modifica la CRL
+e quella trasferita al 51esimo è diversa dalle precedenti.
+
 Un'esecuzione seriale mette al sicuro da questi problemi. Anche con quando il numero di server
 si farà potenzialmente alto, un thread è stato ritenuto sufficiente perché i file trasferiti
 sono sempre testuali e relativamente brevi. L'utilizzo di certificati su curva ellittica
-ha l'effetto di avere anche tali file di dimensioni contenute.
+ha l'effetto di avere anche tali file di dimensioni contenute. In futuro si può prevedere,
+dopo un accurato studio, di aumentare il numero di thread a disposizione.
+Per ciò che concerne il problema appena descritto relativo alla CRL, la stessa modifica alla CRL
+viene schedulata in maniera seriale, non solo il trasferimento.
 
 
 \subsection{Registrazione server}

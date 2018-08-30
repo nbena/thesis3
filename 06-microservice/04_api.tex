@@ -1,165 +1,304 @@
 \section{API}
 In questa sezione si descrivono le API REST messe a disposizione da \texttt{MoonCloud\_VPN}.
+Input ed output sono descritti senza Specificare l'esatta sintassi, poiché è fuori dallo scopo
+di questo documenti fornire una documentazione delle API. Tutti gli input e gli
+output sono in formato JSON.
 
 \begin{description}
     \item[Creazione server]\texttt{POST /server}
     \begin{itemize}
-        \item Descrizione
-        \item Input
-        \item Output
+        \item Descrizione: mediante questa API si creano tutte le configurazioni necessarie per
+        un nuovo VPN server. Tutti i file che servono vengono trasferiti sul server mediante
+        SSH.
+        \item Input: un oggetto con i seguenti campi:
+        \begin{itemize}
+            \item nome DNS da inserire nel certificato ed ulteriori informazioni (es: per il campo \texttt{Email})
+            \item porta di ascolto OpenVPN
+            \item NET ID e subnet mask del tunnel VPN
+            \item credenziali SSH, compresa la porta di ascolto 
+        \end{itemize}
+        \item Output: l'ID del server assegnato dal database ed il \texttt{WorkID} del lavoro di
+        trasferimento.
     \end{itemize}
 
     \item[Stato creazione server]\texttt{GET /server/creation/work-id>}
     \begin{itemize}
-        \item Descrizione
-        \item Input
-        \item Output
+        \item Descrizione: viene utilizzata per controllare se il trasferimento dei file
+        per la creazione di un nuovo server è stato completato.
+        \item Input: nessuno
+        \item Output: un oggetto JSON che riporta lo stato del trasferimento, il tipo di job,
+        in questo caso di tipo \texttt{TransferServer}, il \texttt{WorkID}.
     \end{itemize}
 
     \item[Dettagli server]\texttt{GET /server/<server-id>}
     \begin{itemize}
-        \item Descrizione
-        \item Input
-        \item Output
+        \item Descrizione: ritorna tutte le informazioni memorizzate relative ad un certo
+        server.
+        \item Input: nessuno
+        \item Output: oggetto JSON che riporta le seguenti informazioni:
+        \begin{itemize}
+            \item ID
+            \item nome DNS e porta OpenVPN di ascolto
+            \item indirizzo IP interno mediante il quale è raggiungibile
+            \item alcuni path della configurazione di OpenVPN
+            \item NET ID e subnet mask del tunnel VPN
+            \item informazioni sul certificato, tra cui data di firma, data di scadenza,
+            numero seriale ed algoritmo di firma.
+        \end{itemize}
     \end{itemize}
 
     \item[Rinnovo certificato server]\texttt{PUT /server/<server-id>/renew}
     \begin{itemize}
-        \item Descrizione
-        \item Input
-        \item Output
+        \item Descrizione: i certificati hanno una scandenza, ed una volta scaduti
+        non sono più validi e quindi non è più possibile effettuare il collegamento VPN,
+        pertanto è necessario rinnovarli periodicamente.
+        \item Input: nessuno
+        \item Output: il \texttt{WorkID} relativo al trasferimento del certificato e
+        della chiave privata sul server in questione.
     \end{itemize}
 
     \item[Stato rinnovo certificato server]\texttt{GET /server/renew/<work-id>}
     \begin{itemize}
-        \item Descrizione
-        \item Input
-        \item Output
+        \item Descrizione: utilizzata per verificare lo stato del trasferimento verso
+        il server del nuovo certificato e chiave privata.
+        \item Input: nessuno
+        \item Output: stato del trasferimento, tipo, \texttt{WorkID}.
     \end{itemize}
 
     \item[Creazione client]\texttt{POST /client}
     \begin{itemize}
-        \item Descrizione
-        \item Input
-        \item Output
+        \item Descrizione: si chiama questa API per creare un nuovo client. Il microservizio
+        crea tutti i file di configurazione, registra un mapping, trasferisce sul
+        server designato i file necessari per poter stabilire un collegamento con esso.
+        \item Input: un oggetto JSON che deve contenere i seguenti campi:
+        \begin{itemize}
+            \item ID server a cui il client si connetterà
+            \item nome dell'azienda cliente a cui il device andrà
+            \item nome mnemonico con cui identificare il device (es: \texttt{office1});
+            assieme al nome dell'azienda andrà a comporre il \texttt{CommonName} del
+            certificato
+            \item email da inserire nel certificato
+            \item lista di reti raggiungibil dal device
+        \end{itemize}
+        \item Output: un oggetto JSON costituito da due campi, l'ID del device client
+        all'interno del databse, uno zip file in formato base64 contenente tutti
+        i file che devono essere poi trasferiti sul dispositivo, unitamente ad
+        uno script che automatizza la creazione della struttura di directory assunta
+        da OpenVPN.
     \end{itemize}
 
-    \item[Stato creazione client]\texttt{GET /client/creation/work-id>}
+    \item[Stato creazione client]\texttt{GET /client/creation/<client-id>}
     \begin{itemize}
-        \item Descrizione
-        \item Input
-        \item Output
+        \item Descrizione: analogamente ad ogni altra API relativa ad ottenere
+        lo stato di un trasferimento, questa viene utilizzata per verificare
+        quando i file relativi ad un nuovo client sono stati spostati sul server.
+        \item Input: nessuno a parte la URI in sè; si noti che solo in questo caso il
+        \texttt{WorkID} equivale all'ID del client ritornato al momento della creazione.
+        \item Output: informazioni sullo stato del trasferimento.
     \end{itemize}
 
     \item[Dettagli client]\texttt{GET /client/<client-id>}
     \begin{itemize}
-        \item Descrizione
-        \item Input
-        \item Output
+        \item Descrizione: mediante questa API si ottengono informazioni relative ad
+        un certo VPN client.
+        \item Input: nessuno
+        \item Output: un oggetto JSON con vari campi tra cui:
+        \begin{itemize}
+            \item ID
+            \item nome azienda e nome mnemonico
+            \item informazioni relative al certificato del client, tra cui data di firma,
+            data di scadenza, algoritmo, livello di sicurezza.
+        \end{itemize}
     \end{itemize}
 
     \item[Rinnovo certificato client]\texttt{PUT /client/<client-id>/renew}
     \begin{itemize}
-        \item Descrizione
-        \item Input
-        \item Output
+        \item Descrizione: come per il certificato del server, anche quello
+        del client deve essere sempre valido, altrimenti il server rifiuterà
+        la connessione VPN. Questa API serve a creare un nuovo certificato valido
+        e contemporaneamente a revocare il precedente, distribuendo la nuova CRL
+        a tutti i server.
+        \item Input: nessuno
+        \item Output: lo \texttt{WorkID} del trasferimento ed uno zip file
+        in base64 contenente la nuova chiave privata e certificato.
     \end{itemize}
 
     \item[Stato rinnovo certificato client]\texttt{GET /client/renew/<work-id>}
     \begin{itemize}
-        \item Descrizione
-        \item Input
-        \item Output
+        \item Descrizione: viene utilizzata per verificare lo stato del
+        trasferimento della CRL verso tutti i server in seguito al rinnovo
+        di un certificato client.
+        \item Input: nessuno.
+        \item Output: informazioni sullo stato del trasferimento.
     \end{itemize}
 
     \item[Revoca client]\texttt{DELETE /client/<client-id>/}
     \begin{itemize}
-        \item Descrizione
-        \item Input
-        \item Output
+        \item Descrizione: per numerose ragioni, tra cui il semplice fatto
+        di non servire più, è necessario dover cancellare un VPN client.
+        Tra le azioni coinvolte, oltre a cancellare vari record dal database,
+        occorre revocare il certificato usato da tale client, e propagare la
+        nuova CRL a tutti i server.
+        \item Input: nessuno
+        \item Output: lo \texttt{WorkID} relativo alla propagazione della CRL.
     \end{itemize}
 
     \item[Stato revoca client]\texttt{GET /revocation/<work-id>}
     \begin{itemize}
-        \item Descrizione
-        \item Input
-        \item Output
+        \item Descrizione: si usa questa API per verificare lo stato
+        del trasferimento della CRL verso i VPN server in seguito alla
+        cancellazione di un client.
+        \item Input: nessuno
+        \item Output: informazioni sullo stato del trasferimento.
+    \end{itemize}
+
+    \item[Ottenimento IP mappato]\texttt{GET /client/<client-id>/mapping}
+    \begin{itemize}
+        \item Descrizione: questa API implementa una delle funzionalità
+        più importanti, ovvero fornire la versione mappata di un indirizzo
+        IP originale per un certo VPN client.
+        \item Input: il body della richiesta prevede un oggetto JSON contenente
+        come unico campo l'IP richiesto.
+        \item Output: un oggetto JSON composto dall'IP originale e dall'IP mappato.
     \end{itemize}
 
     \item[Aggiunta di un'esclusione]\texttt{POST /blacklist/add}
     \begin{itemize}
-        \item Descrizione
-        \item Input
-        \item Output
+        \item Descrizione: è necessario poter definire delle reti o
+        indirizzi IP (o nomi di dominio tradotti poi in IP) che non
+        devono essere mai utilizzati come reti mappate. Mediante questa
+        API è possibile aggiungere nuove esclusioni alla blacklist.
+        \item Input: un oggetto JSON con diverse combinazioni,
+        tra cui un singolo indirizzo IP, una rete (NET ID e subnet mask),
+        un nome di dominio. Vi è anche un campo \texttt{isInternal} per specificare
+        se quell'esclusione è relativa a MoonCloud (ad esempio, si vuole escludere
+        l'indirizzo IP che contiene la repository Docker).
+        \item Output: un oggetto JSON con gli stessi campi dell'input ed in
+        più l'ID assegnato dal database a quella particolare esclusione.
     \end{itemize}
 
     \item[Elenco blacklist]\texttt{GET /blacklist/all}
     \begin{itemize}
-        \item Descrizione
-        \item Input
-        \item Output
+        \item Descrizione: si utilizza questa API per visualizzare l'intera
+        blacklist.
+        \item Input: nessuno
+        \item Output: si ritorna un array di oggetti JSON in cui ciascun oggetto
+        rappresenta un'esclusione, tra i vari campi si mostra anche l'ID.
     \end{itemize}
 
     \item[Aggiornare blacklist]\texttt{PUT /blacklist/update}
     \begin{itemize}
-        \item Descrizione
-        \item Input
-        \item Output
+        \item Descrizione: i nomi di dominio salvati nella blacklist devono
+        essere aggiornati per riflettere i cambiamenti nell'associazione
+        indirizzo IP -- nome DNS. Si noti che questo aggiornamento è fatto
+        anche ogni volta che si crea un nuovo client, per cui si può presumere
+        che quest'API non sarà chiamata spesso.
+        \item Input: nessuno
+        \item Output: un oggetto JSON con i seguenti campi:
+        \begin{itemize}
+            \item una lista di dei nomi DNS aggiornati
+            \item una lista dei nomi DNS che non sonos stati aggiornati a causa
+            di errori
+            \item una descrizione degli errori incontrati durante la risoluzione.
+        \end{itemize}
     \end{itemize}
 
     \item[Vedere specifiche esclusioni]\texttt{GET /blacklist/dns/internal|external|all}
     \begin{itemize}
-        \item Descrizione
-        \item Input
-        \item Output
+        \item Descrizione: questa API è stata pensata appositamente per visualizzare solo
+        le esclusioni che hanno un nome DNS registrato. Le si possono ritornare
+        tutte (``\texttt{all}''), solo quelle esterne (``\texttt{external}''),
+        oppure solo quelle interne (``\texttt{internal}'').
+        \item Input: nessuno
+        \item Output: una lista di oggetti JSON, per ciascuno si mostra il nome DNS,
+        se interna o no, e l'ID.
     \end{itemize}
 
     \item[Dettagli esclusione]\texttt{GET /blacklist/<blacklist-id>}
     \begin{itemize}
-        \item Descrizione
-        \item Input
-        \item Output
+        \item Descrizione: utilizzata per visualizzare
+        una particolare esclusione dalla blacklist, dato il suo ID.
+        \item Input: nessuno
+        \item Output: un oggetto JSON con tutte le informazioni relative all'esclusione.
     \end{itemize}
 
     \item[Cancellare esclusione]\texttt{DELETE /blacklist/<blacklist-id>}
     \begin{itemize}
-        \item Descrizione
-        \item Input
-        \item Output
+        \item Descrizione: mediante quest'API si cancella una particolare esclusione. 
+        \item Input: nessuno
+        \item Output: nessuno
     \end{itemize}
 
     \item[Specificare il supporto a ChaCha20]\texttt{PUT /chachasupport/true|false}
     \begin{itemize}
-        \item Descrizione
-        \item Input
-        \item Output
+        \item Descrizione: l'algoritmo di cifratura \texttt{ChaCha20} \ref{chacha20} è
+        supportato solo in alcune versioni di OpenVPN a seconda di come sia stato compilato.
+        Questa API presuppone che, ad esempio, da un certo punto in poi tale algoritmo sia
+        sempre supportato sui nuovi client e server, e che si possa specificare tale
+        supporto mediante questa API senza dover riavviare il microservizio (poiché
+        il valore di default è specificato nei settaggi).
+        \item Input: nessuno
+        \item Output: nessuno
     \end{itemize}
 
     \item[Refresh CRL]\texttt{PUT /crl}
     \begin{itemize}
-        \item Descrizione
-        \item Input
-        \item Output
+        \item Descrizione: tra i vari campi che si inseriscono in una CRL vi
+        è ``\texttt{NextUpdate}'', ovvero per quando ci si aspetta il prossimo
+        aggiornamento. OpenVPN, nel controllo della CRL, verifica anche il valore di
+        questo campo, e se la CRL non è aggiornata il server rifiuterà nuove connessioni,
+        pertanto è importante mantenerla aggiornata. In questo caso si genera una
+        nuova CRL con gli stessi certificati revocati della precedente, ma con data
+        di \texttt{NextUpdate} posticipata di un anno. Dopo aver generato una
+        nuova CRL, viene distribuita a tutti i server.
+        \item Input: nessun
+        \item Output: lo \texttt{WorkID} relativo alla distribuzione della CRL
+        a tutti i VPN server di MoonCloud.
+    \end{itemize}
+
+    \item[Stato refresh CRL]\texttt{GET /crl/refresh/<work-id>}
+    \begin{itemize}
+        \item Descrizione: si usa l'API in questione per vedere lo stato
+        del trasferimento della CRL ai server in seguito ad un refresh.
+        \item Input: nessuno
+        \item Output: nessuno
     \end{itemize}
 
     \item[Ultimi aggiornamenti alla CRL]\texttt{GET /crl}
     \begin{itemize}
-        \item Descrizione
-        \item Input
-        \item Output
+        \item Descrizione: questa API ritorna una lista degli ultimi dieci aggiornamenti
+        fatti alla CRL. I dati vengono prelevati da un'apposita tabella
+        dal database, la quale è aggiornata solo dopo che la CRL modificata è stata distribuita
+        a tutti i server.
+        \item Input: nessuno 
+        \item Output: un array JSON in cui ciascun oggetto rappresenta un aggiornamento.
+        Per ciascun item dell'array i campi sono la data di aggiornamento  e la ragione
+        (``\texttt{refresh}'' o ``\texttt{revocation}'' di un client). 
     \end{itemize}
 
     \item[Far ripartire un job]\texttt{PUT /<work-id>}
     \begin{itemize}
-        \item Descrizione
-        \item Input
-        \item Output
+        \item Descrizione: vi sono molte ragioni per cui un work di trasferimento può
+        terminare con un errore, tra cui un problema di connettività. Per situazioni
+        come queste, in cui per problemi che poi sono stati risolti non è stato
+        possibile completare un trasferimento, si è pensata questa API.
+        Dopo aver verificato che un trasferimento non è andato a buon fine, e dopo
+        aver risolto l'errore (se possibile), si può far ripartire il job. Esso
+        sarà rimesso sulla coda come lavoro più recente.
+        \item Input: nessuno
+        \item Output: nessuno
     \end{itemize}
 
-    \item[Elenco job da eseguire]\texttt{GET /all-works}
+    \item[Elenco job]\texttt{GET /all-works}
     \begin{itemize}
-        \item Descrizione
-        \item Input
-        \item Output
+        \item Descrizione: oltre a fare del polling per ogni singolo job, può essere
+        più veloce utilizzare questa API per vedere l'elenco di tutti i job in corso,
+        compresi quelli terminati di cui non si è ancora verificato lo stato,
+        quelli in corso, quelli conclusi con errore.
+        \item Input: nessuno
+        \item Output: un array JSON contenente oggetti ciascuno nell'esatto
+        formato ritornato dalle API relative a vedere lo stato di un job.
+        Tutti i job completati e ritornati sono rimossi, pertanto non sarà
+        più possibile vedere il loro stato in un secondo momento.
     \end{itemize}
 \end{description}
