@@ -66,7 +66,8 @@ Alcuni metodi sono omessi per brevità, tra essi il costruttore.
 
 
 Nel database si memorizzano anche informazioni relative ai certificati, come il
-\texttt{CommonName}, il seriale. Questa tabella è quindi referenziata dalla relativa
+\texttt{CommonName}, il seriale, il livello di sicurezza, l'algoritmo
+di firma. Questa tabella è quindi referenziata dalla relativa
 tabella che rappresenta i VPN server ed i VPN device client.
 
 Si mantiene anche un tabella con informazioni relative alla CRL, come la data di ultima
@@ -276,3 +277,33 @@ Viene messa a disposizione una API per questo scopo; i passi per creare un serve
 L'estratto di codice che si presenta ora è una versione leggermente modificata di ciò che
 \texttt{controllers} fà.
 \inputminted[tabsize=4, breaklines]{python}{code_samples/controllers_create_server.py}
+
+Alla fine, la API ritorna al chiamante l'ID del server che lo identifica univocamente
+nel database ed il \texttt{WorkID} relativo al trasferimento dei file. E' responsabilità
+del chiamante fare ulteriori richieste per verificare lo stato del trasferimento. Per farlo
+viene messa a disposizione una API specifica.
+
+\subsection{Registrazione client}
+Una API REST è predisposta alla creazione di un nuovo VPN device client. Tra gli input
+che occorre fornire, è particolarmente importante specificare l'ID del server a cui
+il client si connetterà e l'elenco delle reti che il client sarà in grado di
+raggiungere una volta portato nella rete target.
+Si compiono i seguenti step:
+\begin{enumerate}
+    \item fare un refresh della lista di nomi di dominio da escludere dal mapping
+    \item creare una nuova istanza nel database per il device client
+    \item creare i certificati ed i file di configurazione
+    \item definire il mapping
+    \item creare il file di script per nftables
+    \item mettere sulla coda di trasferimento un nuovo job di tipo ``\texttt{Trasferire Client}''.
+\end{enumerate}
+
+Si ritorna al chiamante l'ID del client ed un file zippato codificato in formato
+base64 che contiene:
+\begin{itemize}
+    \item file di configurazione principale per OpenVPN
+    \item certificato e chiave privata del VPN client
+    \item chiave pubblica della CA
+\end{itemize}
+Anche in questo caso si mostra un esempio.
+\inputminted[tabsize=4, breaklines]{python}{code_samples/controllers_create_client.py}
