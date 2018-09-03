@@ -209,21 +209,26 @@ Il trasferimento è richiesto nelle seguenti situazioni:
 	\item[Revoca certificato client]Similmenete al punto precedente, per ciò che concerne
 	il trasferimento file, l'unica azione da effettuare è propagare la nuova
 	CRL ai VPN server.
+	\item[Refresh CRL]Quando si crea una CRL si specifica la data di prossimo aggiornamento,
+	ed essa viene controllata da OpenVPN server: se risulta scaduta non si accettano nuove
+	connessioni. Per questa ragione è importante aggiornarla, ovvero creare una nuova
+	CRL che contenga gli stessi certificati revocati della precedente ma con
+	data di prossimo aggiornamento posticipata di un anno.
 \end{description}
 
 Il trasferimento dei file verso i server è una parte fondamentale del microservizio,
 pertanto deve essere il più possibile robusto.
 Il modo in cui viene effettuato è stato chiamato \textbf{\textit{asynchronous transferring}},
-perché è svolto da un thread specifico a questo scopo, separato dagli altri thread di
+perché è svolto da due thread specifici a questo scopo, separati dagli altri thread di
 esecuzione, implementato dalla classe \texttt{SSHBackgroundWorker}.
 Il modulo \texttt{controllers} organizza i trasferimenti da effettuare e crea degli
-oggetti (\textit{dizionari} Python) e li mette su una coda condivisa con il thread di
-trasferimento.
-La computazione \texttt{SSHBackgroundWorker} è composta da un loop infinito, dentro
+oggetti (\textit{dizionari} Python) e li mette su una delle due code condivise con i
+thread di trasferimento.
+La computazione \texttt{SSHBackgroundWorker} è composta da due loop (uno per ogni thread), dentro
 il quale si estraggono elementi dalla coda: ciascun elemento contiene tutte le informazioni
 che servono per trasferirlo sul server (o sui server) correttamente. I trasferimenti
 quindi sono eseguiti serialmente, nell'ordine con cui sono stati inseriti
-nella coda (\textit{FIFO}).
+in una delle due code (\textit{FIFO}).
 Ogni volta che si deposita un nuovo job sulla coda, si riceve un \texttt{WorkID}, il quale,
 a secondo del tipo di job, può essere numerico, oppure alfanumerico. In quest'ultimo
 caso, l'ID è generato in maniera pseudocasuale mediante del materiale
@@ -241,7 +246,7 @@ nel quale si mantengono a loro volta dei dizionari, ciascuno con le seguenti inf
 Ogni volta che si inserisce un nuovo lavoro nella coda, si aggiunge un corrispondente oggetto
 nello \texttt{shared\_dict}. L'accesso ad esso è protetto da lock.
 
-Una volta che il job è stato depositato nella coda, si ritorna immediatamente una risposta HTTP
+Una volta che il job è stato depositato in una coda, si ritorna immediatamente una risposta HTTP
 al chiamante. Il body della risposta conterrà, tra le altre cose, anche il \texttt{WorkID}.
 Il chiamante può quindi fare del \textit{polling} per sapere lo stato di un certo lavoro: dietro
 le quindi si accede allo \texttt{shared\_dict}.
@@ -273,6 +278,18 @@ dopo un accurato studio, di aumentare il numero di thread a disposizione.
 Per ciò che concerne il problema appena descritto relativo alla CRL, la stessa modifica alla CRL
 viene schedulata in maniera seriale, non solo il trasferimento.
 
+
+Inizialmente tutte le operazioni venivano eseguite da un unico thread, successivamente se ne
+è aggiunto un secondo.
+\begin{itemize}
+	\item \texttt{Main\_worker\_thread} si occupa del trasferimento di nuovi server, nuovi
+	client e, parzialmente, della revoca di un client chiamando lo script \texttt{deleteclient.py}.
+	Si noti che questo thread è l'\textit{unico} flusso di computazione che può modificare
+	i file \texttt{client-up.sh} e \texttt{client-down.sh}.
+	\item \texttt{CRL\_worker\_thread} è responsabile dell'aggiornamento e della propagazione
+	della CRL ai diversi server. Anche in questo caso, vi è un unico flusso che modifica
+	un file, per cui l'integrità è ancora garantita.
+\end{itemize}
 
 \subsection{Registrazione server}
 Registare un nuovo server significa che è stata già deployata in MoonCloud una VM dedicata

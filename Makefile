@@ -1,8 +1,11 @@
 all: build open clean tarr
 .PHONY: all clean tarr
 
-latex_input = thesis.tex
-latex_output = thesis.pdf
+latex_summary_input := summary.tex
+latex_summary_output := summary.pdf
+
+latex_input := thesis.tex
+latex_output := thesis.pdf
 
 latex ?= pdflatex
 
@@ -104,10 +107,15 @@ img_files += $(img_directory)/ip_mapping_recv.pdf
 img_files += $(img_directory)/openvpn_test1.pdf
 img_files += $(img_directory)/openvpn_test2.pdf
 
+summary_files := $(latex_summary_input)
+
 # aux_files := *.aux
 
 # deps := $(files)
 all_deps := $(files) $(img_files)
+
+tar_deps := $(all_deps)
+tar_deps += $(summary_files)
 
 tar_dest  := /media/nicola/Drive/BackupTar/thesis3.tar.bz2
 gdrive_dest_dir := /home/nicola/GDrive
@@ -119,15 +127,24 @@ $(latex_output): $(all_deps)
 	$(latex) -file-line-error --shell-escape $(latex_input)
 	$(latex) -file-line-error --shell-escape $(latex_input)
 
-$(tar_dest): $(all_deps)
+$(latex_summary_output): $(summary_files)
+	$(latex) -file-line-error $(latex_summary_input)
+	$(latex) -file-line-error $(latex_summary_input)
+
+$(tar_dest): $(tar_deps)
 	tar --exclude=$(tar_exclude) -cjf $(tar_dest) $(PWD)
 	test -d $(gdrive_dest_dir) && cp $(tar_dest) $(gdrive_dest_file)
 	test -d $(gdrive_dest_dir) && ls -l $(gdrive_dest_file)
 
 build: $(latex_output)
 
+summary: $(latex_summary_output) open-summary clean tarr
+
 open:
 	gvfs-open $(latex_output) 2> /dev/null &
+
+open-summary:
+	gvfs-open $(latex_summary_output) 2> /dev/null &
 
 tarr: $(tar_dest)
 
