@@ -1,7 +1,10 @@
 \section{Architettura}\label{sec:mooncloud-archi}
 
-
-TODO INSERT HERE FIGURE
+\begin{figure}
+	\includegraphics[scale=0.5]{img/mooncloud_archi}
+	\label{fig:mooncloud-archi}
+	\caption{L'architettura MoonCloud}
+\end{figure}
 
 Logicamente, è possibile dividere l'architettura MoonCloud
 in due macrocomponenti, così come mostrato in figura \ref{fig:moonclod-archi}.
@@ -17,14 +20,14 @@ I due macrocomponenti sono:
 	dell'intero processo di certificazione. Ne fanno parte i seguenti moduli:
 	\begin{itemize}
 		\item \texttt{Dashboard}: una web GUI utilizzata dai clienti per
-		      gestire l'intero processo di certificazione.
+		      gestire l'intero processo di certificazione
 		\item \texttt{Model Database}: una base di dati in cui sono memorizzate
 		      tutte le regole relative al processo di certificazione (e di verifica
-		      dei modelli) \textbf{Postgres?}.
+		      dei modelli)
 		\item \texttt{Probe Dispatcher} il quale si occupa della comunicazione
 		      tra \texttt{Certification Manager} ed i cluster di esecuzione.
 		\item \texttt{Result Database} ovvero una base di dati \texttt{InfluxDB} in
-		      cui vengono salvate le evidenze collezionate durante i test.
+		      cui vengono salvate le evidenze collezionate durante i test
 		\item \texttt{Evidence Analyzer} è un componente responsabile di analizzare
 		      le evidenze raccolte nella specifica base di dati. % e di verificare la correttezza di modelli.
 	\end{itemize}
