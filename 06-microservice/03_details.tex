@@ -165,7 +165,7 @@ caso molto veloce.
 Vi sono diverse situazioni che richiedono il trasferimento di file
 verso i VPN server di MoonCloud. Qualsiasi sia il caso, esso viene effettuato
 lungo il protocollo SSH, mediante il quale si possono sia inviare comandi remoti
-o trasferire file con il sottosistema SCP -- Secure File Copy. Si sfruttano
+o trasferire file con il sottosistema SFTP -- Secure File Transfer Protocol. Si sfruttano
 delle librerie Python a tale scopo. L'autenticazione viene fatta mediante chiave
 pubblica.
 Il trasferimento è richiesto nelle seguenti situazioni:
@@ -220,38 +220,43 @@ Il trasferimento dei file verso i server è una parte fondamentale del microserv
 pertanto deve essere il più possibile robusto.
 Il modo in cui viene effettuato è stato chiamato \textbf{\textit{asynchronous transferring}},
 perché è svolto da due thread specifici a questo scopo, separati dagli altri thread di
-esecuzione, implementato dalla classe \texttt{SSHBackgroundWorker}.
+esecuzione, implementati dalla classe \texttt{SSHBackgroundWorker}.
 Il modulo \texttt{controllers} organizza i trasferimenti da effettuare e crea degli
-oggetti (\textit{dizionari} Python) e li mette su una delle due code condivise con i
+oggetti (\textit{dizionari} Python) e li deposita su una delle due code condivise con i
 thread di trasferimento.
-La computazione \texttt{SSHBackgroundWorker} è composta da due loop (uno per ogni thread), dentro
-il quale si estraggono elementi dalla coda: ciascun elemento contiene tutte le informazioni
+La computazione di \texttt{SSHBackgroundWorker} è composta da due loop (uno per ogni thread), dentro
+il quale si estraggono elementi dalla coda: ciascun elemento estratto contiene tutte le informazioni
 che servono per trasferirlo sul server (o sui server) correttamente. I trasferimenti
 quindi sono eseguiti serialmente, nell'ordine con cui sono stati inseriti
 in una delle due code (\textit{FIFO}).
-Ogni volta che si deposita un nuovo job sulla coda, si riceve un \texttt{WorkID}, il quale,
-a secondo del tipo di job, può essere numerico, oppure alfanumerico. In quest'ultimo
-caso, l'ID è generato in maniera pseudocasuale mediante del materiale
-prelevato dal generatore pseudocasuale del sistema operativo.
-Parallelamente alla coda infatti, \texttt{SSHBackgroundWorker} mantiene anche un \textit{dizionario}
-(detto \texttt{shared\_dict})
-nel quale si mantengono a loro volta dei dizionari, ciascuno con le seguenti informazioni:
+Ogni volta che si deposita un nuovo job sulla coda, si riceve un \texttt{WorkID}, il quale
+è generato in maniera pseudocasuale nell'idea di identificare univocamente ogni job.
+
+Lo stato della computazione di un lavoro è mantenuto in memoria da Redis. Tra le varie informazioni
+che si memorizzano vi sono:
 \begin{itemize}
-	\item ID del job
+	\item ID del lavoro (è la Key)
+	\item stato di avanzamento: non iniziato, in corso, concluso, concluso con errore
 	\item tipo (es: \textit{trasferimento server}, \textit{rinnovo certificato}, ecc\ldots)
-	\item stato, gli stati possibili sono: \texttt{Completato},\texttt{Pendente},\texttt{In corso},
-	      \texttt{Concluso con errore}
-	\item ulteriori informazioni, come una descrizione in caso di errore
+	\item ulteriori informazioni, come una descrizione dell'errore in caso si verifichi.
 \end{itemize}
-Ogni volta che si inserisce un nuovo lavoro nella coda, si aggiunge un corrispondente oggetto
-nello \texttt{shared\_dict}. L'accesso ad esso è protetto da lock.
 
-Una volta che il job è stato depositato in una coda, si ritorna immediatamente una risposta HTTP
-al chiamante. Il body della risposta conterrà, tra le altre cose, anche il \texttt{WorkID}.
-Il chiamante può quindi fare del \textit{polling} per sapere lo stato di un certo lavoro: dietro
-le quindi si accede allo \texttt{shared\_dict}.
+Quando un thread inizia la computazione per un job modifica lo stato da \texttt{Pending}
+a \texttt{Working}, infine ad \texttt{Executed} quando è finito.
 
-Quando si richiede lo stato di un lavoro ed esso è stato completato, viene rimosso dallo \texttt{shared\_dict}.
+Inizialmente si utilizzava, al posto di Redis, un dizionario acceduto concorrentemente dai thread,
+tuttavia questo presupponeva un elevato uso di meccanismi di lock. Si è deciso quindi di
+passare a Redis, il quale, in quanto database di tipo Key--Value, è molto efficiente,
+inoltre tutte le operazioni svolte da esso sono atomiche per definizione.
+Inoltre, per svolgere operazioni complesse in esso, è possibile definire degli script Lua,
+e richiamarne quindi la loro esecuzione; più avanti se ne mostra un esempio.
+
+Una volta che il job è stato depositato in una coda dal \texttt{controllers}, si ritorna immediatamente
+la risposta HTTP, tale risposta contiene anche lo \texttt{WorkID}. E' responsabilità
+del chiamante fare quindi del \textit{polling} al microservizio per verificare se il task
+si è concluso. Tali richieste si traducono in una interrogazione a Redis.
+
+Quando si richiede lo stato di un lavoro ed esso è stato completato, viene rimosso da Redis.
 
 La ragione per cui il trasferimento segue questo paradigma non è prestazionale, bensì è per
 garantire l'integrità dei file sui server.
@@ -290,6 +295,20 @@ Inizialmente tutte le operazioni venivano eseguite da un unico thread, successiv
 	della CRL ai diversi server. Anche in questo caso, vi è un unico flusso che modifica
 	un file, per cui l'integrità è ancora garantita.
 \end{itemize}
+
+
+Di seguito si mostra un estratto di \texttt{SSHBackgroundWorker}, in particolare si mostrano
+i due loop eseguiti dai due thread.
+
+\inputminted[tabsize=4, breaklines]{python}{code_samples/sshworker_loops.py}
+
+Il prossimo codice presentato è uno script Lua che viene eseguito su Redis. E' utilizzato
+per ritornare, in una sola query a tale database, l'intera lista dei job.
+Senza tale script, sarebbe stato necessario fare una prima query per ottenere la lista degli
+\texttt{WorkID}, poi, per ciascuno di essi, richiedere l'oggetto completo.
+
+\inputminted[tabsize=4, breaklines]{lua}{code_samples/works.lua}
+
 
 \subsection{Registrazione server}
 Registare un nuovo server significa che è stata già deployata in MoonCloud una VM dedicata

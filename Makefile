@@ -64,6 +64,8 @@ code_files += $(code_samples_directory)/openssl.py
 code_files += $(code_samples_directory)/nftables.py
 code_files += $(code_samples_directory)/controllers_create_server.py
 code_files += $(code_samples_directory)/controllers_create_client.py
+code_files += $(code_samples_directory)/sshworker_loops.py
+code_files += $(code_samples_directory)/works.lua
 
 bib_file = bib.tex
 
