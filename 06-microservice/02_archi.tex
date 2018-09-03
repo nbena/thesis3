@@ -1,4 +1,26 @@
 \section{Architettura}
+L'intero deployment del mio microservizio si compone di un container
+su cui è in esecuzione Django, cioè il web framework che espone le API REST,
+di un secondo container su cui è in esecuzione PostgreSQL, di un terzo dedicato
+a Redis.
+La figura \ref{fig:microservice-deployment} mostra quanto descritto.
+Non è escluso che in futuro questo servizio venga separato in microservizi
+ancora più piccoli, ad esempio si sta studiando la separazione della
+parte di trasferimento file. Realizzarlo non sarebbe
+difficile poiché le singole componenti sono il più possibile separate ed independenti
+tra loro le singole componenti.
+
+\begin{figure}
+  \includegraphics[scale=0.5]{img/microservice_deployment}
+  \label{fig:microservice-deployment}
+  \caption[Il deployment di \texttt{MoonCloud\_VPN}]{
+    Il deployment di \texttt{MoonCloud\_VPN}. I rettangoli con linee in grassetto
+    rappresentano le VM su cui vi sono i VPN server, mentre quelli con contorno
+    normale rappresentano i tre container di cui il deployment si compone.
+  }
+\end{figure}
+
+
 Il microservizio è composto da diversi moduli, ciascuno dei quali ben
 specializzato per una certa funzionalità, ad esempio: creazione file di configurazione
 server, creazione file per nftables, trasferimento file, ecc\ldots
@@ -6,8 +28,9 @@ Il modulo \texttt{controllers.py}  definisce
 una serie di funzioni che, tramite \texttt{views.py} risponde direttamente alle
 chiamate alle API del servizio. Si cura di chiamare i metodi delle classi di tutti
 gli altri moduli.
-La figura \ref{fig:microservice-archi} mostra in maniera grafica i diversi moduli di cui
-si compone il microservizio, i quali sono descritti in maggior dettaglio di seguito.
+% La figura \ref{fi}
+% La figura \ref{fig:microservice-archi} mostra in maniera grafica i diversi moduli di cui
+% si compone il microservizio, i quali sono descritti in maggior dettaglio di seguito.
 
 \begin{description}
   \item[\texttt{client}]Questo modulo si occupa delle configurazioni relative ai

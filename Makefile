@@ -113,6 +113,8 @@ img_files += $(img_directory)/ip_mapping_recv.pdf
 img_files += $(img_directory)/openvpn_test1.pdf
 img_files += $(img_directory)/openvpn_test2.pdf
 
+img_files += $(img_directory)/microservice_deployment.pdf
+
 summary_files := $(latex_summary_input)
 
 # aux_files := *.aux

@@ -34,13 +34,4 @@ Il microservizio implementa delle API REST per le seguenti funzionalità:
   motivo a connettersi nuovamente alla VPN di MoonCloud.
 \end{description}
 
-Attualmente, l'intero deployment del mio microservizio si compone di un container
-su cui è in esecuzione Django, cioè il server web che espone le API REST, e
-di un secondo container su cui è in esecuzione PostgreSQL.
-Non è escluso che in futuro questo servizio venga separato in microservizi
-ancora più piccoli, ad esempio si può pensare di creare un microservizio
-che gestisca solo le funzionalità legate ai certificati. Realizzarlo non sarebbe
-difficile poiché le singole componenti sono il più possibile separate ed independenti
-tra loro le singole componenti.
-
 
