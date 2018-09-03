@@ -17,28 +17,33 @@
 
         \maketitle
 
-        \begin{minipage}{.99\linewidth}
+        \vspace{0.5cm}
+
+        %\begin{minipage}{.99\linewidth}
+        \begin{minipage}{\linewidth}
             \begin{tabular}{l r}
-                \begin{minipage}{.4\linewidth}
+                \begin{minipage}[t]{.4\linewidth}
                     \begin{flushleft}
-                        {\large
+                        {%\large
                             RELATORE\\[.15cm]
                             Prof. Marco Anisetti
                         }
                     \end{flushleft}
                 \end{minipage}
                 &
-                \begin{minipage}{.6\linewidth}
+                \begin{minipage}[t]{.53\linewidth}
                     \begin{flushright}
-                        {\large
+                        {%\large
                             CORRELATORI\\[.15cm]
-                            Prof. Claudio A. Ardagna\\
+                            Prof. Claudio A. Ardagna\\[.1cm]
                             Dott. Filippo Gaudenzi
                         }
                     \end{flushright}
                 \end{minipage}
             \end{tabular}
         \end{minipage}
+
+        \vspace{2cm}
 
         Nell'ambito della mia tesi ho collaborato a MoonCloud, spinoff di questa università,
         il quale è un prodotto in grado di fornire valutazione e monitoraggio continuo
@@ -68,7 +73,7 @@
         del firewall, ecc\ldots), se non sul VPN client. Quest'ultimo aspetto, ovvero
         una soluzione \textit{configuration-free} è molto importante.
 
-        Il mio lavoro che ha portato alla tesi si può articolare in tre parti principali:
+        Il lavoro che ho svolto per arrivare alla tesi si può articolare in tre parti principali:
         \begin{enumerate}
             \item uno studio sulle tecnologie VPN esistenti al fine di valutare quali
             fossero le più adatte per il problema
@@ -84,7 +89,7 @@
         Durante la prima fase ho studiato le maggiori tecnologie VPN disponibili,
         tenendo presente che si richiedeva una VPN molto flessibile, anche a costo
         di non essere la più performante in assoluto. Naturalmente doveva essere
-        molto sicura. La scelta è infine ricaduta su OpenVPN, una soluzione open-source
+        molto sicura. La scelta è infine ricaduta su \textit{OpenVPN}, una soluzione open-source
         ampiamente diffusa, sicura, e, soprattutto, flessibile, grazie alle sua numerose
         opzioni di configurazione.
 
@@ -125,7 +130,7 @@
             che hanno per destinazione la rete mappata, deve modificarli specificano come
             destinazione l'IP reale, viceversa per le risposte.
             Capire come fare ciò è stata la parte più difficile dell'intera tesi, alla fine
-            si è deciso di utilizzare \texttt{nftables}, successore di iptables.
+            si è deciso di utilizzare \textit{nftables}, successore di \textit{iptables}.
         \end{description}
 
 
@@ -145,6 +150,6 @@
 
         Oltre all'architettura per MoonCloud basata su VPN, che consente di mantenerla
         \textit{as-a Service}, vi sono ulteriori evoluzioni in fase di studio, tra cui
-        la possibilità di portare parte dei componenti MoonCloud presso i clienti.
+        la possibilità di portare parte dei componenti software di MoonCloud presso i clienti.
 
     \end{document}
