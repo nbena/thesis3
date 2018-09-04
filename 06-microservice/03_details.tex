@@ -309,6 +309,17 @@ Senza tale script, sarebbe stato necessario fare una prima query per ottenere la
 
 \inputminted[tabsize=4, breaklines]{lua}{code_samples/works.lua}
 
+\begin{figure}
+	\includegraphics[scale=0.5]{img/activity_generic_file_transfer}
+	\label{fig:activity-generic-file-transfer}
+	\caption[Diagramma di attività: trasferimento file]{Diagramma di attività:
+	trasferimento file. Il presente diagramma UML mostra cosa succede quando è necessario
+	trasferire dei file. Ad una generica richiesta arrivata a \texttt{controllers},
+	esso richiede di aggiungere un lavoro. Si decide quindi su quale coda
+	depositarlo in base al tipo, quindi si ritorna al chiamante.
+	Parallelamente, i due thread di trasferire svolgono il lavoro.}
+\end{figure}
+
 
 \subsection{Registrazione server}
 Registare un nuovo server significa che è stata già deployata in MoonCloud una VM dedicata
