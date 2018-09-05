@@ -53,8 +53,9 @@
         di un sistema.
 
         Il target iniziale di MoonCloud sono i sistemi cloud, tutttavia si è voluto espandere
-        tale target anche ai sistemi IT tradizionali (\textit{reti target}), ovvero sistemi
-        confinati all'interno di una classica rete aziendale. Se, per quanto riguarda target nella
+        tale target anche ai sistemi IT tradizionali, ovvero sistemi
+        confinati all'interno di una classica rete aziendale (\textit{reti target}).
+        Se, per quanto riguarda target nella
         cloud, ci si appoggia a degli \textit{hook} forniti dal cloud provider, per analizzare
         sistemi IT tradizionali è stato necessario ripensare a come MoonCloud possa dialogare
         con tali sistemi.
@@ -66,12 +67,12 @@
 
         La soluzione che si è trovata, e che è stata il punto di partenza della mia tesi,
         è stata quella di utilizzare una VPN per collegare MoonCloud alla rete
-        da analizzare; il collegamento sarebbe avvenuto mediante un device VPN portato
+        da analizzare; il collegamento sarebbe avvenuto mediante un device portato
         fisicamente nella rete, il quale si sarebbe collegato alla VPN di MoonCloud dando
         accesso a quest'ultima all'intera rete aziendale, il tutto senza che
         l'utente debba operare alcuna configurazione sulla propria rete (es: aprire porte
         del firewall, ecc\ldots), se non sul VPN client. Quest'ultimo aspetto, ovvero
-        una soluzione \textit{configuration-free} è molto importante.
+        una soluzione il più possibile\textit{configuration-free} è molto importante.
 
         Il lavoro che ho svolto per arrivare alla tesi si può articolare in tre parti principali:
         \begin{enumerate}
@@ -117,7 +118,7 @@
             il proprio. Poiché esso appartiene alla rete target, per definizione si trova
             nello stesso spazio di indirizzi, e quindi le risposte tornano ad esso anziché essere
             inviate al default gateway.
-            \item[Conflitti di IP]Si vuole far sì che un VPN possa gestire il maggior numero
+            \item[Conflitti di IP]Si vuole far sì che un VPN server possa gestire il maggior numero
             di VPN client, tuttavia bisogna rispettare un vincolo fondamentale: ogni rete che
             partecipa alla VPN deve avere un NET ID diverso. E' ragionevole presumere che
             le reti target utilizzino degli indirizzi IP privati, che sono limitati, e che prima
@@ -144,7 +145,8 @@
             nella VPN
             \item gestione dell'\textit{IP mapping}: assegnare correttamente le reti
             ai client e, dato un indirizzo IP originale, ritornare la sua versione mappata
-            \item trasferimento dei file di configurazione per i server verso i server stessi.
+            \item trasferimento dei file di configurazione per i server verso i server stessi,
+            mantenendone la coerenza.
         \end{itemize}
 
 
