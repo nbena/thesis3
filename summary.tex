@@ -45,8 +45,7 @@
 
         \vspace{2cm}
 
-        Nell'ambito della mia tesi ho collaborato a MoonCloud, spinoff di questa università,
-        il quale è un prodotto in grado di fornire valutazione e monitoraggio continuo
+        MoonCloud è un prodotto in grado di fornire valutazione e monitoraggio continuo
         di servizi cloud. In particolare, MoonCloud offre \textit{Security Assessment} e
         \textit{Security Assurance}, cioè la capacità di valutare, mediante
         la raccolta continua di evidenze, lo stato \textit{effettivo} della sicurezza
@@ -60,12 +59,15 @@
         sistemi IT tradizionali è stato necessario ripensare a come MoonCloud possa dialogare
         con tali sistemi.
 
-        MoonCloud viene attualmenete erogato come un servizio, ovvero l'utente finale
+        Inoltre, MoonCloud viene erogato come un servizio, ovvero l'utente finale
         non deve installare niente per analizzare i propri assert nella cloud, e nella transizione
         verso sistemi IT tradizionali si è cercato di mantenere questa caratteristica.
+        
+        L'ambito della tesi è stato studiare e realizzare questo passaggio, fornendo
+        a MoonCloud la capacità di analizzare anche sistemi tradizionali.
 
 
-        La soluzione che si è trovata, e che è stata il punto di partenza della mia tesi,
+        La soluzione che si è trovata, e che è stata il punto di partenza della tesi,
         è stata quella di utilizzare una VPN per collegare MoonCloud alla rete
         da analizzare; il collegamento sarebbe avvenuto mediante un device portato
         fisicamente nella rete, il quale si sarebbe collegato alla VPN di MoonCloud dando
@@ -74,7 +76,7 @@
         del firewall, ecc\ldots), se non sul VPN client. Quest'ultimo aspetto, ovvero
         una soluzione il più possibile\textit{configuration-free} è molto importante.
 
-        Il lavoro che ho svolto per arrivare alla tesi si può articolare in tre parti principali:
+        Il lavoro svolto per arrivare alla tesi si può articolare in tre parti principali:
         \begin{enumerate}
             \item uno studio sulle tecnologie VPN esistenti al fine di valutare quali
             fossero le più adatte per il problema
@@ -87,7 +89,7 @@
         \end{enumerate}
 
         
-        Durante la prima fase ho studiato le maggiori tecnologie VPN disponibili,
+        Durante la prima fase si sono studiante le maggiori tecnologie VPN disponibili,
         tenendo presente che si richiedeva una VPN molto flessibile, anche a costo
         di non essere la più performante in assoluto. Naturalmente doveva essere
         molto sicura. La scelta è infine ricaduta su \textit{OpenVPN}, una soluzione open-source
@@ -95,7 +97,7 @@
         opzioni di configurazione.
 
 
-        A questo punto ho affrontato il problema di configurare OpenVPN per
+        A questo punto si è affrontato il problema di configurare OpenVPN per
         MoonCloud. Posto che i server VPN verranno installati in MoonCloud, è stato
         fondamentale capire quali problemi tale soluzione
         presenta. In particolare, se ne sono individuati tre.
@@ -130,12 +132,12 @@
             Il VPN client è responsabile di fare l'operazione inversa, quando riceve pacchetti
             che hanno per destinazione la rete mappata, deve modificarli specificano come
             destinazione l'IP reale, viceversa per le risposte.
-            Capire come fare ciò è stata la parte più difficile dell'intera tesi, alla fine
-            si è deciso di utilizzare \textit{nftables}, successore di \textit{iptables}.
+            Per realizzare questa funzionalità si utilizza \textit{nftables}, successore
+            di \textit{iptables}.
         \end{description}
 
 
-        Come ultima parte, ho realizzato un microservizio in Python, linguaggio che non conoscevo,
+        Come ultima parte, è stato realizzato un microservizio in Python 
         a supporto di questo nuova soluzione.
         In particolare, il microservizio mette a disposizione delle API REST che
         assolvono ai seguenti compiti:
