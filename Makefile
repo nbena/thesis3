@@ -114,6 +114,8 @@ img_files += $(img_directory)/openvpn_test1.pdf
 img_files += $(img_directory)/openvpn_test2.pdf
 
 img_files += $(img_directory)/microservice_deployment.pdf
+img_files += $(img_directory)/activity_generic_file_transfer.pdf
+img_files += $(img_directory)/sequence_mapping.pdf
 
 summary_files := $(latex_summary_input)
 

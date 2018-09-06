@@ -125,9 +125,19 @@ Si può vedere un indirizzo IP originale nel come l'offset tra esso e il NET ID,
 allo steso modo, il corrispondente indirizzo mappato si calcola sommando l'offset dell'IP
 originale al NET ID mappato.
 
-La creazione del mapping è abbastanza complessa, pertanto si inserisce come codice d'esempio
-la creazione del file di script per nftables, il quale è più breve.
+La creazione del mapping è abbastanza complessa, si inserisce come codice d'esempio
+la creazione del file di script per nftables.
 \inputminted[tabsize=4, breaklines]{python}{code_samples/nftables.py}
+
+\begin{figure}
+	\includegraphics[scale=0.65]{img/sequence_mapping}
+	\caption[Diagramma di interazione: assegnato reti]{Diagramma di interazione che mostra
+	le chiamate tra le vari classi che collaborano per assegnare nuove reti mappate
+	all'aggiunta di un nuovo client (altre azioni, come la creazione dei file di configurazione
+	vengono omesse). La classe \texttt{HLDB} si occupa dell'interazione con il database, mentre
+	\texttt{DNMCP} compie operazioni ad un più alto livello.}
+	\label{fig:sequence-mapping}
+\end{figure}
 
 \subsubsection{Ritornare indirizzo IP mappato}
 Quando un client specifica un target per un'analisi, egli lo fà inserendo l'indirizzo
