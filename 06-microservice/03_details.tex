@@ -93,7 +93,7 @@ alle seguenti osservazioni:
 \end{itemize}
 
 \subsubsection{Assegnamento reti}
-Il grafico \ref{fig:ip-mapping-sequence} rappresenta, mediante la notazione UML per
+Il grafico \ref{fig:sequence-mapping-assign} rappresenta, mediante la notazione UML per
 i diagrammi di sequenza, quali azioni sono svolte per l'assegnamento delle reti, che
 qui viene descritto a parole.
 \begin{enumerate}
@@ -127,7 +127,7 @@ originale al NET ID mappato.
 
 La creazione del mapping è abbastanza complessa, si inserisce come codice d'esempio
 la creazione del file di script per nftables.
-\inputminted[tabsize=4, breaklines]{python}{code_samples/nftables.py}
+\inputminted[tabsize=1, breaklines, fontsize=\footnotesize]{python}{code_samples/nftables.py}
 
 \begin{figure}
 	\includegraphics[scale=0.65]{img/sequence_mapping}
@@ -136,7 +136,7 @@ la creazione del file di script per nftables.
 	all'aggiunta di un nuovo client (altre azioni, come la creazione dei file di configurazione
 	vengono omesse). La classe \texttt{HLDB} si occupa dell'interazione con il database, mentre
 	\texttt{DNMCP} compie operazioni ad un più alto livello.}
-	\label{fig:sequence-mapping}
+	\label{fig:sequence-mapping-assign}
 \end{figure}
 
 \subsubsection{Ritornare indirizzo IP mappato}

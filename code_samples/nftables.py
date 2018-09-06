@@ -22,11 +22,7 @@ class NFTables(abstract_tables.AbstractTables):
     """
     Class that creates the mapping file for `nftables`.
 
-    Currently, we do not use the *structured nftables configuration format*
-    (the one with brackets and so on) but *bash-like format*.
-
-    The `shebang` is set to `#!/usr/sbin/nft -f` ensuring that rules are
-    added atomically.
+    The `shebang` is set to `#!/usr/sbin/nft -f`.
     """
 
     def __init__(self, directory, data):
