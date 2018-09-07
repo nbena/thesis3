@@ -8,6 +8,7 @@ latex_input := thesis.tex
 latex_output := thesis.pdf
 
 latex ?= pdflatex
+bibtex ?= bibtex
 
 # img_directory = img
 mooncloud_directory := 01-mooncloud
@@ -67,7 +68,8 @@ code_files += $(code_samples_directory)/controllers_create_client.py
 code_files += $(code_samples_directory)/sshworker_loops.py
 code_files += $(code_samples_directory)/works.lua
 
-bib_file = bib.tex
+bib_file = bibliography.bib
+bib_file_input = thesis
 
 files := $(mooncloud_files)
 files += $(vpn_files)
@@ -78,6 +80,7 @@ files += $(microservice_files)
 files += $(bib_file)
 files += $(code_files)
 files += thesis.tex # thesis.pdf
+files += $(bib_file)
 # need to exclude thesis.pdf because it is a circular dependency,
 # $(deps) is used as a dependency for thesis.pdf
 
@@ -133,7 +136,9 @@ gdrive_dest_file := /home/nicola/GDrive/backs-tar/thesis3.tar.bz2
 
 tar_exclude := .git
 
-$(latex_output): $(all_deps)
+$(latex_output): $(all_deps) Makefile
+	$(latex) -file-line-error --shell-escape $(latex_input)
+	$(bibtex) $(bib_file_input)
 	$(latex) -file-line-error --shell-escape $(latex_input)
 	$(latex) -file-line-error --shell-escape $(latex_input)
 
@@ -166,3 +171,5 @@ clean:
 	rm -f *.nav
 	rm -f *.idx
 	rm -f *.pyg
+	rm -f *.bbl
+	rm -f *.blg
