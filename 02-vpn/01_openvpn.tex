@@ -14,19 +14,20 @@ Per ciascun tunnel VPN, vengono create due connessioni separate:
   di dati.
 \end{itemize}
 Entrambe le connessioni sono multiplexate su di un unico protocollo di trasporto
-da OpenVPN, sia esso TCP o UDP.
+da OpenVPN, sia esso TCP o UDP\cite{openvpn-security}.
 OpenVPN è una tecnologia ampiamente usata per creare VPN.
 La figura \ref{fig:openvpn-sec} mostra un semplice schema del suo funzionamento.\\
 \begin{figure}[h!]
   \includegraphics[scale=0.4]{img/openvpn_sec}
   \caption[Il multiplexing di OpenVPN]{Il multiplexing di OpenVPN: si vede come
-  le due connessioni siano multiplexate su un unico protocollo L4, in questo caso UDP.}
+  le due connessioni siano multiplexate su un unico protocollo L4, in questo caso UDP.
+  \url{https://openvpn.net/index.php/open-source/documentation/security-overview.html}}
   \label{fig:openvpn-sec}
 \end{figure}
 OpenVPN viene distribuitpo anche in una versione \textit{enterprise} a pagamento: si chiama
 \textit{OpenVPN AS -- Access Server}, offre una web GUI, sicuramente più intuitiva
 rispetto ai file di configurazione con cui si amministra la versione open source
-(detta \textit{Community Edition}). D'ora in poi ci si concentra su quest'ultima
+(detta \textit{Community Edition})\cite{openvpn-intro}. D'ora in poi ci si concentra su quest'ultima
 versione, a livello di VPN le funzionalità sono le stesse; per una comparazione tra
 le due versioni si veda
 \cite{openvpn-comparison}.\\

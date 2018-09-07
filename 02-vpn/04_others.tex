@@ -1,14 +1,12 @@
 \section{Altre tecnologie}
 \subsection{SSTP}
 \textit{Secure Socket Tunneling Protocol} è il protocollo VPN di nuova generazione sviluppato
-da Microsoft, il cui client è nativamente integrato in Windows. Il server è tipicamente
+da Microsoft \cite{sstp}, il cui client è nativamente integrato in Windows. Il server è tipicamente
 disponibile nelle versioni Server di Windows, tuttavia esistono dei cloni gratuiti, come
 SoftEther; vi sono anche client per Linux.\\
 SSTP incapsula in TLS , quindi un protocollo
 sicuro, tuttavia non offre particolari vantaggi rispetto a SoftEther, inoltre il supporto
-per piattaforme non-Microsoft va verificato. Non vi sono particolari vantaggi rispetto
-alla soluzione HTTPS-based di SoftEther, pertanto non si era dedicata particolare
-attenzione a SSTP.
+per piattaforme non-Microsoft va verificato.
 
 \subsection{OpenConnect}
 \textit{DTLS - Datagram Transport Layer Security} è uno standard RFC che specifica
@@ -28,7 +26,7 @@ vantaggi rispetto a SoftEther.
 La prima versione del protocollo SSH mirava semplicemente a rendere sicura una
 sessione telnet, mentre la versione 2 rende disponibile un protocollo di trasporto
 sicuro sul quale è possibile poi offrire diversi servizi multiplexati su quest'unico
-trasporto.
+protocollo.
 
 Sono offerte vari tipi di autenticazione, tra cui username e password, oppure basata
 su chiavi pubbliche (negoziate a priori).
@@ -37,83 +35,85 @@ Uno dei software più diffusi che implementano questo protocollo è OpenSSH.
 
 Le ultime versioni di tale software consentono anche di creare
 diversi tipi di tunnel altre al classico di login remoto, tra cui anche tunnel verso
-un host remoto al livello 2 o 3, realizzando quindi una VPN.
+host remoti al livello 2 o 3. Si tratta a tutti gli effetti di una VPN, poiché
+offre una connettività completa al livello desiderato (non si tratta di
+\textit{SSH reverse tunnel} o \textit{forwarding})
+\cite{ssh-vpn-ubuntu} \cite{ssh-vpn-debian}.
 
-Per funzionare si usa \texttt{TUN}, quindi si creano delle interfacce di rete virtuali
-su client e sul server. E' una soluzione interessante, che non ho approfondito
-perché principalmente non offriva vantaggi rispetto a SoftEther od OpenVPN.
+Per funzionare si utilizzano delle interfacce di rete virtuali
+su client e sul server. Si è tratta di una soluzione interessante, basata su un
+protocollo ben noto, tuttavia, ad una prima analisi, non si sono rilevati
+particolari vantaggi rispetto a SoftEther od OpenVPN.
 
 \subsection{WireGuard}
-\textit{WireGuard} è una moderna soluzione VPN per Linux, creata con i seguenti obiettivi:
+\textit{WireGuard}\cite{DBLP:conf/ndss/Donenfield17} è una moderna soluzione VPN per Linux, creata con i seguenti obiettivi:
 \begin{itemize}
-  \item facile da configurare
-  \item sicurezza mediante crittografia:
-  \begin{itemize}
-    \item autenticazione con chiavi pubbliche Diffie-Hellman su curva ellittica \textit{X25519}
-    e scambiate a priori
-    \item pacchetti scambiati usando \textit{ChaCha20-Poly1305} con \textit{Authenticated
-    Encryption with Associated Data}
-    \item chiavi di sessione rinegoziate periodicamente
-  \end{itemize}
-  \item elevate performance
-  \item minimalità: key exchanging, aggiunta e rimozione delle rotte dal kernel
-  non sono intenzionalmente gestite.
-\end{itemize}
-WireGuard è implementato come un modulo del kernel Linux e come tale riesce ad essere
-molto performante, i benchamrk forniti dagli autori riportano un throughput vicino
-ad 1 Gbps figura \ref{fig:wireguard-performance}).
-Lavora a livello 3 ed i partecipanti sono dei peer,
-il protocollo di trasporto è UDP. Per funzionare correttamente con il NAT vi è
-la possibilità di configurare i peer per mandarsi periodicamente dei keep-alive.
-
-
-Poiché è una proposta molto interessante, l'ho analizzata più in dettaglio rispetto
-alle altre proposte di questa sezione. Per configurare un peer,
-posto di avere la chiave pubblica dell'altro endpoint, occorre:
-\begin{itemize}
-  \item aggiungere una una nuova interfaccia virtuale e configurarla specificandone
-  l'indirizzo IP, sarà l'indirizzo IP del tunnel VPN
-  \item aggiungere le rotte verso le reti indirizzate dagli altri endpoint alla scheda
-  di rete virtuale. Normalmente questa operazione è fatta automaticamente dal software
-  VPN, non in questo caso.
-  \item Configurazione della \textit{cryptokey routing table}, ovvero specificare
-  quali remote sono responsabili di quali reti a livello di VPN.
-\end{itemize}
-\begin{figure}
-  \includegraphics[scale=0.45]{img/wireguard_performance}
-  \caption[Benchmark tra IPsec, OpenVPN e WireGuard]{Benchmark tra IPsec, OpenVPN e WireGuard.}
-  \label{fig:wireguard-performance}
-\end{figure}
-WireGuard ha un grande potenziale, soprattutto è estremamente performante e facile
-da configurare, infatti, le opzioni che possono essere specificate sono davvero poche.
-Un interfaccia WireGuard può gestire più peer, ed occorre che le chiavi pubbliche di tutti
-i peer a cui ci si vuole connettere siano presenti su tutti i partecipanti. Si parla
-di \textit{peer} e si distingue solo tra \textit{initiator} e \textit{responder},
-considerano il primo client ed il secondo server, a causa della presenza di NAT
-avevo consigliato una topologia \textit{Local Server}.
-
-
-
-\subsection{IPsec/L2TPv3 e EtherIP/IPsec}
-  \begin{itemize}
-    \item L2TP versione 3 è l'ultimo aggiornamento del protocollo L2TP, principalmente implementato in
-    devices Cisco. Analogamento ad L2TP, è possibile usarlo per creare VPN LAN-to-LAN al livello 2.\\
-    Viene supportato dai principali produttori di apparati di rete, oltre che da Linux.
-    \item EtherIP è un protovollo per l'incapsulamento di frame Ethernet in frame IP, il cui scopo è quello
-    di connettere tra loro diverse LAN a livello 2.
-  \end{itemize}
-  Entrambi i due protocolli devono essere incapsulati in IPsec per ottenere una VPN che garantisca proprietà
-  di sicurezza.
-  EtherIP è
-  supportato da Linux ed in SoftEther VPN Server.\\
-  Le due tecnologie sono in qualche modo simili, poiché realizzano connessioni a livello 2. Nel caso in cui
-  MoonCloud abbia esigenze di lavorare al livello 2, queste soluzioni sono da prendere in considerazione, sebbene
-  anche OpenVPN e SoftEther supportino VPN a questo layer.
-
-
-\subsection{PPTP}
-Il protocollo \textit{PPTP - Point To Point Tunneling Protocol} è un protocollo
-\textit{legacy}, sviluppato da Microsoft e non più sicuro, sebbene (purtroppo)
-ancora usato.
-Questo protocollo offre VPN, ma non è assolutamente una soluzione praticabile per
-MoonCloud.
+	\item facile da configurare
+	\item sicurezza mediante crittografia:
+	      \begin{itemize}
+	      	\item autenticazione con chiavi pubbliche Diffie-Hellman su curva ellittica \textit{X25519}
+	      	      e scambiate a priori
+	      	\item pacchetti scambiati usando \textit{ChaCha20-Poly1305} con \textit{Authenticated
+	      		Encryption with Associated Data}
+	      		\item chiavi di sessione rinegoziate periodicamente
+	      	\end{itemize}
+	      	\item elevate performance
+	      	\item minimalità: key exchanging, aggiunta e rimozione delle rotte dal kernel
+	      	      non sono intenzionalmente gestite.
+	      \end{itemize}
+	      WireGuard è implementato come un modulo del kernel Linux e come tale riesce ad essere
+	      molto performante, i benchamrk forniti dagli autori riportano un throughput vicino
+	      ad 1 Gbps figura \ref{fig:wireguard-performance}).
+	      Lavora a livello 3 ed i partecipanti sono dei peer,
+	      il protocollo di trasporto è UDP. Per funzionare correttamente con il NAT vi è
+	      la possibilità di configurare i peer per mandarsi periodicamente dei keep-alive.
+	      
+	      
+	      Poiché è una proposta molto interessante, è stata analizzata pià in dettaglio rispetto
+	      alle altre proposte di questa sezione. Per configurare un peer,
+	      posto di avere la chiave pubblica dell'altro endpoint, occorre:
+	      \begin{itemize}
+	      	\item aggiungere una una nuova interfaccia virtuale e configurarla specificandone
+	      	      l'indirizzo IP, sarà l'indirizzo IP del tunnel VPN
+	      	\item aggiungere le rotte verso le reti indirizzate dagli altri endpoint alla scheda
+	      	      di rete virtuale
+	      	\item Configurazione della \textit{cryptokey routing table}, ovvero specificare
+	      	      quali remote sono responsabili di quali reti a livello di VPN\cite{wireguard-quick-start}.
+	      \end{itemize}
+	      \begin{figure}
+	      	\includegraphics[scale=0.45]{img/wireguard_performance}
+	      	\caption[Benchmark tra IPsec, OpenVPN e WireGuard]{Benchmark tra IPsec, OpenVPN e WireGuard.
+	      		\url{https://www.wireguard.com/performance/}}
+	      	\label{fig:wireguard-performance}
+	      \end{figure}
+	      WireGuard ha un grande potenziale, soprattutto è estremamente performante e facile
+	      da configurare, infatti, le opzioni che possono essere specificate sono davvero poche.
+	      Un interfaccia WireGuard può gestire più peer, ed occorre che le chiavi pubbliche di tutti
+	      i peer a cui ci si vuole connettere siano presenti su tutti i partecipanti. In fase di scelta
+	      finale, questa soluzione è stata infine scartata perché funzionante su UDP.
+	      
+	      
+	      
+	      \subsection{IPsec/L2TPv3 e EtherIP/IPsec}
+	      \begin{itemize}
+	      	\item L2TP versione 3 è l'ultimo aggiornamento del protocollo L2TP, principalmente implementato in
+	      	      devices Cisco. Analogamento ad L2TP, è possibile usarlo per creare VPN LAN-to-LAN al livello 2.\\
+	      	      Viene supportato dai principali produttori di apparati di rete, oltre che da Linux.
+	      	\item EtherIP è un protovollo per l'incapsulamento di frame Ethernet in frame IP, il cui scopo è quello
+	      	      di connettere tra loro diverse LAN a livello 2.
+	      \end{itemize}
+	      Entrambi i due protocolli devono essere incapsulati in IPsec per ottenere una VPN che garantisca proprietà
+	      di sicurezza.
+	      EtherIP è
+	      supportato da Linux ed in SoftEther VPN Server.\\
+	      Le due tecnologie sono in qualche modo simili, poiché realizzano connessioni a livello 2. Nel caso in cui
+	      MoonCloud abbia esigenze di lavorare al livello 2, queste soluzioni sono da prendere in considerazione, sebbene
+	      anche OpenVPN e SoftEther supportino VPN a questo layer.
+	      
+	      
+	      \subsection{PPTP}
+	      Il protocollo \textit{PPTP - Point To Point Tunneling Protocol} è un protocollo
+	      \textit{legacy}, sviluppato da Microsoft e non più sicuro, sebbene (purtroppo)
+	      ancora usato.
+	      Questo protocollo offre VPN, ma non è assolutamente una soluzione praticabile per
+	      MoonCloud.
