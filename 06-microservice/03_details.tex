@@ -62,7 +62,7 @@ si aggiunge un certificato fake il cui numero seriale vale 1.
 Il tipo di certificato (client o server), dipende dai parametri con cui si chiama il metodo
 ``\texttt{create\_keys\_and\_cert}''.
 Alcuni metodi sono omessi per brevità, tra essi il costruttore.
-\inputminted[tabsize=4]{python}{code_samples/openssl.py}
+\inputminted[tabsize=4, breaklines, fontsize=\footnotesize]{python}{code_samples/openssl.py}
 
 
 Nel database si memorizzano anche informazioni relative ai certificati, come il
@@ -127,7 +127,7 @@ originale al NET ID mappato.
 
 La creazione del mapping è abbastanza complessa, si inserisce come codice d'esempio
 la creazione del file di script per nftables.
-\inputminted[tabsize=1, breaklines, fontsize=\footnotesize]{python}{code_samples/nftables.py}
+\inputminted[tabsize=4, breaklines, fontsize=\footnotesize]{python}{code_samples/nftables.py}
 
 \begin{figure}
 	\includegraphics[scale=0.65]{img/sequence_mapping}
@@ -310,14 +310,14 @@ Inizialmente tutte le operazioni venivano eseguite da un unico thread, successiv
 Di seguito si mostra un estratto di \texttt{SSHBackgroundWorker}, in particolare si mostrano
 i due loop eseguiti dai due thread.
 
-\inputminted[tabsize=4, breaklines]{python}{code_samples/sshworker_loops.py}
+\inputminted[tabsize=4, breaklines, fontsize=\footnotesize]{python}{code_samples/sshworker_loops.py}
 
 Il prossimo codice presentato è uno script Lua che viene eseguito su Redis. E' utilizzato
 per ritornare, in una sola query a tale database, l'intera lista dei job.
 Senza tale script, sarebbe stato necessario fare una prima query per ottenere la lista degli
 \texttt{WorkID}, poi, per ciascuno di essi, richiedere l'oggetto completo.
 
-\inputminted[tabsize=4, breaklines]{lua}{code_samples/works.lua}
+\inputminted[tabsize=4, breaklines, fontsize=\footnotesize]{lua}{code_samples/works.lua}
 
 \begin{figure}
 	\includegraphics[scale=0.5]{img/activity_generic_file_transfer}
@@ -346,7 +346,7 @@ Viene messa a disposizione una API per questo scopo; i passi per creare un serve
 \end{enumerate}
 L'estratto di codice che si presenta ora è una versione leggermente modificata di ciò che
 \texttt{controllers} fà.
-\inputminted[tabsize=4, breaklines]{python}{code_samples/controllers_create_server.py}
+\inputminted[tabsize=4, breaklines, fontsize=\footnotesize]{python}{code_samples/controllers_create_server.py}
 
 Alla fine, la API ritorna al chiamante l'ID del server che lo identifica univocamente
 nel database ed il \texttt{WorkID} relativo al trasferimento dei file. E' responsabilità
@@ -376,4 +376,4 @@ base64 che contiene:
     \item chiave pubblica della CA
 \end{itemize}
 Anche in questo caso si mostra un esempio.
-\inputminted[tabsize=4, breaklines]{python}{code_samples/controllers_create_client.py}
+\inputminted[tabsize=4, breaklines, fontsize=\footnotesize]{python}{code_samples/controllers_create_client.py}
