@@ -1,7 +1,7 @@
 \section{SoftEther}
 \subsection{Overview}
-SoftEther è una tecnologia per VPN molto particolare, sviluppata da uno studente
-giapponese per la sua tesi di laurea magistrale (ora è diventato \textit{associate professor}),
+SoftEther \cite{softether} è una tecnologia per VPN molto particolare, sviluppata dallo studente
+giapponese D. Nobori per la sua tesi di laurea magistrale,
 è un progetto
 attivamente sviluppato, open source e gratuito.\\
 E' disponibile cross-platform, Linux, MAC OS X e Windows. Per
@@ -11,15 +11,14 @@ bisogna cavarsela con file di configurazione ed una shell (\texttt{vpncmd}).
 
 
 La particolarità di questo software è che in grado di gestire anche \textit{altri}
-protocolli VPN, oltre a quello sviluppato appositamente per SoftEther.
-I protocolli supportati sono:
+protocolli VPN, oltre a quello sviluppato appositamente per SoftEther:
 \begin{itemize}
-  \item SoftEther (VPN over HTTPS);
-  \item OpenVPN (L2  e L3);
-  \item SSTP (PPTP over TLS);
-  \item L2TP/IPsec;
-  \item L2TPv3/IPsec;
-  \item EtherIP.
+  \item SoftEther (VPN over HTTPS)
+  \item OpenVPN (L2  e L3)
+  \item SSTP (PPTP over TLS)
+  \item L2TP/IPsec
+  \item L2TPv3/IPsec
+  \item EtherIP
 \end{itemize}
 Il grande vantaggio che dà l'utilizzo del protocollo SoftEther è l'incapsulamento in
 HTTPS, per cui si usa tutta la sicurezza derivante da TLS, unitamente al fatto che
@@ -34,9 +33,9 @@ SoftEther è composto da diversi software:
 % \end{figuare}
 \begin{itemize}
   \item \textit{VPN Server}: il componente server in grado di gestire i multipli
-  protocolli VPN.
-  \item \textit{Virtual Hub}: a dispetto del nome è uno switch che viene usato internamente
-  dal VPN Server per collegare i diversi tunnel.
+  protocolli VPN
+  \item \textit{Virtual Hub} che, a dispetto del nome, è uno switch che viene usato internamente
+  dal VPN Server per collegare i diversi tunnel
   \item \textit{Virtual L3 Switch}: anche in questo caso il nome trae in inganno, poiché si tratta di un
   router che si utilizza in topologie LAN-to-LAN.
   \item \textit{Local Bridge}: componente del server che viene usato per collegare la rete dei Virtual Hub
@@ -59,7 +58,7 @@ SoftEther è composto da diversi software:
   \includegraphics[scale=0.45]{img/softether_scheme}
   \label{fig:softether-archi}
   \caption[Il design di SoftEther]{Il design di SoftEther. Mediante il \textit{Virtual Hub} si \textit{collegano} i diversi
-  moduli.}
+  moduli. \url{https://www.softether.org/@api/deki/files/4/=1.2.jpg?size=webview}}
 \end{figure}
 Con SoftEther si possono realizzare le topologie:
 \begin{itemize}
@@ -74,7 +73,9 @@ Con SoftEther si possono realizzare le topologie:
     \begin{figure}
       \includegraphics[scale=0.4]{img/softether_ras}
       \label{fig:softether_ras}
-      \caption[Configurazione di SoftEther per Remote Access VPN]{Configurazione di SoftEther per Remote Access VPN.}
+      \caption[Configurazione di SoftEther per Remote Access VPN]{
+        Configurazione di SoftEther per Remote Access VPN.
+        \url{https://www.softether.org/@api/deki/files/626/=1_remote2.jpg?size=webview}}
     \end{figure}
   \end{enumerate}
   \item \textbf{LAN-to-LAN}. E' possibile scegliere se collegare le diverse (non necessariamente 2) LAN
@@ -83,18 +84,20 @@ Con SoftEther si possono realizzare le topologie:
   Una volta scelta la topologia che si preferisce si crea un \textit{VPN server}, poi occorre
   differenziare in base al livello.
   \begin{itemize}
-    \item L2:
+    \item L2 \cite{softether-l2-lan-to-lan}:
     \begin{enumerate}
-      \item sulla rete da connettere al server si crea un nuovo \textit{VPN Bridge};
-      \item si connette il bridge al server (si chiama \textit{cascaded connection});
+      \item sulla rete da connettere al server si crea un nuovo \textit{VPN Bridge}
+      \item si connette il bridge al server (si chiama \textit{cascaded connection})
       \item si connette il bridge alla LAN locale utilizzando \textit{Local Bridge}.
       \begin{figure}
         \includegraphics[scale=0.55]{img/softether_l2_lan_to_lan}
         \label{fig:softether_l2_lan_to_lan}
-        \caption[Configurazione LAN-to-LAN con SoftEther al layer 2]{Configurazione LAN-to-LAN con SoftEther al layer 2.}
+        \caption[Configurazione LAN-to-LAN con SoftEther al layer 2]{
+          Configurazione LAN-to-LAN con SoftEther al layer 2.
+          \url{https://www.softether.org/@api/deki/files/325/=10-5-1.png?size=webview}}
       \end{figure}
     \end{enumerate}
-    \item L3:
+    \item L3 \cite{softether-l3-lan-to-lan}:
     \begin{enumerate}
       \item sul server si creano $n$ \textit{Virtual Hub}, uno per ogni LAN remota che si vuole
       collegare; esso ``accumula'' tutte le connessioni provenienti da ciascuna LAN;
@@ -110,7 +113,8 @@ Con SoftEther si possono realizzare le topologie:
       \begin{figure}
         \includegraphics[scale=0.45]{img/softether_l3_lan_to_lan}
         \label{fig:softether_l3_lan_to_lan}
-        \caption[Configurazione LAN-to-LAN con SoftEther al layer 3]{Configurazione LAN-to-LAN con SoftEther al layer 3.}
+        \caption[Configurazione LAN-to-LAN con SoftEther al layer 3]{Configurazione LAN-to-LAN con SoftEther al layer 3.
+          \url{https://www.softether.org/@api/deki/files/326/=10-6-1.png?size=webview}}
       \end{figure}
     \end{enumerate}
   \end{itemize}
@@ -122,10 +126,10 @@ SoftEther possiede alcune caratteristiche molto interessanti, oltre a quelle gi�
   o DNS per bypassare anche i firewall più stringenti. Occorre valutare \textit{quanto}
   siano stringenti tali firewall, perché anche queste soluzioni potrebbero non essere
   praticabili (ad esempio se si usa un server DNS interno e sul firewall si configura l'abilitazione
-  al protocollo DNS solo se proveniente da tale server).
+  al protocollo DNS solo se proveniente da tale server)\cite{softether-vpn-over-icmp}.
   \item[\textbf{NAT Traversal}]Se il server si trova dietro ad un NAT, è comunque possibile connettersi poiché
   esso si occupa di fare continue connessioni verso l'esterno in modo che, quando un client tenta di connettersi
-  il NAT lascia passare la connessione, similmente a quanto fatto da Skype.
+  il NAT lascia passare la connessione, similmente a quanto fatto da Skype\cite{softether-dynamic-dns-nat-trav}.
   \item[\textbf{Dyamic DNS}]Non occorre che si possieda un indirizzo IP statico per identificare il server.
   Gratuitamente SoftEther registra un nuovo nome DNS per ciascun server che viene installato, ed aggiorna
   automaticamente tale nome sulla base degli assegnamenti degli ISP (verificando quale sia l'IP
@@ -133,7 +137,7 @@ SoftEther possiede alcune caratteristiche molto interessanti, oltre a quelle gi�
   \item[\textbf{SecureNAT}]Si tratta di una tecnologia sviluppata appositamente per SoftEther ed è integrata
   nel server, e consiste di un DHCP+NAT. Va notato che questa funzione non richiede privilegi particolari,
   poiché è eseguita in user-space (in Windows, mentre per Linux occorrerebbe verificare se non siano
-  richiesti i privilegi di root).
+  richiesti i privilegi di root)\cite{softether-exploit-securenat}.
   Per ciascun \textit{Virtual Hub} è possibile abilitare questa funzione, ciò fa sì che si crei
   una nuova interfaccia di rete virtuale connessa al \textit{Virtual Hub}
   come se fosse un altro computer collegato in VPN, ed infatti, per gli altri host, la scheda virtuale appare proprio
@@ -149,9 +153,11 @@ SoftEther possiede alcune caratteristiche molto interessanti, oltre a quelle gi�
     necessario installare su in essa \textit{VPN Server}, e di conseguenza connettersi da un client. Usando \textit{SecureNAT}
     è invece possibile invertire questo paradigma. La figura \ref{fig:securenat} illustra la topologia che si realizza.\\
     \begin{figure}
-      \includegraphics[scale=0.55]{img/securenat}
+      \includegraphics[scale=0.55]{img/softether_securenat}
       \label{fig:securenat}
-      \caption[La topologia realizzata con \textit{SecureNAT}]{La topologia realizzata con \textit{SecureNAT}.}
+      \caption[La topologia realizzata con \textit{SecureNAT}]{
+        La topologia realizzata con \textit{SecureNAT}.
+        \url{https://www.softether.org/@api/deki/files/342/=10-11-9.png?size=webview}}
     \end{figure}
     Senza scendere troppo nei dettagli, si illustrano gli step necessari. Per \textit{rete remota} si intende la rete a cui
     ci si vuole connettere, per \textit{rete principale} si intende la rete da cui la connessione parte, ovvero
@@ -173,11 +179,13 @@ SoftEther possiede alcune caratteristiche molto interessanti, oltre a quelle gi�
   \end{itemize}
   \item[\textbf{Performance}]Secondo dei test eseguiti nel 2012 SoftEther \textit{VPN Server} è più veloce (maggiore throughput) di tutte le
   altre alternative. Il grafico in figura \ref{fig:softether-performance} mostra il risultato dei test. Si tenga comunque
-  conto che sono benchamrk vecchi di 5 anni.
+  conto che sono benchamrk vecchi di 5 anni, e che nel frattempo anche i concorrenti si sono evoluti.
 \end{description}
 \begin{figure}
   \includegraphics[scale=0.4]{img/softether_perf}
-  \caption[Comparazione performance delle diverse tecnologie VPN]{Comparazione performance delle diverse tecnologie VPN (2012).}
+  \caption[Comparazione performance delle diverse tecnologie VPN]{
+    Comparazione performance delle diverse tecnologie VPN (2012).
+    \url{https://www.softether.org/@api/deki/files/12/=1.3.jpg}}
   \label{fig:softether-performance}
 \end{figure}
 
