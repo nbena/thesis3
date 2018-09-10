@@ -89,6 +89,8 @@ img_files := $(img_directory)/minerva_2013_DI.jpg
 img_files += $(img_directory)/mooncloud_archi.pdf
 img_files += $(img_directory)/mooncloud_archi_extended.pdf
 
+img_files += $(img_directory)/tunnelling.pdf
+
 # img_files += $(img_directory)/mls.png
 img_files += $(img_directory)/openvpn_sec.png
 # img_files += $(img_directory)/rsmc.png
