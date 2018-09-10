@@ -4,15 +4,15 @@ tecnologie.
 Nonostante WireGuard non sia stato analizzato
 in dettaglio, viene comunque inserito in questa lista grazie ai suoi vantaggi.
 \begin{description}
-  \item[\textbf{OpenVPN}]:
+  \item[\textbf{OpenVPN}]
   \begin{itemize}
     \item ampio supporto e documentazione
-    \item sicurezza basata su TLS e protocollo custom
+    \item sicurezza basata su TLS e protocollo custom assimilabile ad esso
     \item vari tipi di autenticazione
     \item possibile connessione anche al layer 2
     \item topologie consigliate:
     \begin{enumerate}
-      \item \textit{MLS} con client in \textit{NAT al contrario}
+      \item \textit{LS} con client in \textit{NAT al contrario}
       \item \textit{RS} con port forwarding abilitato sulla rete target
     \end{enumerate}
     \item Contro:
@@ -22,7 +22,7 @@ in dettaglio, viene comunque inserito in questa lista grazie ai suoi vantaggi.
       \item necessaria gestione dei certificati
     \end{itemize}
   \end{itemize}
-    \item[\textbf{SoftEther}]:
+    \item[\textbf{SoftEther}]
     \begin{itemize}
       \item multi-protocol e multi-platform
       \item incapsulamento in HTTPS
@@ -41,11 +41,11 @@ in dettaglio, viene comunque inserito in questa lista grazie ai suoi vantaggi.
       \end{enumerate}
       \item Contro:
       \begin{itemize}
-        \item necessità di una secondo NIC sul server in modalità promiscua;
+        \item necessità di una seconda NIC sul server in modalità promiscua
         \item documentazione buona per Windows, meno per Linux
       \end{itemize}
     \end{itemize}
-    \item[\textbf{IPsec}]:
+    \item[\textbf{IPsec}]
     \begin{itemize}
       \item IKEv2 dà ampia scelta di configurazioni
       \item sicurezza mediante ESP (cifratura payload pacchetto IP)
@@ -64,7 +64,7 @@ in dettaglio, viene comunque inserito in questa lista grazie ai suoi vantaggi.
         \item voci di indebolimento da parte dell'NSA
       \end{itemize}
     \end{itemize}
-    \item[\textbf{WireGuard}]:
+    \item[\textbf{WireGuard}]
     \begin{itemize}
       \item molto più performante di ogni altra soluzione
       \item altamente sicuro
@@ -84,7 +84,7 @@ su ICMP  e DNS, sebbene dichiarate come non completamente affidabili.
 
 L'opzione IPsec con IKEv2 è altrettanto valida, il principale svantaggio è che i firewall più stringenti
 potrebbero bloccare il traffico \textit{ESP}. In tal caso si può incapsulare \textit{ESP} in \textit{UDP},
-ma comunque si richiede che il traffico UDP sia permesso (porta 4500).
+ma comunque si richiede che il traffico UDP sia permesso (porta 500).
 
 Come prima soluzione si è scelta SoftEther, ma infine quella utilizzata è OpenVPN. Il
 prossimo capitolo affronta tutto nel dettaglio.

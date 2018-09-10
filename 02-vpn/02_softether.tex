@@ -6,12 +6,12 @@ giapponese D. Nobori per la sua tesi di laurea magistrale,
 attivamente sviluppato, open source e gratuito.\\
 E' disponibile cross-platform, Linux, MAC OS X e Windows. Per
 le versioni MAC OS X e Windows è disponibile un'interfaccia grafica sia per client
-sia per server, che consente di configurazioni in maniera molto intuitiva; su Linux
+sia per server, che consente di fare configurazioni in maniera molto intuitiva; su Linux
 bisogna cavarsela con file di configurazione ed una shell (\texttt{vpncmd}).
 
 
 La particolarità di questo software è che in grado di gestire anche \textit{altri}
-protocolli VPN, oltre a quello sviluppato appositamente per SoftEther:
+protocolli VPN, oltre ad uno sviluppato ad hoc:
 \begin{itemize}
   \item SoftEther (VPN over HTTPS)
   \item OpenVPN (L2  e L3)
@@ -22,7 +22,7 @@ protocolli VPN, oltre a quello sviluppato appositamente per SoftEther:
 \end{itemize}
 Il grande vantaggio che dà l'utilizzo del protocollo SoftEther è l'incapsulamento in
 HTTPS, per cui si usa tutta la sicurezza derivante da TLS, unitamente al fatto che
-praticamente qualsiasi firewall lascerà passare questo traffico.\\
+praticamente qualsiasi firewall lascerà passare tale traffico.\\
 La figura \ref{fig:softether-archi} mostra come funziona SoftEther.
 
 
@@ -35,18 +35,19 @@ SoftEther è composto da diversi software:
   \item \textit{VPN Server}: il componente server in grado di gestire i multipli
   protocolli VPN
   \item \textit{Virtual Hub} che, a dispetto del nome, è uno switch che viene usato internamente
-  dal VPN Server per collegare i diversi tunnel
+  dal VPN Server per collegare i diversi tunnel (uno per ogni protocollo)
   \item \textit{Virtual L3 Switch}: anche in questo caso il nome trae in inganno, poiché si tratta di un
   router che si utilizza in topologie LAN-to-LAN.
   \item \textit{Local Bridge}: componente del server che viene usato per collegare la rete dei Virtual Hub
   alla rete fisica su cui si trova il server VPN. E' necessario avere un'interfaccia di rete
-  fisica dedicata che sia connessa ad uno switch (su cui non sia attivo nessun protocollo di rete);
-  è possibile anche utilizzare una scheda di rete virtuale usando \texttt{TAP} al layer 2.
-  E' comunque consigliabile
+  reale dedicata che sia connessa alla rete fisica (su cui non sia attivo nessun protocollo di rete);
+  è possibile anche utilizzare una scheda di rete virtuale usando \texttt{TAP} al layer
+  2\footnote{\texttt{TAP} è un modulo del kernel Linux che consente di creare NIC virtuali al livello 2.}.
+  E' consigliabile
   una NIC di buona qualità, che possa lavorare in modalità promiscua. Non è obbligatorio
   avere questa seconda interfaccia, sebbene sia caldamente consigliato.
   \item \textit{VPN Bridge} è la combinazione di \textit{Virtual Hub} e \textit{Local Bridge} che consente
-  di collegare tra loro diverse \textit{reti} in VPN (e non singoli host). E' utilizzabile
+  di collegare tra loro diverse \textit{reti} in VPN (e non singoli host). E' utilizzato
   lato client per realizzare topologie LAN-to-LAN.
   \item \textit{VPN Client} è il classico componente client che connette un PC ad una VPN. Utilizza il
   protocollo SoftEther VPN sopra descritto. Come client si può comunque utilizzare un qualsiasi software che
@@ -56,11 +57,11 @@ SoftEther è composto da diversi software:
 
 \begin{figure}
   \includegraphics[scale=0.45]{img/softether_scheme}
-  \label{fig:softether-archi}
   \caption[Il design di SoftEther]{Il design di SoftEther. Mediante il \textit{Virtual Hub} si \textit{collegano} i diversi
   moduli. \url{https://www.softether.org/@api/deki/files/4/=1.2.jpg?size=webview}}
+  \label{fig:softether-archi}
 \end{figure}
-Con SoftEther si possono realizzare le topologie:
+Con SoftEther si possono realizzare diverse topologie:
 \begin{itemize}
   \item \textbf{Remote Access}. Si crea in maniera molto semplice una nuovo server, mediante la GUI o
   la linea di comando. Dal punto di vista logico si fanno i seguenti passaggi:
@@ -72,15 +73,14 @@ Con SoftEther si possono realizzare le topologie:
     \item Connessione al server utilizzando il software client.
     \begin{figure}
       \includegraphics[scale=0.4]{img/softether_ras}
-      \label{fig:softether_ras}
       \caption[Configurazione di SoftEther per Remote Access VPN]{
         Configurazione di SoftEther per Remote Access VPN.
         \url{https://www.softether.org/@api/deki/files/626/=1_remote2.jpg?size=webview}}
+        \label{fig:softether_ras}
     \end{figure}
   \end{enumerate}
-  \item \textbf{LAN-to-LAN}. E' possibile scegliere se collegare le diverse (non necessariamente 2) LAN
-  a livello 2 o a livello 3, le differenze tra le due sono già state descritte
-  in precedenza.
+  \item \textbf{LAN-to-LAN}. E' possibile scegliere se collegare le diverse LAN
+  a livello 2 o a livello 3.
   Una volta scelta la topologia che si preferisce si crea un \textit{VPN server}, poi occorre
   differenziare in base al livello.
   \begin{itemize}
@@ -91,10 +91,10 @@ Con SoftEther si possono realizzare le topologie:
       \item si connette il bridge alla LAN locale utilizzando \textit{Local Bridge}.
       \begin{figure}
         \includegraphics[scale=0.55]{img/softether_l2_lan_to_lan}
-        \label{fig:softether_l2_lan_to_lan}
         \caption[Configurazione LAN-to-LAN con SoftEther al layer 2]{
           Configurazione LAN-to-LAN con SoftEther al layer 2.
           \url{https://www.softether.org/@api/deki/files/325/=10-5-1.png?size=webview}}
+          \label{fig:softether_l2_lan_to_lan}
       \end{figure}
     \end{enumerate}
     \item L3 \cite{softether-l3-lan-to-lan}:
@@ -112,9 +112,9 @@ Con SoftEther si possono realizzare le topologie:
       così: per raggiungere la LAN $x$ inoltra all'indirizzo IP relativo nel \textit{Virtual L3 Switch}.
       \begin{figure}
         \includegraphics[scale=0.45]{img/softether_l3_lan_to_lan}
-        \label{fig:softether_l3_lan_to_lan}
         \caption[Configurazione LAN-to-LAN con SoftEther al layer 3]{Configurazione LAN-to-LAN con SoftEther al layer 3.
           \url{https://www.softether.org/@api/deki/files/326/=10-6-1.png?size=webview}}
+          \label{fig:softether_l3_lan_to_lan}
       \end{figure}
     \end{enumerate}
   \end{itemize}
@@ -129,7 +129,7 @@ SoftEther possiede alcune caratteristiche molto interessanti, oltre a quelle gi�
   al protocollo DNS solo se proveniente da tale server)\cite{softether-vpn-over-icmp}.
   \item[\textbf{NAT Traversal}]Se il server si trova dietro ad un NAT, è comunque possibile connettersi poiché
   esso si occupa di fare continue connessioni verso l'esterno in modo che, quando un client tenta di connettersi
-  il NAT lascia passare la connessione, similmente a quanto fatto da Skype\cite{softether-dynamic-dns-nat-trav}.
+  il NAT lascia passare la connessione \cite{softether-dynamic-dns-nat-trav}.
   \item[\textbf{Dyamic DNS}]Non occorre che si possieda un indirizzo IP statico per identificare il server.
   Gratuitamente SoftEther registra un nuovo nome DNS per ciascun server che viene installato, ed aggiorna
   automaticamente tale nome sulla base degli assegnamenti degli ISP (verificando quale sia l'IP
@@ -154,10 +154,10 @@ SoftEther possiede alcune caratteristiche molto interessanti, oltre a quelle gi�
     è invece possibile invertire questo paradigma. La figura \ref{fig:securenat} illustra la topologia che si realizza.\\
     \begin{figure}
       \includegraphics[scale=0.55]{img/softether_securenat}
-      \label{fig:securenat}
       \caption[La topologia realizzata con \textit{SecureNAT}]{
         La topologia realizzata con \textit{SecureNAT}.
         \url{https://www.softether.org/@api/deki/files/342/=10-11-9.png?size=webview}}
+        \label{fig:securenat}
     \end{figure}
     Senza scendere troppo nei dettagli, si illustrano gli step necessari. Per \textit{rete remota} si intende la rete a cui
     ci si vuole connettere, per \textit{rete principale} si intende la rete da cui la connessione parte, ovvero
@@ -191,17 +191,18 @@ SoftEther possiede alcune caratteristiche molto interessanti, oltre a quelle gi�
 
 \subsection{SoftEther e MoonCloud}
 Dopo aver analizzato SoftEther ora si vedono quali sono le possibili configurazioni per un suo uso in MoonCloud.
-Si è valutata come migliore soluzione quella basata su incapsulamento in HTTPS di L3.
+Si è valutata come migliore soluzione quella basata su incapsulamento in HTTPS di L3, ovvero utilizzare
+il protocollo SoftEther.
 La prima distinzione sta nel dove posizionare il server.
 \begin{description}
-  \item[\textbf{Nel cloud}]Installare il server nella rete MoonCloud pone un problematica
+  \item[\textbf{Local Server}]Installare il server nella rete MoonCloud pone un problematica
   non così banale, cioè la necessità (non mandatoria ma caldamente consigliata) di
   disporre di una scheda di rete da poter configurare in modalità promiscua, ovviamente
   a livello di VM. E' possibile che dei cloud provider non consentano questo.
   Nella rete target si porterebbe un'appliance con \textit{VPN Bridge}.
-  \item[\textbf{Nella rete target}]In questa configurazione, se l'implementazione
+  \item[\textbf{Remote Server}]In questa configurazione, se l'implementazione
   di NAT Traversal di SoftEther lo consente, sarebbe possibile per i client raggiungere
-  il server nella rete target anche se dietro ad un NAT. Occorrerebbe poi valutare utilizzare
+  il server nella rete target anche se dietro ad un NAT. Occorrerebbe poi valutare se utilizzare
   un unico client in MoonCloud (\textit{RSSC}) oppure diversi (\textit{RSMC}); ovviamente
   per \textit{unico client} si intende un \textit{unico} client per ciascuna rete.
 \end{description}
@@ -210,7 +211,7 @@ nella rete target, se non con l'utilizzo del già citato \textit{NAT al contrari
 
 Oltre a queste soluzioni classiche, si sarebbe potuto sfruttare anche \textit{Secure NAT}.
 Si tratta di una modalità interessante, che avrebbe richiesto uno studio approfondito
-per capire come potesse davvero aiutare il nostro use case.
+per capire come potesse davvero aiutare lo use case in questione.
 In questo caso:
   \begin{itemize}
     \item l'appliance è costituita dal \textit{VPN Bridge};

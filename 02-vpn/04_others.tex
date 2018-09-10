@@ -10,15 +10,16 @@ per piattaforme non-Microsoft va verificato.
 
 \subsection{OpenConnect}
 \textit{DTLS - Datagram Transport Layer Security} è uno standard RFC che specifica
-sostanzialmente l'uso di TLS su UDP, per fornire le stesse garanzie di sicurezza che TLS dà
-su TCP. Come tale, può essere utilizzato per costruire VPN.\\
+una sorta di di TLS su UDP, per fornire le stesse garanzie di sicurezza che TLS dà
+su TCP \cite{RFC6347}. Come tale, può essere utilizzato per costruire VPN.\\
 \texttt{Cisco Any Connect} è una soluzione VPN basata su DTLS e HTTPS, e
-\texttt{OpenConnect} è una soluzione open source sia client sia server compatibile.
-OpenConnect fornisce una configurazione molto simile ad OpenVPN, ad esempio le direttive
-di configurazioni lato server sono davvero molto simili. Vi è una prima fase di
-autenticazione su HTTPS, il traffico poi è su DTLS, eventualmente si sposta su
+\texttt{OpenConnect} è una soluzione open source sia client sia server compatibile
+\cite{cisco-vpn} \cite{openconnect-client} \cite{openconnect-server}.
+OpenConnect fornisce una configurazione simile ad OpenVPN \cite{openconnect-server-conf}.
+Per ciò che concerne il funzionamento, vi è una prima fase di
+autenticazione su HTTPS, il traffico poi procede su DTLS, eventualmente si sposta su
 HTTPS se UDP non è supportato. Da questo punto di vista non avevo rilevato particolari
-vantaggi rispetto a SoftEther.
+vantaggi rispetto a SoftEther o OpenVPN.
 
 
 \subsection{OpenSSH}
@@ -82,14 +83,16 @@ particolari vantaggi rispetto a SoftEther od OpenVPN.
 	      \end{itemize}
 	      \begin{figure}
 	      	\includegraphics[scale=0.45]{img/wireguard_performance}
-	      	\caption[Benchmark tra IPsec, OpenVPN e WireGuard]{Benchmark tra IPsec, OpenVPN e WireGuard.
+			  \caption[Benchmark tra IPsec, OpenVPN e WireGuard]{Benchmark tra IPsec, OpenVPN e WireGuard.
+			  	OpenVPN è la soluzione più lenta poiché è l'unica implementata nello user-space.
 	      		\url{https://www.wireguard.com/performance/}}
 	      	\label{fig:wireguard-performance}
-	      \end{figure}
-	      WireGuard ha un grande potenziale, soprattutto è estremamente performante e facile
-	      da configurare, infatti, le opzioni che possono essere specificate sono davvero poche.
-	      Un interfaccia WireGuard può gestire più peer, ed occorre che le chiavi pubbliche di tutti
-	      i peer a cui ci si vuole connettere siano presenti su tutti i partecipanti. In fase di scelta
+		  \end{figure}
+		  Un interfaccia WireGuard può gestire più peer, ed occorre che le chiavi pubbliche di tutti
+	      i peer a cui ci si vuole connettere siano presenti su tutti i partecipanti.
+		  WireGuard ha un grande potenziale, tuttavia è poco configurabile. Questo ha il vantaggio
+		  di rendere tale soluzione molto facile da configurare, al prezzo di, semplicemente, avere
+		  molte meno opzioni su cui intervenire. In fase di scelta
 	      finale, questa soluzione è stata infine scartata perché funzionante su UDP.
 	      
 	      
@@ -97,9 +100,9 @@ particolari vantaggi rispetto a SoftEther od OpenVPN.
 	      \subsection{IPsec/L2TPv3 e EtherIP/IPsec}
 	      \begin{itemize}
 	      	\item L2TP versione 3 è l'ultimo aggiornamento del protocollo L2TP, principalmente implementato in
-	      	      devices Cisco. Analogamento ad L2TP, è possibile usarlo per creare VPN LAN-to-LAN al livello 2.\\
+	      	      device Cisco. Analogamento ad L2TP, è possibile usarlo per creare VPN LAN-to-LAN al livello 2.\\
 	      	      Viene supportato dai principali produttori di apparati di rete, oltre che da Linux.
-	      	\item EtherIP è un protovollo per l'incapsulamento di frame Ethernet in frame IP, il cui scopo è quello
+	      	\item EtherIP è un protocollo per l'incapsulamento di frame Ethernet in frame IP, il cui scopo è quello
 	      	      di connettere tra loro diverse LAN a livello 2.
 	      \end{itemize}
 	      Entrambi i due protocolli devono essere incapsulati in IPsec per ottenere una VPN che garantisca proprietà
