@@ -112,6 +112,8 @@ img_files += $(img_directory)/ls.pdf
 img_files += $(img_directory)/rsmc.pdf
 img_files += $(img_directory)/rssc.pdf
 
+img_files += $(img_directory)/openvpn_tunnelling.pdf
+
 img_files += $(img_directory)/ip_mapping_send.pdf
 img_files += $(img_directory)/ip_mapping_recv.pdf
 
