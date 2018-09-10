@@ -2,21 +2,21 @@
 
 \begin{figure}
 	\includegraphics[scale=0.6]{img/mooncloud_archi}
-	\label{fig:mooncloud-archi}
 	\caption{L'architettura MoonCloud}
+	\label{fig:mooncloud-archi-fig}
 \end{figure}
 
 Logicamente, è possibile dividere l'architettura MoonCloud
-in due macrocomponenti, così come mostrato in figura \ref{fig:moonclod-archi}.
+in due macrocomponenti, così come mostrato in figura \ref{fig:mooncloud-archi-fig}.
 La comunicazione tra di essi avviene mediante due code:
 \begin{description}
 	\item[\texttt{Agent Queue}]Su di essa vengono inviate richieste di esecuzione di test.
-	\item[\texttt{Evidence Queue}]Tale coda è responsabile del passaggio delle evidenze tra
+	\item[\texttt{Evidence Queue}]E' responsabile del passaggio delle evidenze tra
 	il componente di esecuzione e quello di gestione. 
 \end{description}
 I due macrocomponenti sono:
 \begin{description}
-	\item[\texttt{Certification Manager}]Componente responsabile dell'orchestrazione
+	\item[\texttt{Certification Manager}]Si occupa dell'orchestrazione
 	dell'intero processo di certificazione. Ne fanno parte i seguenti moduli:
 	\begin{itemize}
 		\item \texttt{Dashboard}: una web GUI utilizzata dai clienti per
@@ -26,8 +26,9 @@ I due macrocomponenti sono:
 		      dei modelli)
 		\item \texttt{Probe Dispatcher} il quale si occupa della comunicazione
 		      tra \texttt{Certification Manager} ed i cluster di esecuzione.
-		\item \texttt{Result Database} ovvero una base di dati \texttt{InfluxDB} in
-		      cui vengono salvate le evidenze collezionate durante i test
+		\item \texttt{Result Database} ovvero una base di dati
+		\texttt{InfluxDB} in
+		      cui vengono salvate le evidenze collezionate durante i test\footnote{\url{https://www.influxdata.com/}}
 		\item \texttt{Evidence Analyzer} è un componente responsabile di analizzare
 		      le evidenze raccolte nella specifica base di dati. % e di verificare la correttezza di modelli.
 	\end{itemize}
@@ -38,7 +39,7 @@ I due macrocomponenti sono:
 	è composto da:
 	\begin{itemize}
 		\item \texttt{Scheduler}: aspetta richieste dal \texttt{Certification Manager}
-		      e le dispaccia al successivo componente.    
+		      e ne fa il dispatching al successivo componente.    
 		\item \texttt{Worker}: esso è connesso direttamente agli agenti che analizzano,
 		      manda ad essi le configurazioni necessarie, ne raccoglie le evidenze e le invia
 		      al \texttt{Certification Manager}.
@@ -52,7 +53,7 @@ Gli agent di esecuzione a loro volta si dividono in due categorie:
 	\item[\texttt{Meta-probe}]Si occupano di verificare eventuali violazioni ai
 	vincoli di tempo, probabilità, configurazioni. 
 \end{description}
-Si può dire che mentre il primo tipo sia \textit{invasivo}, il secondo invece
+Si può dire che mentre il primo tipo di probe sia \textit{invasivo}, il secondo invece
 ha un minore overhead in quanto si limita a verificare una certa proprietà
 senza interferire con il normale funzionamento del sistema.
 Poiché prevedono una forma di analisi meno intrusiva, il minor overhead comporta

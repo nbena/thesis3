@@ -1,10 +1,10 @@
 \section{Overview}\label{sec:mooncloud-overview}
 MoonCloud è un framework per la valutazione ed il monitoraggio continuo
 di servizi cloud.
-Molto sinteticamente, si definiscono delle proprietà (es: \textit{cifratura
-dei dati salvati su storage}) e si verifica in maniera continua che tale
-proprietà sia sempre rispettata. Il rispetto della proprietà porta al
-rilascio di un certificato che ne attesta il rispetto. Nel momento in cui
+Il suo funzionamento consiste nella definizione di proprietà (es: \textit{cifratura
+dei dati salvati su storage}) e nella verifica in maniera continua che tali
+proprietà siano sempre rispettate. Il rispetto di queste proprietà porta al
+rilascio di un certificato che attesta ciò. Nel momento in cui
 tale rispetto viene meno il certificato diventa revocato, e, si presume
 che vengano al più presto applicate azioni correttive per ripristinare
 la proprietà.
@@ -35,12 +35,12 @@ un certificato per il ToC.
 
 Nella seconda fase, detta \textit{production evaluation}, l'accreditated
 lab, mediante test continui, verifica che il certificato sia o meno
-valido.
+sempre valido.
 
 \subsection{Proprietà, meccanismi, certificati}
 Fondamentale è la separazione tra \textit{proprietà} e \textit{meccanismi}.
 
-Una \textit{proprietà non funzionali} è definita
+Una \textit{proprietà non funzionale} è definita
 come ``una proprietà astratta presa da vocabolari comuni o domain-specific, ed un set
 di attributi che la raffinano'' \cite{mooncloud-semi-automatic-and-trustworthy}.
 
@@ -64,13 +64,13 @@ un riferimento alle evidenze collezionate, ed è legato al ToC.
 
 
 Affinché le evidenze raccolte ed i risultati derivati da esse siano conformi alla
-realtà è fondamentale che tutti i modelli usati siano conformi a quelli reali. Ad esempio
+realtà è fondamentale che tutti i modelli usati siano conformi a quelli reali. Ad esempio,
 i modelli di evidenze che ci si aspetta siano corretti devono corrispondere alle
-evidenze effettive che provino la correttezza. Lo stesso vale per l'intera modellazione
+evidenze che davvero ne provino la correttezza. Lo stesso vale per l'intera modellazione
 del sistema \cite{mooncloud-modelling-time}.
 
 Oltre al test di proprietà funzionali, recentemente (\cite{mooncloud-modelling-time}),
-MoonCloud ha introdotto anche verifichi di vincoli basati sul tempo (es: garantire che
+MoonCloud ha introdotto anche verifiche di vincoli basati sul tempo (es: garantire che
 un tempo di risposta di una API inferiore ad $x$ ms), sulla probabilità che
-certi eventi si verifichino, su particolari configurazioni che devono essere adottati
+certi eventi si verifichino, su particolari configurazioni che devono essere adottate
 all'interno di un modello più ampio, ed anche alla verifica di attacchi noti.
