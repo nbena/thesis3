@@ -218,18 +218,18 @@ viene utilizzata nel server per indicare al client quale sia la/e rete/i che si 
 Questo presuppone di sapere in partenza quali siano queste reti, ma in un ambiente
 dinamico quale MoonCloud ciò non è possibile. Può capitare che i \textit{Docker host}
 che vengono aggiunti on-demand appartengano alla stessa rete del server, come
-può anche capitare che appartengano ad un'altra rete di cui il server non ha conoscenza,
-ma comunque vi è mutua raggiungibilità tra tale server e tale rete. Il quesito da
+può anche capitare che appartengano ad un'altra rete che il server a priori non conosce.
+Il quesito da
 risolvere in questo caso è il seguente: \textit{come gestire la dinamicità delle rotte
 lato server senza bisogno di riavviare il server?}
 Il punto di partenza di questo problema è la necessità del client di conoscere le
-reti ``dietro'' al server OpenVPN, che fin'ora era gestito mediante le
+reti ``dietro'' al server OpenVPN, che fin'ora era gestito mediante le direttive
 ``\texttt{push "route <server-net>"}'', ma ora si è visto che non sono più utilizzabili.
 Prima di vedere la soluzione, si esamina il flusso di un pacchetto nel caso in cui
-tale direttiva non venga più inclusa.
+tale direttiva non venga più inclusa, sempre assumendo le configurazioni precedenti.
 \begin{enumerate}
   \item Il \textit{probe} genera il pacchetto, la sorgente di tale pacchetto è
-  \texttt{192.168.200.2}, la destinazione \texttt{192.168.100.254}.
+  \texttt{192.168.200.2}, la destinazione \texttt{192.168.100.254}
   \item il sistema operativo del \textit{Docker host} consulta la propria routing table
   ed instrada il pacchetto verso \texttt{192.168.200.20}
   \item il sistema operativo del VPN server riceve il pacchetto, consulta la
@@ -269,7 +269,7 @@ L'indirizzo IP della scheda di rete virtuale del client si trova nella stessa su
 di quello del server, quindi il sistema operativo aggiunge automaticamente una rotta
 alla propria routing table verso quella scheda di rete, nell'esempio in questione, quando
 tale scheda viene creata, la rotta aggiunta è la seguente:\texttt{10.7.0.0/24 via 10.7.0.2}.\\
-Lato server si usa
+Per fare ciò lato server si applica
 NAT con \texttt{iptables}, ed i comandi sono ancora una volta presenti
 nei file specificati nelle direttive ``\texttt{client-disconnect}'' e ``\texttt{client-disconnect}'';
 nel seguente modo:
@@ -340,4 +340,4 @@ seguito da un pacchetto dall'invio di un pacchetto da parte di un probe.
   ora l'indirizzo IP destinazione è \texttt{192.168.200.2}
   \item il pacchetto viene quindi inviato  a \texttt{192.168.200.2}.
 \end{enumerate}
-Per poterci riferire a questa soluzione, essa viene detta ``\textit{NAT lato server}''.
+Questa soluzione viene detta ``\textit{NAT lato server}''.

@@ -1,8 +1,9 @@
 \section{Configurazione finale}\label{sec:ending}
 Dopo aver visto tutti i problemi affrontati e come sono stati risolti, è il
 momento di vedere come sono configurati \textit{davvero} i server ed i client
-VPN in MoonCloud. Come per il mappaggio degli indirizzi IP, il mio microservizio,
-si occupa di automatizzare il tutto, e di generare tutto ciò che
+VPN in MoonCloud. Come per il mappaggio degli indirizzi IP, il microservizio
+\texttt{MoonCloud\_VPN}
+si occupa di automatizzare e di generare tutto ciò che
 serve.\\
 Durante tutte le sottosezioni successive, si supporrà la seguente configurazione
 di esempio:
@@ -20,10 +21,10 @@ di esempio:
   \item indirizzo IP scheda di rete virtuale VPN client $A$: \texttt{10.7.0.2}
   \item \texttt{CommonName} del VPN client $A$: \texttt{office1.company.com}
 \end{itemize}
-Si tenga presente che ci concentrà sulla configurazione della VPN ed anche l'
+Si tenga presente che ci si concentra sulla configurazione della VPN ed anche l'
 \textit{IP mapping} viene affrontato solo dal punto di vista della VPN. Per avere ulteriori
 informazioni sulla generazione dei certificati, sull'algoritmo che mappa una rete o che
-mappa un IP, capitolo \ref{ch:microservice} è dedicato ad esso.
+mappa un IP, il capitolo \ref{ch:microservice} è dedicato ad esso.
 Nei file \texttt{client-up.sh} e \texttt{client-down.sh} si noteranno alcune regole iptables
 che non state ancora spiegate: esse sono funzionali ad incrementare la sicurezza della VPN,
 e sono descritte nel prossimo capitolo.
@@ -38,7 +39,7 @@ di configurazione:
 mode server
 tls-server
 
-# protocllo L4
+# protocollo L4
 proto tcp
 
 # configurazione NIC
@@ -206,7 +207,7 @@ Si produce quindi uno script di comandi per \texttt{iptables} così composto:
 \begin{minted}[breaklines]{bash}
 # !/bin/bash
 
-# ip mapping, changing destination addresses
+# ip mapping, modifica destinazione
 # (done for request packets)
 iptables -t nat -A PREROUTING -d 192.168.1.1 -s 10.7.0.0/24 -j DNAT --to-destination 192.168.100.1
 iptables -t nat -A PREROUTING -d 192.168.1.2 -s 10.7.0.0/24 -j DNAT --to-destination 192.168.100.2
@@ -217,7 +218,7 @@ iptables -t nat -A PREROUTING -d 192.168.1.254 -s 10.7.0.0/24 -j DNAT --to-desti
 # 'reverse NAT'
 iptables -t nat -A POSTROUTING -d 192.168.1.0/24 -s 10.7.0.0/24 -j MASQUERADE
 
-# ip mapping, changing source addresses
+# ip mapping, modifica sorgente
 # (done for response packets)
 iptables -t nat -A POSTROUTING -s 192.168.100.1 -d 10.7.0.0/24 -j SNAT --to-source 192.168.1.1
 iptables -t nat -A POSTROUTING -s 192.168.100.2 -d 10.7.0.0/24 -j SNAT --to-source 192.168.1.2

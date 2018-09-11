@@ -1,10 +1,9 @@
 \section{Testing}
 Dopo aver visto come configurare i partecipanti alla VPN, si passa a descrivere
-i test che ho effettuato per verificare che il tutto funzionasse.
+i due test che sono stati effettuati per verificare che il tutto funzionasse.
 
 \subsection{Test 1}
-Il primo test è stato eseguito sulla configurazione spiegata all'inizio del capitolo,
-eccola spiegata nel dettaglio:
+Il primo test è stato eseguito sulla configurazione spiegata all'inizio del capitolo:
 \begin{itemize}
   \item OpenVPN server ospitato su AWS, raggiungibile da nome DNS, sistema
   operativo \texttt{Ubuntu Server}, indirizzo IP privato \texttt{172.31.40.221}
@@ -34,9 +33,9 @@ eccola spiegata nel dettaglio:
       IP \texttt{192.168.100.20}, default gateway \texttt{192.168.100.254}
       \item un host \texttt{Alpine Linux}, con indirizzo IP
       \texttt{192.168.100.30} ed un server
-      web in ascolto sulla porta 80\footnote{Non ho usato un secondo host anche
-      in questa rete perché il carico di lavoro del mio portatile iniziava ad
-      essere un pò elevato.}
+      web in ascolto sulla porta 80\footnote{Non si è creato un secondo host anche
+      in questa rete perché il carico di lavoro sul PC utilizzato iniziava ad
+      essere elevato.}
     \end{itemize}
   \end{itemize}
 \end{itemize}
@@ -57,8 +56,8 @@ dell'\textit{IP mapping}. In particolare:
 La figure \ref{fig:openvpn-test1} dà una rappresentazione grafica della topologia
 realizzata.\\
 I due firewall sono stati configurati volutamente in modo restrittivo, al fine
-di verificare se OpenVPN fosse in grado di passarli. Riporto quindi i comandi
-\texttt{iptables} utilizzati (essi sono gli stessi per entrambi i firewall):
+di verificare se OpenVPN fosse in grado di passarli. Si riportano i comandi
+\texttt{iptables} utilizzati (uguali per entrambi i firewall):
 \begin{minted}[breaklines]{bash}
 #!/bin/ash
 # ash è la shell di Alpine
@@ -246,7 +245,7 @@ status /var/log/openvpn/client200/openvpn-status.log
 \end{minted}
 Una volta messa a punto la connessione, l'obiettivo del test era riuscire a visualizzare
 le pagine web offerte dai target dal \textit{Docker host}.
-Mentre con SoftEther non ero nemmeno riuscito a completare la connessione, lo
+Mentre con SoftEther non si era nemmeno riusciti a completare la connessione, lo
 screenshot qui sotto mostrano che la mia soluzione funziona. Si tratta della mia
 shell connessa in SSH al \textit{Docker host} sul quale è in esecuzione un container
 \texttt{Alpine}. Come detto prima, i tre host che si vogliono raggiungere sono
@@ -267,8 +266,8 @@ ip route add 192.168.200.0/24 via 172.31.40.221
 
 \begin{figure}
   \includegraphics[scale=0.6]{img/openvpn_test1}
-  \label{fig:openvpn-test1}
   \caption{Test 1 per OpenVPN}
+  \label{fig:openvpn-test1}
 \end{figure}
 
 Ecco quindi il risultato:
@@ -307,9 +306,9 @@ differenza è che si è usata una sola rete target anziché due.
 L'obiettivo era testare una connessione SSH dalla \textit{Docker machine}
 nella stessa rete del VPN server verso un host nella rete target (passando
 ovviamente per il collegamento VPN).
-Il test ha dato esito positivo, ed è mostrato in figura \ref{fig:openvpn-test2}.
+Il test ha dato esito positivo, lo schema è mostrato figura \ref{fig:openvpn-test2}.
 \begin{figure}
   \includegraphics[scale=0.55]{img/openvpn_test2}
-  \label{fig:openvpn-test2}
   \caption{Test 2 per OpenVPN}
+  \label{fig:openvpn-test2}
 \end{figure}

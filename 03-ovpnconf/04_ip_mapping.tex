@@ -4,7 +4,7 @@ più difficile da risolvere, e che, potenzialmente, avrebbe potuto far fallire
 tutto il lavoro precedentemente fatto.
 
 \subsection{Il problema}
-Si è detto in precedenza che si è scelta infine una configurazione \textit{Multi Local
+Si è detto in precedenza che si è scelta infine una configurazione \textit{Local
 Server}, con i server OpenVPN installati in MoonCloud e raggiungibili mediante IP
 pubblici da i client presenti nella rete target. Per ragioni di costi, si vuole
 limitare il numero di VM in MoonCloud con OpenVPN in esecuzione, e quindi poter
@@ -15,8 +15,8 @@ che si utilizzi la direttiva ``\texttt{client-to-client}'', e, come si è visto,
 tale direttiva non viene utilizzata).\\
 Per poter quindi realizzare in maniera corretta una topologia del genere è
 \textit{fondamentale che ogni rete target abbia un spazio di indirizzamento diverso} \cite{openvpn-lan-to-lan}.
-Tuttavia qui sorge il problema: ciascuna LAN target è ragionevolmente dotata
-di uno o più pool di indirizzi privati, i quali sono limitati. L'RFC 1918 \cite{RFC1918}
+Tuttavia qui sorge il problema: ciascuna LAN target ragionevolmente usa uno o più
+pool di indirizzi privati, i quali sono limitati. \cite{RFC1918}
 stabilisce che i seguenti spazi di indirizzi siano riservati per l'utilizzo esclusivo
 in una rete privata e che non siano instradabili su Internet:
 \begin{itemize}
@@ -24,165 +24,35 @@ in una rete privata e che non siano instradabili su Internet:
   \item classe B (subnet mask a 16 byte) \texttt{172.16.0.0} -- \texttt{172.31.255.255}
   \item classe C (subnet mask a 24 byte) \texttt{192.168.0.0} -- \texttt{192.168.255.255}
 \end{itemize}
-Spesso accade poi che tali indirizzi siano utilizzati con una subnet mask non
-\textit{canonica}, ad esempio si può utilizzare \texttt{10.1.1.0/24}, rimane
+Può accadere che tali indirizzi siano utilizzati con una subnet mask diversa, ad esempio
+\texttt{10.1.1.0/24}. Rimane
 comunque il fatto che i detti prefissi sono tipicamente quelli che si trovano
-in una qualsiasi LAN.\\
-Nell'estate del 2014 ho lavorato per tre mesi in una azienda che si occupava di
-gestire la parte IT di altre aziende, e, sebbene non mi vanti di avere una grande
-esperienza in merito, ho potuto constatare come nei fatti solo \textit{alcuni}
-degli indirizzi sopra citati siano utilizzati, ad esempio ho visto usati
-spesso indirizzi nel range \texttt{10.1.1.0/24} -- \texttt{10.10.10.0/24} e
-\texttt{192.168.1.0/24} -- \texttt{192.168.100.0/24}.\\
-E' quindi chiaro come la probabilità che due reti target di due clienti diversi
-abbiano lo stesso spazio di indirizzamente sia piuttosto alta. Diventa
+in una qualsiasi LAN con IPv4.\\
+E' chiaro che la probabilità che diverse reti target abbiano lo stesso NET ID
+è alta, diventa
 quindi un grosso problema poter collegare più
-reti target ad uno stesso VPN server, proprio perché avranno uno stesso indirizzo IP
-di rete.\\
-Una prima soluzione potrebbe essere quella di destinare ad ogni server un certo
-numero di reti target predefinite, ad esempio al server \texttt{OpenVPN10-20}
-si assegnano le reti nello spazio \texttt{10.0.0.0/24} -- \texttt{10.20.20.0/24},
-e così via fino ad esaurire lo spazio di indirizzi privati. Ogni volta che
-si collega una nuova rete target, essa viene assegnata al server VPN competente
-sulla base del suo indirizzo di rete\ldots Chiaramente questa soluzione non è
-possibile, si possono individuare almeno tre problematiche:
-\begin{itemize}
-  \item cosa fare nel caso due reti target diverse abbiano lo stesso indirizzo IP?
-  \item Cosa fare nel caso in cui cliente sia dotato di più reti, che per competenza
-  spetterebbero a diversi server OpenVPN? Non è possibile collegare uno stesso client
-  a due server contemporaneamente.
-  \item Molti server infine resterebbero poco utilizzati, perché sebbene, ad esempio,
-  siano responsabili per venti target, ne hanno assegnate solo un paio. Viceversa,
-  altri sarebbero utilizzati fino al proprio limite.
-\end{itemize}
+reti target ad uno stesso VPN server, proprio a causa della possibilità che prima o poi
+si verifichi un conflitto.\\
+Stabilire a priori un mappaggio tra VPN server e reti clienti (es: si definisce
+il server \texttt{OpenVPN\_1--20} che gestirà reti \texttt{10.0.0.0/24 -- 10.20.20.0/24})
+non risolve il problema: cosa fare se ad un certo punto ci si trova con due clienti con
+entrambi \texttt{10.1.1.0/24}?\\
 Un'altra soluzione potrebbe essere quella di allocare un server OpenVPN
-\textit{per ogni} cliente, sia che esso abbia una oppure $n$ reti che debbano essere
-analizzate da MoonCloud. Lato MoonCloud si creano quindi tante reti isolate tra loro
-costituite da un server OpenVPN e da un \textit{Docker host}, ciascuna competente
-per un singolo cliente. Questa configurazione risolve effettivamente il problema di
-conflitto tra reti target diverse, poiché si assume che un singolo cliente, nel caso
-in cui sia composto da più di una rete, abbia configurato le proprie reti con indirizzi
-di rete \textit{diversi}.\\
-Perché non adottare quindi questa soluzione? La risposta è semplice, perché avrebbe
-fatto lievitare i costi di MoonCloud alle stelle, richiedendo di allocare un altissimo
-numero di VM per OpenVPN server, e più clienti MoonCloud acquisisce, più questi
-costi aumenterebbero!\\
-Ecco quindi il problema a cui ho dovuto trovare una soluzione: \textit{come gestire
+per ogni cliente. Lato MoonCloud si creano $n$ Exection Cluster, uno per ciascun cliente,
+costituiti da un VPN server e almeno da un \textit{Docker host}. Ciascun cluster è isolato,
+quindi i conflitti non hanno nessun impatto. Si è deciso di lasciare questa strada per ultima,
+perché per quanto funzioni presenta un grosso incoveniente: farebbe aumentare di molti i
+costi. Più il numero di client aumenterebbe maggiore sarebbe il numero di VM per OpenVPN server
+da allocare, tanto più i costi aumenterebbero.\\
+Ecco quindi il problema che si è dovuto risolvere: \textit{come gestire
 la conflittualità tra gli indirizzi IP delle reti target senza dover allocare un
 server OpenVPN per ogni cliente?}
-Prima di analizzare la risposta a tale quesito, si meglio cosa succederebbe in caso in cui
-vi siano dei pacchetti generati da dei \textit{probe} destinati ad una delle due reti target,
-e che vi
-sia un conflitto di indirizzamenti. Si ipotizza di lavorare nella seguente
-configurazione:
-\begin{itemize}
-  \item rete target 1: \texttt{192.168.100.0/24} (cliente $A$)
-  \item rete target 2: \texttt{192.168.100.0/24} cliente ($B$)
-  \item rete MoonCloud: \texttt{192.168.200.0/24}
-  \item indirizzo IP interno VPN server: \texttt{192.168.200.20}
-  \item indirizzo IP pubblico VPN server: \texttt{100.4.78.5}
-  \item indirizzo IP del \textit{Docker host} per client $A$: \texttt{192.168.200.2}
-  \item indirizzo IP del \textit{Docker host} per client $B$: \texttt{192.168.200.3}
-  \item indirizzo IP VPN client $A$: \texttt{192.168.100.50}
-  \item indirizzo IP VPN client $B$: \texttt{192.168.100.150}
-  \item subnet VPN: \texttt{10.7.0.0/24}
-  \item indirizzo IP scheda di rete virtuale VPN server: \texttt{10.7.0.1}
-  \item indirizzo IP scheda di rete virtuale VPN client $A$: \texttt{10.7.0.2}
-  \item indirizzo IP scheda di rete virtuale VPN client $B$: \texttt{10.7.0.3}
-  \item \texttt{CommonName} del VPN client $A$: \texttt{clientA}
-  \item \texttt{CommonName} del VPN client $B$: \texttt{clientB}
-\end{itemize}
-Si supponga infine che si adottano le soluzioni discusse precedentemente, tra cui
-l'uso del \textit{NAT al contrario}, ed il \textit{NAT lato server}. Le direttive
-``\texttt{iroute}'' dei file di configurazione relativi ai due client contengono
-entrambi l'indicazione della rete \texttt{192.168.100.0 255.255.255.0}.
-Ciò che si descrive di seguito è \textit{ipotetico}, poiché non è nemmeno detto che
-OpenVPN accetti due \texttt{iroute} di due client diversi con lo stesso contenuto,
-supponendo che ciò sia possibile, accadrebbe la situazione che ora si dettaglia.
-\begin{enumerate}
-  \item Un \textit{probe} per client $A$ genera un pacchetto, la sorgente di tale pacchetto è
-  \texttt{192.168.200.2}, la destinazione \texttt{192.168.100.254}; si supponga che
-  tale pacchetto sia una richiesta HTTP a tale indirizzo (e che quindi sia un TCP \texttt{SYN}).
-  \item Il sistema operativo del \textit{Docker host A} consulta la propria routing table
-  ed instrada il pacchetto verso \texttt{192.168.200.20}
-  \item contemporaneamente, un altro \textit{probe} per client $B$ genera un pacchetto,
-  la sorgente di tale pacchetto è
-  \texttt{192.168.200.3}, e la sfortuna vuole che la destinazione sia
-  \texttt{192.168.100.254}, e che in questo caso si tratti di un pacchetto  di inizio
-  di una connessione SSH.
-  \item Il sistema operativo del \textit{Docker host B} consulta la propria routing table
-  ed instrada il pacchetto verso \texttt{192.168.200.20}
-  \item il sistema operativo del VPN server riceve il pacchetto da \texttt{192.168.200.2},
-  consulta la
-  routing table e trova l'entry \texttt{192.168.100.0/24 via 10.7.0.1}, quindi inoltra
-  alla scheda di rete virtuale di OpenVPN
-  \item il sistema operativo del VPN server riceve il pacchetto da \texttt{192.168.200.3},
-  consulta la
-  routing table e trova l'entry \texttt{192.168.100.0/24 via 10.7.0.1}, quindi inoltra
-  alla scheda di rete virtuale di OpenVPN
-  \item OpenVPN riceve i due pacchetti,
-  essi hanno entrambi come destinazione \texttt{192.168.100.254}
-  \item OpenVPN consulta la propria routing table e trova che sia client $A$ sia client $B$
-  sono responsabili per tali pacchetti, per cui si supponga (non è dato sapere come OpenVPN
-  si comporti davvero in questo caso\footnote{Non è dato sapere come OpenVPN si comporterebbe
-  davvero in un caso come questo, né lo si è verificato in pratica perché ci si è
-  piuttosto concentrati sulla soluzione di tale probelma.}) che entrambi i due pacchetti
-  siano inviato ad entrambi i due client.
-  \item Entrambi i due pacchetti sono ricevuti da \texttt{clientA}, il quale provvede
-  a scriverli sulla propria scheda di rete virtuale
-  \item i pacchetti sono quindi ricevuti dal sistema operativo ed inviati a
-  \texttt{192.168.100.254} nella rete $A$
-  \item parallelamente, i due pacchett sono ricevuti da \texttt{clientB} ed inviati a
-  \texttt{192.168.10.254} nella rete $B$.
-  \item A questo punto si possono verificare diverse combinazioni più o meno
-  sfortunate, qua se ne elenca solo una, ma abbastanza esemplificativa:
-  \begin{itemize}
-    \item \texttt{192.168.100.254} $A$ li riceve e li elabora, si supponga che per una sfortunata
-    coincidenza su tale host sia installato sia un server HTTP (a cui era destinato il
-    pacchetto proveniente da \texttt{192.168.200.2}) sia un server SSH: entrambi
-    producono delle risposte ``valide'' per i due pacchetti.
-    \item \texttt{192.168.100.254} $B$ riceve anch'esso i due pacchetti e li elabora, si ricorda
-    che a tale host era destinato solo un pacchetto per il server SSH, e che non vi
-    sia alcun server HTTP. Per tale motivo, la risposta al pacchetto SSH è una
-    risposta ``valida'', mentre invece la risposta alla richiesta HTTP, si supponga
-    sulla porta 80, produce un \texttt{connection reset by peer}\footnote{Il protocollo TCP
-    prescrive che quando si invii un \texttt{SYN} verso una porta chiusa si risponda
-    con un \texttt{RST}.}.
-  \end{itemize}
-  \item i due host nelle due reti inoltrano quindi le risposte ai due client VPN, i quali
-  applicano il NAT ed inviano al server OpenVPN
-  \item per ragioni non note, i pacchetti di risposta provenienti dalla rete del cliente $B$
-  arrivano prima al server, OpenVPN provvede quindi a scriverli sulla scheda di rete
-  virtuale
-  \item il sistema operativo li riceve ed riapplica il NAT, ed ora iniziano i veri problemi:
-  si supponga che \texttt{iptables} riesca ad applicare il NAT ad entrambi i pacchetti
-  (si ricorda che quello contenente l'\texttt{RST} di risposta ad un web server non esistente
-  è una risposta che non dovrebbe esistere)
-  \item il pacchetto di risposta al TCP \texttt{SYN} per l'instaurazione di una connessione
-  in vista della richiesta HTTP viene inviato al \textit{Docker host} \texttt{192.168.200.2},
-  il cui \textit{probe} vedrà quindi un risultato diverso da quello reale (il pacchetto
-  di risposta dalla rete $A$ deve ancora arrivare)
-  \item il pacchetto di risposta all'inizio della connessione SSH (sarà un
-  \texttt{SYN/ACK}) viene ricevuto dal \textit{Docker host} \texttt{192.168.200.3} e quindi
-  inviato al \textit{probe}, in questo caso il \textit{probe} vedrà il risultato reale.
-  \item Ora il server OpenVPN riceve i due pacchetti provenienti dalla rete $A$, che sono
-  quindi scritti sulla scheda di rete virtuale e ricevuti dal sistema operativo
-  \item \texttt{iptables} dovrebbe riapplicare NAT come descritto tre punti prima, che cosa
-  succede? Si riesce ad applicare il NAT? Anche ammesso che si riesca, le risposte
-  arriverebbero duplicate, ammesso che non vengano scartate o che si verifiche qualche
-  altra anomalia.
-\end{enumerate}
-E' quindi chiaro che, qualsiasi cosa succeda, i \textit{probe} raramente riceveranno
-le risposte legittime, e durante il percorso possono verificarsi molti incovenienti che
-facciano sì che tale risposte addirittura non raggiungano \textit{mai} i probe. Si
-ribadisce che lo scenario descritto è \textit{ipotetico}, non è nemmeno detto che OpenVPN
-accetti la situazione di conflitto presente nei file di configurazione client-specific.
+
 
 \subsection{La soluzione}
-Mentre questo problema emergeva con il prof. Anisetti, la prima soluzione che entrambi
-abbiamo abbozzato è stata quella in cui MoonCloud \textit{rimappi} ogni rete target
-su una nuova rete, stabilita da MoonCloud e garantita essere univoca.
-``\textit{Rimappare}'' una rete significa trovare una nuovo NET ID per tale rete, e
+L'idea alla base della soluzione è quella di \textit{mappare} ogni rete target
+su una nuova rete, stabilita da MoonCloud e garantita univoca.
+``\textit{Mappare}'' una rete significa trovare una nuovo NET ID per tale rete, e
 \textit{spostare} gli indirizzi IP originali nel nuovo NET ID. Lato MoonCloud, i
 \textit{probe} conoscono gli indirizzi IP modificati (garantiti univoci), ed il rimappaggio
 verso quelli originali viene effettuato sul device VPN client.\\
@@ -191,19 +61,19 @@ come potessa il client rimappare gli indirizzi IP, tenendo presente che tale
 rimappaggio deve essere perfettamente aderente a quello stabilito da MoonCloud.
 Prima di proseguire, si chiarisce meglio la terminologia che da qui in poi sarà utilizzata:
 \begin{itemize}
-  \item ``\textit{rete originale OTN (Original Target Network)}'': l'indirizzo IP di rete della rete target così come
+  \item ``\textit{rete originale -- OTN (Original Target Network)}'': l'indirizzo IP di rete della rete target così come
   è in realtà
-  \item ``\textit{IP originale OTI (Original Target IP)}'': l'indirizzo IP di un
+  \item ``\textit{IP originale -- OTI (Original Target IP)}'': l'indirizzo IP di un
   host nella rete target così
   come è in realtà
-  \item ``\textit{rete mappata MTN (Mapped Target Network)}'': il nuovo NET ID
+  \item ``\textit{rete mappata -- MTN (Mapped Target Network)}'': il nuovo NET ID
   assegnato ad una rete target
-  \item ``\textit{IP mappato MTI (Mapped Target IP)}'': l'indirizzo IP appartenente alla \textit{rete
+  \item ``\textit{IP mappato -- MTI (Mapped Target IP)}'': l'indirizzo IP appartenente alla \textit{rete
   mappata} a cui corrisponde un indirizzo IP originale
-  \item ``\textit{rete rimappata RTN (Remapped Target Network)}'':  l'indirizzo
+  \item ``\textit{rete rimappata -- RTN (Remapped Target Network)}'':  l'indirizzo
   IP di rete della rete target così
   come è in realtà, ovvero uguale alla \textit{rete originale}
-  \item ``\textit{IP rimappato RTI (Remapped Target IP)}'': corrisponde all'\textit{IP originale}.
+  \item ``\textit{IP rimappato -- RTI (Remapped Target IP)}'': corrisponde all'\textit{IP originale}.
   \item ``\textit{mappare una rete}'': assegnare alla \textit{rete originale} una
   \textit{rete mappata}
   \item ``\textit{mappare un indirizzo IP}'': assegnare un \textit{IP mappato}
@@ -219,7 +89,7 @@ le seguenti funzioni \textit{deterministiche} (con $S$ corrispondente ad un cert
 server OpenVPN):
 \begin{itemize}
   \item $map\_network: OTN, S \rightarrow MTN$, una funzione cha data una
-  $OTN$ ritorna una $MTN$, garantita univoca per ogni server
+  $OTN$ ritorna una $MTN$, garantita univoca per il server $S$
   \item $map\_address: OTI, OTN, MTN, S \rightarrow MTI$,
   una funzione che dato in input:
   \begin{itemize}
@@ -251,11 +121,13 @@ Per queste funzioni valgono le seguenti uguaglianze:
     map\_address(OTN, OTI, MTN, S)^{-1}$
 \end{itemize}
 In altre parole, ogni funzione è l'inverso dell'altra.\\
-\textit{Come effettuare il mappaggio?} Per rispondere a questa domanda, si vede ora
-un nuovo flusso che include questa nuova funzionalità.
+\textit{Come effettuare il mappaggio?} Per rispondere a questa domanda, si descrive
+il nuovo flusso dei pacchetti, in modo da mostrare dove queste funzioni siano
+applicate.\\
 Si supponga di avere la seguente configurazione:
 \begin{itemize}
   \item rete target $OTN$: \texttt{192.168.100.0/24}
+  \item \texttt{CommonName} VPN client: \texttt{client1}
   \item rete mappata: $map\_network(OTN, S)=$\texttt{192.168.1.0./24}
   \item rete MoonCloud: \texttt{192.168.200.0/24}
   \item indirizzo IP interno VPN server $S$: \texttt{192.168.200.20}
@@ -311,9 +183,9 @@ Si noti che in questo comando la rete di destinazione è la \textit{rete origina
 \begin{enumerate}
   \item un cliente registra una nuova rete: \texttt{192.168.100.0/24}
   \item MoonCloud sceglie a quale server $S$ assegnare tale rete,
-  in questo caso è il VPN server all'indirizzo IP interno \texttt{192.168.200.20}
-  \item MoonCloud mappa la rete in input $MTN=map\_network(\texttt{192.168.100.0/24}, S)$,
-  ed $MTN=\texttt{192.168.1.0/24}$
+  in questo caso è il VPN server all'indirizzo IP \texttt{192.168.200.20}
+  \item MoonCloud mappa la rete in input: $MTN=map\_network(\texttt{192.168.100.0/24}, S)$,
+  il risultato è \texttt{192.168.1.0/24}
   \item si crea un nuovo device client, proriamente configurato
   \item il device client viene collegato alla rete target e si connette al server OpenVPN
   \item si alloca un nuovo \textit{Docker host}, nell'esempio in questione è \texttt{192.168.200.2}
@@ -327,8 +199,8 @@ Si noti che in questo comando la rete di destinazione è la \textit{rete origina
   \item il sistema operativo del server $S$ riceve il pacchetto, a sua volta ha configurato
   la rotta seguente: \texttt{192.168.1.0/24 via 10.7.0.1}; tale rotta è stata configurata
   tramite il file di script \texttt{client-up.sh}.
-  \item a questo punto il pacchetto passa nello stato di \texttt{POSTROUTING}, e come
-  si applica la regola di NAT descritta nel file sopra, quindi l'IP sorgente del
+  \item A questo punto il pacchetto passa nell'hook di \texttt{POSTROUTING}, quindi
+  si applica la regola di NAT descritta precedentemente: l'IP sorgente del
   pacchetto in questione è ora \texttt{10.7.0.1}
   \item il pacchetto viene inviato all'interfaccia
   virtuale di OpenVPN, e da esso ricevuto
@@ -338,7 +210,7 @@ Si noti che in questo comando la rete di destinazione è la \textit{rete origina
   quello mappato, cioè \texttt{192.168.1.254}
   \item il pacchetto viene scritto sull'interfaccia virtuale e ricevuto dal kernel
   del sistema operativo
-  \item in un modo che poi verrà descritto, il sistema operativo di \texttt{Client100}
+  \item in un modo che poi verrà descritto, l'OS di \texttt{client1}
   applica la seguente funzione
   per ottenere $OTI=RTI$ cioè l'indirizzo IP effettivo del target: $OTI=remap\_address(
   \texttt{192.168.1.254}, \texttt{192.168.1.0/24},\\ \texttt{192.168.100.254})$, il
@@ -346,19 +218,19 @@ Si noti che in questo comando la rete di destinazione è la \textit{rete origina
   specificato dal cliente come target dell'analisi.
   \item Si modifica l'indirizzo IP destinazione del pacchetto, inserendo come destinazione
   $OTI$, cioè \texttt{192.168.100.254}
-  \item a questo punto il pacchetto è in stato di \texttt{POSTROUTING} e si applica il
+  \item a questo punto il pacchetto passa per l'hook di \texttt{POSTROUTING} e si applica il
   \textit{NAT al contrario}, l'indirizzo IP sorgente è ora \texttt{192.168.100.50}
   (cioè l'IP del device client)
   \item il pacchetto viene quindi inviato a \texttt{192.168.100.254}
   \item \texttt{192.168.100.254} riceve il pacchetto, lo elabora, invia una risposta
   con destinazione \texttt{192.168.100.50}
-  \item il pacchetto viene ricevuto da \texttt{192.168.100.50} (\texttt{Client100}),
+  \item il pacchetto viene ricevuto da \texttt{192.168.100.50} (\texttt{client1}),
   come prima cosa
   si riapplica l'inverso di \textit{NAT al contrario}, modificando l'indirizzo IP
   destinazione in \texttt{10.7.0.1} (l'indirizzo IP sorgente del pacchetto di richiesta
   inviato dal server OpenVPN)
-  \item il sistema operativo di \texttt{Client1} ora provvede a modificare tale
-  pacchetto, andando a specificare che l'indirizzo IP sorgente non è più
+  \item l'OS di \texttt{client1} modifica tale
+  pacchetto andando a specificare che l'indirizzo IP sorgente non è più
   \texttt{192.168.100.254} (IP originale -- $OTI$), ma \texttt{192.168.1.254}
   (IP mappato -- $MTI$). Per farlo, applica:
   $source=map\_address(\texttt{192.168.100.254}, \texttt{192.168.100.0/24},\\
@@ -366,7 +238,7 @@ Si noti che in questo comando la rete di destinazione è la \textit{rete origina
   ; a questo il pacchetto è conforme a quello inviato da OpenVPN server dopo il
   \textit{NAT lato server}, poiché l'indirizzo IP sorgente è quello mappato, cioè quello
   che MoonCloud conosce.
-  \item il sistema operativo quindi inoltra il pacchetto alla scheda di rete virtuale
+  \item  L'OS quindi inoltra il pacchetto alla scheda di rete virtuale
   OpenVPN, il quale lo riceve e lo invia al server
   \item il server OpenVPN $S$ riceve il pacchetto, lo decifra, lo scrive sulla scheda di rete
   virtuale
@@ -376,37 +248,34 @@ Si noti che in questo comando la rete di destinazione è la \textit{rete origina
   la risposta precisa alla richiesta generata dal Docker host}.
   \item Il pacchetto viene quindi inviato al \textit{Docker host} e quindi al \textit{probe}.
 \end{enumerate}
-Poiché questa descrizione è abbastanza lunga, è possibile trovarne una più schematica
-nella prossima sezione: \textit{configurazione finale}.\\
-Detto questo, non resta che spiegare \textit{come} eseguire le funzioni di mappaggio
+Non resta che spiegare \textit{come} sono eseguite le funzioni di mappaggio
 e rimappaggio.
 
 
-Lato server, $map\_network$ è una funzione eseguita dal microservizio da me scritto
-e che sarà dettagliato nel prossimo capitolo. Per ora basti sapere che nel momento
-in cui avviene l'\textit{enrollment} di un nuovo cliente, le sue reti sono mappate
+Lato MoonCloud, $map\_network$ è una funzione eseguita dal microservizio
+\texttt{MoonCloud\_VPN} (si veda a partire da pagina \ref{ch:microservice}).
+Per ora basti sapere che nel momento
+in cui avviene l'enrollment di un nuovo cliente, le sue reti sono mappate
 su nuove reti in modo che siano univoche.\\
 Ogni volta che si specifica un target per l'analisi, il cliente inserisce l'indirizzo IP
-\textit{vero} ($OTI$), quindi si contatta il mio microservizio per ottenerne
+\textit{vero} ($OTI$), quindi si contatta il \texttt{MoonCloud\_VPN} per ottenerne
 la sua versione mappata ($MTI$): tale indirizzo $MTI$ è l'IP target dei \textit{probe}
 che fanno analisi.\\
-All'interno di MoonCloud, ogni vi sono varie reti locali che comprendono il VPN server,
-responsabile per un certo numero di clienti, ed un certo numero di \textit{Docker host}
-i quali effettivamente fanno l'analisi tramite tale server. Ogni rete è isolata
-dalle altre, pertanto è possibile che due server VPN abbiano due reti target mappate
-uguali, ma questo non crea conflitto perché i due server sono isolati tra loro.
-Allo stesso modo, un server è ovviamente in grado di gestire più clienti
+All'interno di MoonCloud, per ogni Execution Cluster si predispone una VM destinata ad
+essere il VPN server. Ogni cluster è isolato, pertanto è possibile che due server abbiano
+dei mapping in comune, grazie all'isolamento questo non crea problemi.
+Un server può gestire diversi clienti
 contamporaneamente, poiché l'univocità delle reti mappate è garantita \textit{per-server}.
 
 
-L'ultima cosa che rimane da capire è come effettuare mappaggio e rimappaggio lato client;
-questo problema in particolare è stato il più difficile da risolvere.
-In particolare, il software responsabile di questa traduzione deve imprescindibilmente
-\textit{andare d'accordo} con il \textit{NAT al contrario} (poiché si è visto che
-è la soluzione all'Impossibilità di configurare rotte sulla rete target), e deve effettuare
-una modifica degli indirizzi IP che sia perfettamente aderente al mapping stabilito
+Rimane da capire è come effettuare mappaggio e rimappaggio lato client;
+si è tratta di un problema di non facile soluzione.
+Il software responsabile di questa traduzione deve imprescindibilmente
+funzionare di concerto con il \textit{NAT al contrario} (poiché quest'ultimo è
+fondamentale), e deve effettuare
+modifiche degli indirizzi IP che siano perfettamente aderente al mapping stabilito
 da MoonCloud\ldots
-L'illuminazione è stato capire che questa operazione di mapping altro non è che un
+Infine si è capito che queste modifiche altro non sono che del
 NAT 1:1, ed una volta afferrato questo è stato (relativamente) facile scrivere delle
 regole \texttt{iptables} che mi consentissero di farlo.\\
 In generale, supponendo di voler fare NAT (quindi mappaggio e rimappaggio) da
