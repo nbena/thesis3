@@ -1,5 +1,5 @@
 \section{Prerequisiti}
-Prima di speigare nftables si procede ad una breve introduzione di iptables,
+Prima di speigare nftables si procede ad introdurre in maniera rigorosa iptables,
 questo consentirà di comprendere meglio come mai nftables sia superiore.
 
 \paragraph{netfiler}
@@ -35,42 +35,45 @@ In particolare, gli hook disponibili per quest'ultimo sottosistema sono:
   sono stati \textit{routed} e stanno per uscire dal sistema.
   \item \texttt{NF\_IP\_INGRESS} è un hook disponibile nelle versioni più recenti di
   Linux, avviene prima di \texttt{NF\_IP\_PREROUTING} per pacchetti in ingresso.
+  E' utile per il cosìdetto ``\textit{early packet dropping}''.
 \end{itemize}
 
 \begin{figure}
   \includegraphics[scale=0.5]{img/NetfilterHooks}
-  \label{fig:netfiler-hooks}
   \caption[Hook di Netfiler]{Gli hook di Netfilter \textit{classici}. Tutti i
   pacchetti in arrivo passano per \texttt{PREROUTING}, viceversa quelli in
-  uscita devono passare per forza per \texttt{POSTROUTING}.}
+  uscita devono passare per forza per \texttt{POSTROUTING}.
+  \url{https://wiki.nftables.org/wiki-nftables/index.php/Netfilter_hooks}}
+  \label{fig:netfiler-hooks}
 \end{figure}
 
 
 \begin{figure}
   \includegraphics[scale=0.5]{img/NetfilterIngress}
-  \label{fig:ingress-hooks}
   \caption[Hook \texttt{INGRESS}]{Hook \texttt{INGRESS} di Netfilter. E' l'hook
-  che viene prima di tutti gli altri.}
+  che viene prima di tutti gli altri.
+  \url{https://wiki.nftables.org/wiki-nftables/index.php/Netfilter_hooks}}
+  \label{fig:ingress-hooks}
 \end{figure}
 
 \paragraph{iptables}
 iptables è uno dei programmi userspace usati per registrare degli hook in netfilter e
 specificare quale azioni devono essere eseguite.  Ciò che tipicamente si scrive
 mediante iptables sono delle \textit{regole}, esse sono organizzate in
-\textit{tabelle}, ed a loro sono organizzate in \textit{chain}. Esistono delle
+\textit{tabelle}, le quali a loro volta sono costituite da \textit{chain}. Esistono delle
 tabelle predefinite:
 \begin{itemize}
   \item \texttt{filter}: utilizzata per definire regole di firewalling
   \item \texttt{mangle}: utilizzata per \textit{packet alteration}
-  \item \texttt{nat}: utilizzata per gestire i protocolli NAT/PAT
-  \item \texttt{raw}: utilizzata principalmente per creare esenzione dal tracking
-  delle connessione.
+  \item \texttt{nat}: utilizzata la traduzione NAT/PAT
+  \item \texttt{raw}: utilizzata principalmente operare sui pacchetti senza
+  il connection tracking
   \item \texttt{security}: utilizzata in distribuzioni \texttt{SELinux}
 \end{itemize}
 E' possibile definire delle tabelle ulteriori.
 Le chain predefinite sono:
 \begin{itemize}
-  \item \texttt{FORWARD} per pacchetti che vengono \textit{routed} attraverso
+  \item \texttt{FORWARD} per pacchetti che passano attraverso
   il sistema
   \item \texttt{INPUT} per i pacchetti ricevuti e destinati al sistema locale
   \item \texttt{OUTPUT}: pacchetti generati dal sistema in uscita da esso
@@ -80,8 +83,8 @@ Le chain predefinite sono:
   dal sistema.
 \end{itemize}
 Non tutte le tabelle hanno a disposizione tutte le chain, ad esempio nella tabella
-di nat sono disponibili sono \texttt{PREROUTING} e \texttt{POSTROUTING}, mentre
-in filter è possibile usare \texttt{INPUT}, \texttt{FORWARD}, \texttt{OUTPUT}.\\
+di \texttt{nat} sono disponibili sono \texttt{PREROUTING} e \texttt{POSTROUTING}, mentre
+in \texttt{filter} è possibile usare \texttt{INPUT}, \texttt{FORWARD}, \texttt{OUTPUT}.\\
 Come si può dedurre dal nome delle chain, esse corrispondono agli hook di
 netfilter:
 
@@ -121,19 +124,20 @@ target disponibili sono:
   prosegua nel suo attraversamento del kernel
   \item \texttt{REJECT} per droppare il pacchetto inviando un pacchetto
   \texttt{ICMP} al mittente
-  \item \texttt{DNAT} per applicare il protocollo NAT/PAT cambiando l'indirizzo
+  \item \texttt{DNAT} per la traduzione NAT/PAT modificando l'indirizzo
   IP/porta destinazione
-  \item \texttt{SNAT} per applicare il protocollo NAT/PAT all'indirizzo sorgente.
+  \item \texttt{SNAT} per la traduzione NAT/PAT dell'indirizzo/porta sorgente.
 \end{itemize}
 
 
 Un'importante funzionalità offerta da netfilter è il tracking della connessione
-in tabelle di stato (nota come \texttt{Connection Tracking}), che è la base
-per il NAT e statefull firewalling.
+in una tabelle di stato (nota come ``\textit{Connection Tracking}''), che è la base
+per il NAT e statefull firewalling.\\
 Infine, sono disponibili numerose estensioni sia per matching sia per target;
 Ad esempio, esiste una versione di iptables
-(\textit{iptables L7}) che aggiunge comprensione anche dei protocolli applicativi.
-iptables viene usato per il protocollo IP versione 4 (e protocolli di livello
+(\textit{iptables L7}) che aggiunge comprensione anche dei protocolli
+applicativi\footnote{\url{http://l7-filter.clearos.com/start}}.
+iptables viene usato con il protocollo IP versione 4 (e protocolli di livello
 superiore che si appoggiano ad IPv4), se si vuole lavorare con protocolli
 di livello 3 diversi, o protocolli di livello inferiore vi sono:
 \begin{itemize}

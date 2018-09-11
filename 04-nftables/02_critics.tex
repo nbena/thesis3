@@ -15,24 +15,23 @@ dei \textit{breaking changes}, e vista la vasta diffusione di iptables, questo
 non è possibile.
 Alcuni dei problemi sono:
 \begin{description}
-  \item[Duplicazione del codice] Per ogni protocollo gestito da iptables (o sue
-  controparti), occorre che tale programma sappia gestire nel dettaglio
-  tale protocollo, in modo che possa creare le strutture dati necessarie per
-  il file da inserire nel kernel.\\
-  Il kernel stesso deve infine poter gestire tale protocollo perché deve
-  compiere le operazioni richieste.\\
+  \item[Duplicazione del codice]Per ogni protocollo gestito da iptables (o sue
+  controparti), occorre che vi sia comprensione di esso sia a livello
+  utente (perché il programma in userspace deve creare il \textit{blob} per
+  il kernel), sia a livello di kernel-space, per operare correttamente sul pacchetto
+  secondo quanto specificato dall'utente.\\
   Ciò significa che \textit{per ogni nuovo protocollo}, esso deve essere
   supportato sia in userspace sia in kernel-space.
-  \item[Target multipli]Si supponga che si voglia droppare un pacchetto
+  \item[Target multipli]Si supponga che si voglia loggare un pacchetto
   \textit{e} dropparlo, in una sola regola non è possibile, è necessario, ad
   esempio, creare una nuova tabella.
   \item[Matching avanzato]iptables supprta matching di fatto controllando l'header
   del protocollo di trasporto e l'header IP, tuttavia non è possibile scrivere
-  in una \textit{regola} il fatto che il traffico TCP sulla porta 8 e \textit{e}
+  in una \textit{regola} il fatto che il traffico TCP sulla porta 8 \textit{e}
   443 sono consentite: occore scrivere almeno due regole. Questo diventa
   particolarmente tedioso quando il numero di regole aumenta molto (esistono
   estensioni come \texttt{multiport} per il matching di porte multiple, ma ne
-  supporta fino a 15).
+  supporta solo fino a 15).
   \item[Multipli programmi]Un altra criticità è il fatto che vi sono 4 programmi
   userspace diversi, particolarmente problematica è la gestione separata di IPv4
   e IPv6.
@@ -43,4 +42,4 @@ Alcuni dei problemi sono:
 \end{description}
 
 Questi problemi hanno portato gli sviluppatori di netfilter ad introdurre
-una nuova soluzione, una soluzione molto più avanzata.
+una nuova soluzione, molto più avanzata.
