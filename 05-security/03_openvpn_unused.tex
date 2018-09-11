@@ -11,6 +11,8 @@ misure di sicurezza:
   \item \texttt{tls-auth}: il \texttt{Control Channel} viene protetto da un ulteriore
   layer di MAC usando una chiave statica che deve essere nota a tutti i partecipanti a priori.
 \end{itemize}
+Per entrambe, la cifratura/MAC viene applicata dal \textit{primo} pacchetto scambiato, compresi
+quindi quelli appartenenti al TLS handshake.
 Lo scopo principale è quello di mitigare attacchi DoS: se il server riceve un pacchetto con HMAC non valido,
   o che non riesce a decifrare, immediatamente droppa la connessione, anziché iniziare
   il TLS handshake (che eventualmente fallirebbe nel caso l'attaccante non avesse
@@ -23,8 +25,8 @@ Si è scelto di non adottare questa soluzione per ora a causa della necessità d
 in modo sicura la chiave precondivisa: essa deve essere nota a tutti i partecipanti
 alla VPN. Nel caso in cui essa fosse compromessa occorrerebbe cambiare \textit{tutte}
 le chiavi, poiché sebbene rimanga la protezione dei certificati, una chiave
-compromessa non garantirebbe nessun livello di protezione, per cui appunto, bisognerebbe
-generarne una nuova.
+compromessa non garantirebbe nessun livello di protezione, per cui bisognerebbe
+generarne una nuova e redistribuirla.
 In futuro si parla di usare
 chiavi diversi per ogni coppia client-server, rimuovendo quindi la necessità di sostituire
 \textit{tutte} le chiavi in caso di compromissione.
@@ -65,19 +67,15 @@ Il contenuto di tale file è simile al seguente:
 \subsubsection{\texttt{tls-verify}}
 \texttt{tls-verify} è un hook che scatta quando un client ha appena concluso il TLS
 handshake ed ha passato tutte le verifiche, tranne, eventualmente, quella della CRL.
-Il lanciato con questo hook ha accesso ad un certo numero di variabili d'ambiente
+Il processo lanciato con questo hook ha accesso ad un certo numero di variabili d'ambiente
 (minori rispetto a \texttt{client-connect} perché non è stato ancora completamente
-\textit{accettato}). 
-
-Si può usare questo hook per una sorta di \textit{abilitazione esplicita} dei client,
-per la quale dei dati relativi al nuovo client (come ad esempio il seriale), devono
-essere \textit{trasmessi} al server per poter accettarlo.
-Si noti che comunque
-affinché un client possa completare il TLS handshake deve avere un certificato valido
-creato dalla CA in questione.
-
+accettato). \\
+Si può usare questo hook per una sorta di \textit{abilitazione esplicita} dei client:
+ad esempio si può verificare che il seriale del certificato sia
+in una lista di seriali ammessi (anziché semplicemente accettare il client perché
+ha un certificato valido).
 A puro titolo esemplificativo, si presente uno script in Python che
-verifica che il seriale settato al lancio da OpenVPN sia in una lista di seriali noti,
+verifica che il seriale, passato come variabile d'ambiente, sia in una lista di seriali noti,
 in caso positivo ritorna \texttt{0}, sennò \texttt{-1}.
 \begin{minted}{python}
 #!/usr/bin/env python3
@@ -106,4 +104,6 @@ Per abilitare l'uso dello script:
 \begin{minted}{bash}
   tls-verify /etc/openvpn/server/cs/tls_verify.py
 \end{minted}
+In un uso reale la lista dei seriali potrebbe essere recuperata da un file di testo
+o da un database \texttt{SQLite}\footnote{\url{https://www.sqlite.org/index.html}}.
 

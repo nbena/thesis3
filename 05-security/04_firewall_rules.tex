@@ -2,8 +2,7 @@
 L'utilizzo di OpenVPN per collegare la rete MoonCloud alle reti
 target presenta un semplice problema di sicurezza: la VPN \textit{apre}
 un nuovo punto di ingresso in MoonCloud, e come tale deve essere protetto
-il più possibile.
-
+il più possibile.\\
 A tale scopo sono state predisposte delle regole iptables da applicare
 al server OpenVPN, essendo esso il \textit{punto di esposizione}.
 
@@ -12,17 +11,17 @@ Sebbene il \textit{NAT lato server} di fatto agisca come una sorta
 di firewall consentendo solo al traffico proveniente dalla rete
 di MoonCloud ed alle sue risposte di arrivare ed essere accettato
 dal server, esso non è sufficiente. Lo scenario dettagliato di seguito
-ne è infatti la prova.
-
-
+ne è infatti la prova.\\
 Se qualcuno, ad esempio un attaccante,
-effettuasse delle connessioni dal VPN client senza utilizzare il rimappaggio
+effettuasse delle connessioni da un VPN client legittimo senza utilizzare il mappaggio
 degli indirizzi IP (passando per la VPN) esse arriverebbero senza problemi
-al VPN server ed anche oltre. Questo accadrebbe perché OpenVPN server si limiterebbe
+al VPN server ed anche oltre. Questo perché OpenVPN server si limita
 a decifrare i pacchetti provenienti dal client ed a scriverli sulla scheda di rete
-virtuale; allo stesso modo iptables non applica il NAT in uscita sul server per
-i \textit{pacchetti} in uscita, ma solo per quelli che hanno come destinazione
-le reti mappate.\\
+virtuale. Allo stesso modo iptables applica il NAT in uscita verso la VPN solo per
+i pacchetti destinati ad una rete mappata, e relativa traduzione inversa. Per pacchetti
+che non non provengono da una rete mappata iptables non effettua la traduzione
+inversa (perché tali pacchetti non matchano le regole), per cui semplicemente
+i pacchetti passano.
 Un attaccante riesce quindi con successo (è stato testato) ad inviare pacchetti
 al server in questo modo.
 Gli si presentano però alcuni problemi:
@@ -49,7 +48,7 @@ Per contrastare questa possibile minaccia, come anticipato, si è utilizzato ipt
 L'idea delle regole applicate si può riassumare così:
 \begin{itemize}
 	\item usare una politica \texttt{DEFAULT DENY} sul VPN server per cui \textit{solo
-		il traffico in risposta a richieste delle Docker machine} può passare sul server
+		il traffico da MoonCloud verso la rete target e le risposte ad esso} possono passare sul server
 		\item ogni volta che un nuovo client si connette, si \textit{concede alle reti
 			mappate di tale client} l'accesso
 \end{itemize}
@@ -79,17 +78,18 @@ iptables -t filter -I FORWARD -i ovpn+ -j DROP
 			      da tutte le schede di rete che iniziano con ``\texttt{ovpn}''
 			      (il carattere ``\texttt{+}'' fa da \textit{jolly}) e destinato al server locale
 			\item \texttt{iptables -t filter -I FORWARD -i ovpn+ -j DROP} invece dice
-			      di droppare il traffico in transito sul server locale (\texttt{FORWARD}), quindi
-			      destinato all'esterno,
-			      che è stato ricevuto da schede di rete OpenVPN
+			      di droppare il traffico in transito sul server locale (\texttt{FORWARD}) (quindi
+			      destinato a MoonCloud)
+			      che è stato ricevuto dalla schede di rete OpenVPN
 		\end{itemize}
 		
 		Si tratta di una politica di \texttt{DEFAULT} poiché si usa il flag ``\texttt{-I}''
 		che indica di aggiungere la regola in questione all'inizio della chain, e per tale
-		ragione sarà la prima valutata da iptables.
+		ragione sarà la prima valutata da iptables. Il flag ``\texttt{-i} <NIC-name>'' è un match
+		per pacchetti che sono stati ricevuti da ``\texttt{<NIC-name>}''.
 		
 		
-		Queste regole vengono inserito sui server OpenVPN appena vengono creati, e
+		Queste regole vengono inserite sui server OpenVPN appena vengono creati, e
 		devono essere sempre reinserite ad ogni riavvio, pocihé sono la \textit{base}
 		di tutto il meccanismo di protezione di MoonCloud. E' fuori da questa sede la discussione
 		di come garantire la persistenza delle regole iptables tra un riavvio e l'altro.
@@ -102,8 +102,8 @@ iptables -t filter -I FORWARD -i ovpn+ -j DROP
 		Queste regole si attivano ogni volta che un client si connette al server, e per
 		questo motivo si sfrutta ancora una volta l'hook \texttt{client-connect} di OpenVPN.
 		Nello script che viene eseguito dal server quando un client si è connesso, si
-		hanno quindi anche le regole iptable per consentire \textit{solo le richieste
-		dalle Docker machine alle reti rimappate di tale client ed alle sue risposte}
+		hanno quindi anche le regole iptables per consentire \textit{solo le richieste
+		dalle Docker machine alle reti mappate di tale client ed alle sue risposte}
 		di transitare.
 		Supponendo che la rete rimappata di un client dal \texttt{CommonName = client100} sia
 		\texttt{192.168.100.0/24}, le regole per farlo sono:
@@ -113,7 +113,7 @@ iptables -t filter -I INPUT -s 192.168.100.0/24 -i ovpn+ -m state --state RELATE
 iptables -t filter -I FORWARD -s 192.168.100.0/24 -i ovpn+ -m state --state RELATED,ESTABLISHED -j ACCEPT
 \end{minted}
 		
-		Innanzitutto, si utilizzano regole \textit{statefu}, per cui iptables mantiene
+		Innanzitutto, si utilizzano regole \textit{stateful}, per cui iptables mantiene
 		una tabella \textit{di stato}, ad ogni nuova connessione, se consentita, si inserisce
 		una nuova entry in tale tabella, tutte gli altri pacchetti di tale connessione non
 		verranno più verificati ma saranno consentiti; ciò rende più difficile
@@ -129,8 +129,9 @@ iptables -t filter -I FORWARD -s 192.168.100.0/24 -i ovpn+ -m state --state RELA
 			      L'unico traffico consentito rimane comunque quello verso la rete mappata
 			      \texttt{192.168.100.0/24}.
 			\item \texttt{iptables -t filter -I INPUT -s 192.168.100.0/24 -i ovpn+ \ldots -j ACCEPT}
-			      invece è la regola inserito (``\texttt{-I}'') più specifica rispetto alla regola di default
-			      che nega il traffico ricevuto da OpenVPN, quindi destinato al server locale, di passare.
+				  invece è la regola inserita (``\texttt{-I}'') in una posizione più specifica rispetto
+				  alla regola di default
+			      che nega il traffico ricevuto da OpenVPN e destinato localmente, di passare.
 			      Con questa regola si consente solo al traffico proveniente da \texttt{192.168.100.0/24}
 			      destinato al server di transitare. In particolare, si consente \textit{alle sole risposte}
 			      (\texttt{-m state --state RELATED,ESTABLISHED})
@@ -139,8 +140,8 @@ iptables -t filter -I FORWARD -s 192.168.100.0/24 -i ovpn+ -m state --state RELA
 			      poiché è ciò che abilita, appunto, le sole risposte.
 			\item \texttt{iptables -t filter -I FORWARD -s 192.168.100.0/24 -i ovpn+ \ldots -j ACCEPT}
 			      al pari della precedente, è più specifica rispetto alla regola che di default vieta il traffico
-			      dal server OpenVPN verso l'esterno.
-			      Eseguendola, si consente \textit{alle sole risposte})
+			      dal server OpenVPN verso MoonCloud.
+			      Eseguendola, si consente \textit{alle sole risposte}
 			      provenienti da \texttt{192.168.100.0/24}
 			      di raggiungere le \textit{Docker machine}. Come nella precedente, si noti che manca
 			      ``\texttt{--state NEW}''.
@@ -150,7 +151,7 @@ iptables -t filter -I FORWARD -s 192.168.100.0/24 -i ovpn+ -m state --state RELA
 		\paragraph{Rimozione delle regole}
 		Poiché le regole appena elencate devono essere aggiunte al server OpenVPN solo quando
 		un client si connette, è chiaro che devono essere altresì rimosse quando esso si disconnette.
-		Per farlo, molto semplicemente, ci si affida all'hook \texttt{client-disconnect}, riscrivendo
+		Per farlo ci si affida all'hook \texttt{client-disconnect}, riscrivendo
 		le stesse regole ma con l'opzione ``\texttt{-D}'', che indica di rimuovere la regola così
 		composta.
 		
@@ -160,8 +161,8 @@ iptables -t filter -D OUTPUT -d 192.168.100.0/24 -o ovpn+ -m state --state NEW,R
 iptables -t filter -D INPUT -s 192.168.100.0/24 -i ovpn+ -m state --state RELATED,ESTABLISHED -j ACCEPT
 iptables -t filter -D FORWARD -s 192.168.100.0/24 -i ovpn+ -m state --state RELATED,ESTABLISHED -j ACCEPT   
 \end{minted}
-		Le regole combaciano alla perfezione con quelle usate in \texttt{client-connect}, affinché
-        iptables possa rimuoverle con successo.
+		Le regole combaciano alla perfezione con quelle usate in \texttt{client-connect}, in questo modo
+        iptables può rimuoverle con successo.
         
 
     \subsection{Configurazione applicata}
@@ -169,43 +170,43 @@ iptables -t filter -D FORWARD -s 192.168.100.0/24 -i ovpn+ -m state --state RELA
     di seguito si riporta come si presentano i file \texttt{client-up.sh} e \texttt{client-down.sh},
     assumendo, come in precedenza, che la rete mappata di \texttt{client100} sia \texttt{192.168.100.0/24}.
 
-\begin{minted}[breaklines]{bash}
+\begin{minted}[breaklines, tabsize=4]{bash}
 
 # /etc/openvpn/ovpn1/cs/client-up.sh
 
 #!/bin/bash
                 
 if [ "$common_name" == "client100" ]; then
-    # aggiunta rotta
-    ip route add 192.168.100.0/24 via 10.7.0.1
+	# aggiunta rotta
+	ip route add 192.168.100.0/24 via 10.7.0.1
 
-    # aggiunta nat lato server
-    iptables -t nat -A POSTROUTING -d 192.168.100.0/24 -j MASQUERADE
+	# aggiunta nat lato server
+	iptables -t nat -A POSTROUTING -d 192.168.100.0/24 -j MASQUERADE
         
-    # aggiunta traffico consentito
-    iptables -t filter -I OUTPUT -d 192.168.100.0/24 -o ovpn+ -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
-    iptables -t filter -I INPUT -s 192.168.100.0/24 -i ovpn+ -m state --state RELATED,ESTABLISHED -j ACCEPT
-    iptables -t filter -I FORWARD -s 192.168.100.0/24 -i ovpn+ -m state --state RELATED,ESTABLISHED -j ACCEPT
+	# aggiunta traffico consentito
+	iptables -t filter -I OUTPUT -d 192.168.100.0/24 -o ovpn+ -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
+	iptables -t filter -I INPUT -s 192.168.100.0/24 -i ovpn+ -m state --state RELATED,ESTABLISHED -j ACCEPT
+	iptables -t filter -I FORWARD -s 192.168.100.0/24 -i ovpn+ -m state --state RELATED,ESTABLISHED -j ACCEPT
 fi
 \end{minted}
         
-\begin{minted}[breaklines]{bash}
+\begin{minted}[breaklines, tabsize=4]{bash}
 
 # /etc/openvpn/ovpn1/cs/client-down.sh
         
 #!/bin/bash
              
 if [ "$common_name" == "client100" ]; then
-    # rimozione rotta
-    ip route add 192.168.100.0/24 via 10.7.0.1
+	# rimozione rotta
+	ip route add 192.168.100.0/24 via 10.7.0.1
 
- 	# rimozione nat lato server
-    iptables -t nat -D POSTROUTING -d 192.168.100.0/24 -j MASQUERADE
+	# rimozione nat lato server
+	iptables -t nat -D POSTROUTING -d 192.168.100.0/24 -j MASQUERADE
         
-    # rimozione regole di filtraggio
-    iptables -t filter -D OUTPUT -d 192.168.100.0/24 -o ovpn+ -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
-    iptables -t filter -D INPUT -s 192.168.100.0/24 -i ovpn+ -m state --state RELATED,ESTABLISHED -j ACCEPT
-    iptables -t filter -D FORWARD -s 192.168.100.0/24 -i ovpn+ -m state --state RELATED,ESTABLISHED -j ACCEPT
+	# rimozione regole di filtraggio
+	iptables -t filter -D OUTPUT -d 192.168.100.0/24 -o ovpn+ -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
+	iptables -t filter -D INPUT -s 192.168.100.0/24 -i ovpn+ -m state --state RELATED,ESTABLISHED -j ACCEPT
+	iptables -t filter -D FORWARD -s 192.168.100.0/24 -i ovpn+ -m state --state RELATED,ESTABLISHED -j ACCEPT
 fi
 \end{minted}
 
@@ -280,7 +281,7 @@ e \texttt{client-disconnect}.
 #!/bin/bash
 
 if [ "$common_name" == "client100" ]; then
-	ip route add 192.168.10.0/24 via 10.7.0.1
+	ip route add 192.168.100.0/24 via 10.7.0.1
 	nft add element ovpn_management allowed_clients { 192.168.100.0/24 }
 fi	
 \end{minted}

@@ -1,10 +1,10 @@
 \subsection{Configurazioni}
-In questa sottosezione si affrontano tutte le scelte in merito alla configurazione
-specifica
-di OpenVPN, comprese la scelta dei cifrari.
+In questa sottosezione si affrontano tutte le scelte in merito a configurazioni
+specifiche
+di OpenVPN riguardanti la sicurezza.
 
 \subsubsection{Crittografia}
-OpenVPN consente di specificare quali algoritmi crittografici utilizzare, in entrambi i canali.
+OpenVPN consente di specificare quali algoritmi crittografici utilizzare in entrambi i canali.
 Fino a qualche versione fà, le ciphersuite del TLS vengono negoziate nel
 modo classico del TLS, mentre non era prevista alcuna modalità di negoziazione
 dei cifrari sul \texttt{Data Channel}, pertanto dovevano essere specificati
@@ -20,21 +20,20 @@ Ad esempio, i ricercatori propongono l'esempio di una pagina servita su HTTPS ch
 conosce, e ad esempio vuole scoprire il valore di un cookie. Questo attacco si applica
 a qualsiasi protocollo che utilizzi un cifrario con le caratteristiche sopra citate, e richiede
 molto traffico per poter aver successo, tuttavia nel caso di una VPN il fatto che
-vi sia molto traffico è la normalità.
-
-Un esempio di cifrari vulnerabili è \texttt{Blowfish}, \texttt{DES}, \texttt{3DES}.
-Per tale ragione quindi OpenVPN è vulnerabile.
-
-
-La prima contromisura che gli sviluppatori di OpenVPN hanno implementato è stata
-avvertire gli utenti mediante il file di log. Nelle ultime versioni è stata infine
+vi sia molto traffico è la normalità.\\
+Esempi di cifrari vulnerabili sono \texttt{Blowfish}, \texttt{DES}, \texttt{3DES}: quindi
+OpenVPN è vulnerabile.\\
+La prima contromisura che OpenVPN ha adotatto è stata
+avvertire gli utenti mediante il file di log del fatto che si utilizzasse \texttt{Blowfish} e che
+esso è vulnerabile (naturalmente, solo nei casi in cui tale cifrario era effettivamente
+usato). Nelle ultime versioni è stata infine
 aggiunta la negoziazione dei cifrari, ed il cifrario di default non è più
 \texttt{Blowfish} ma \texttt{AES-GCM-256}, cioè AES in modalità \texttt{GCM} con
 chiavi a 256 bit. Poiché è un cifrario \textit{AEAD}, garantisce autenticità ed
 integrità di per sè, per cui non occorre specificare anche un algoritmo MAC.
 
 \paragraph{Protezione del \texttt{Data Channel}}
-\texttt{AES-256-GCM} è il cifrario che ho scelto di utilizzare per la protezione
+\texttt{AES-256-GCM} è il cifrario che si è scelto di utilizzare per la protezione
 del \texttt{Data Channel}. Si tratta di un algoritmo molto veloce, ed ovviamente
 molto sicuro.
 Sebbene sia il cifrario di default si è comunque scelto di specificare questo algoritmo in
@@ -44,7 +43,7 @@ cipher AES-GCM-256
 \end{minted}
 
 \paragraph{Configurazione di TLS}
-Allo stesso modo, ho scelto di specificare in maniera esplicita quali siano
+Allo stesso modo, si è deciso di specificare in maniera esplicita quali siano
 le ciphersuite TLS, e sono stato molto stringente. Anche in questo caso
 l'unica possibile è quella basata su \texttt{AES-256-GCM}, cioè:\\
 \texttt{TLS-ECDHE-ECDSA-AES-GCM-256-SHA384}.
@@ -56,13 +55,17 @@ Per specificare questo si usa la direttiva:
 \begin{minted}{bash}
 tls-cipher TLS-ECHDE-AES-265-GCM-SHA384
 \end{minted}
-Esistono ciphersuite basate su \texttt{ChaCha20-Poly1305}, tuttavia di default non
+Esistono ciphersuite basate su \texttt{ChaCha20-Poly1305}, tuttavia non
 sono incluse nei file di configurazioni perché non sono ancora supportate nella
 versione di \texttt{OpenSSL} utilizzata da OpenVPN. E' supportata in alcune versioni
 di OpenVPN compilate con \texttt{LibreSSL}, tuttavia solo come ciphersuite di TLS,
-per il \texttt{Data Channel} ancora non vi è nessun supporto. Con \textit{di default
-non è supportata} si intende il fatto che sia possibile configurare dinamicamente
-il mio microservizio per indicare se \texttt{ChaCha20} sia supportato o meno.
+per il \texttt{Data Channel} ancora non vi è nessun supporto.\\
+Per forzare all'utlizzo dello scambio di chiavi Diffie-Hellman su curva ellittica, oltre
+a specificare le ciphersuite che lo utilizzano, occorre anche inserire il valore
+``\texttt{none}'' alla direttiva ``\texttt{dh}'':
+\begin{minted}{bash}
+dh none
+\end{minted}
 
 La fase di handshake del TLS include anche la negoziazione della versione supportata
 da TLS, in modo che cleint e server utilizzino la versione più alta supportata da entrambi.
@@ -99,9 +102,9 @@ revocati (mediante i loro seriali), la data di revoca, ed eventualmente la ragio
 Essa è emessa dalla CA che ha precedentemente emesso i certificati revocati, ed è firmata digitalmente
 dalla CA, in modo da attestarne l'autenticità e l'integrità.
 
-OpenVPN supporta la verifica mediante CRL, tale verifica è ovviamente fatta lato server: quando
-un client si connette al server, OpenVPN legge tale CRL e, se il numero seriale del certificato
-del client è presente nella lista, la connessione con il client in questione viene terminata.
+OpenVPN supporta la verifica mediante CRL, tale verifica è fatta lato server: quando
+un client si connette, OpenVPN legge tale CRL e, se il numero seriale del certificato
+del client è presente nella lista, la connessione con esso viene terminata.
 A differenza dei file di configurazione in \texttt{/etc/} che vengono letti solo all'avvio
 dal software, la CRL viene riletta ad ogni nuova connessione, pertanto è possibile aggiornarla senza
 preoccuparsi di dover riavviare il server.
