@@ -10,7 +10,7 @@ local result = {}
 
 -- iterating over the list
 for _, key in ipairs(keys) do
-    -- get the full object
+    -- getting the full object
     local value = redis.call("HGETALL", key)
     local current_work = {}
 

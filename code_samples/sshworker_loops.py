@@ -15,7 +15,7 @@ class SSHBackgroundWorker(object):
         self.__thread_number = 2
 
         self.__redis_conn = redis_conn.RedisConn(
-            threads_number=self.__thread_number)    
+            threads_number=self.__thread_number)
 
     def __main_loop_func(self):
         loop = True
@@ -25,7 +25,7 @@ class SSHBackgroundWorker(object):
 
                 work_type = work['work_type']
                 work_id = work['work_id']
-
+                self.__work_pre(work_id)
                 result = None
 
                 if work_type == status.WorkType.transfer_client.value:
@@ -52,6 +52,8 @@ class SSHBackgroundWorker(object):
                 work_type = work['work_type']
                 work_id = work['work_id']
 
+                self.__work_pre(work_id)
+
                 if status.is_crl_str(work_type):
                     result = self.__update_crl(work)
                     self.__work_post(work_id, result)
@@ -68,3 +70,7 @@ class SSHBackgroundWorker(object):
             self.__redis_conn.set_work_status(
                 work_id, status.WorkStatus.error,
                 error_str)
+
+    def __work_pre(self, work_id):
+
+        self.__redis_conn.set_work_status(work_id, status.WorkStatus.working)

@@ -145,6 +145,7 @@ class OpenSSL(object):
             curve=curve,
             backend=backends.default_backend())
         public_key = private_key.public_key()
+        return private_key, public_key
 
     def create_keys_and_cert(self, data, cert_type, serial=None):
         """

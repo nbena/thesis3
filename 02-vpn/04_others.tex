@@ -52,10 +52,9 @@ particolari vantaggi rispetto a SoftEther od OpenVPN.
 	\item facile da configurare
 	\item sicurezza mediante crittografia:
 	      \begin{itemize}
-	      	\item autenticazione con chiavi pubbliche Diffie-Hellman su curva ellittica \textit{X25519}
-	      	      e scambiate a priori
-	      	\item pacchetti scambiati usando \textit{ChaCha20-Poly1305} con \textit{Authenticated
-	      		Encryption with Associated Data}
+	      	\item autenticazione con chiavi pubbliche Diffie-Hellman su curva ellittica \texttt{X25519}
+	      	      e scambiate a priori \cite{RFC7748}
+	      	\item pacchetti scambiati usando \texttt{ChaCha20-Poly1305} \cite{RFC7539}
 	      		\item chiavi di sessione rinegoziate periodicamente
 	      	\end{itemize}
 	      	\item elevate performance

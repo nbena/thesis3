@@ -1,6 +1,6 @@
 \section{API}
 In questa sezione si descrivono le API REST messe a disposizione da \texttt{MoonCloud\_VPN}.
-Input ed output sono descritti senza Specificare l'esatta sintassi, poiché è fuori dallo scopo
+Input ed output sono descritti senza specificare l'esatta sintassi, poiché è fuori dallo scopo
 di questo documenti fornire una documentazione delle API. Tutti gli input e gli
 output sono in formato JSON.
 
@@ -21,7 +21,7 @@ output sono in formato JSON.
         trasferimento.
     \end{itemize}
 
-    \item[Stato creazione server]\texttt{GET /server/creation/work-id>}
+    \item[Stato creazione server]\texttt{GET /server/creation/<work-id>}
     \begin{itemize}
         \item Descrizione: viene utilizzata per controllare se il trasferimento dei file
         per la creazione di un nuovo server è stato completato.
@@ -80,14 +80,14 @@ output sono in formato JSON.
             \item email da inserire nel certificato
             \item lista di reti raggiungibil dal device
         \end{itemize}
-        \item Output: un oggetto JSON costituito da due campi, l'ID del device client
-        all'interno del databse, uno zip file in formato base64 contenente tutti
+        \item Output: un oggetto JSON costituito da tre campi, l'ID del device client
+        all'interno del databse, il \texttt{WorkID}, uno zip file in formato base64 contenente tutti
         i file che devono essere poi trasferiti sul dispositivo, unitamente ad
         uno script che automatizza la creazione della struttura di directory assunta
         da OpenVPN.
     \end{itemize}
 
-    \item[Stato creazione client]\texttt{GET /client/creation/<client-id>}
+    \item[Stato creazione client]\texttt{GET /client/creation/<work-id>}
     \begin{itemize}
         \item Descrizione: analogamente ad ogni altra API relativa ad ottenere
         lo stato di un trasferimento, questa viene utilizzata per verificare
@@ -231,7 +231,7 @@ output sono in formato JSON.
 
     \item[Specificare il supporto a ChaCha20]\texttt{PUT /chachasupport/true|false}
     \begin{itemize}
-        \item Descrizione: l'algoritmo di cifratura \texttt{ChaCha20} \ref{chacha20} è
+        \item Descrizione: l'algoritmo di cifratura \texttt{ChaCha20} è
         supportato solo in alcune versioni di OpenVPN a seconda di come sia stato compilato.
         Questa API presuppone che, ad esempio, da un certo punto in poi tale algoritmo sia
         sempre supportato sui nuovi client e server, e che si possa specificare tale
@@ -251,7 +251,7 @@ output sono in formato JSON.
         nuova CRL con gli stessi certificati revocati della precedente, ma con data
         di \texttt{NextUpdate} posticipata di un anno. Dopo aver generato una
         nuova CRL, viene distribuita a tutti i server.
-        \item Input: nessun
+        \item Input: nessuno
         \item Output: lo \texttt{WorkID} relativo alla distribuzione della CRL
         a tutti i VPN server di MoonCloud.
     \end{itemize}

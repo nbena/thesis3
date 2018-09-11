@@ -1,31 +1,28 @@
 \section{Dettagli}
 In questa sezione si affrontano in maniera più dettagliata le principali funzionalità
-offerte dal microservizio. In letteratura vi è un ampio dibattito su quale sia
+offerte dal microservizio. In letteratura \cite{7030212} \cite{8229914} vi è un ampio
+dibattito su quale sia
 l'effettiva dimensione di un microservizio, e di fatto il risultato è che un esso
 dovrebbe fare una cosa ed una soltanto. Si potrebbe quindi dire che questo principio
 non è completamente rispettato in \texttt{MoonCloud\_VPN}. A tale proposito, vanno fatte
 le seguenti osservazioni:
 \begin{itemize}
-    \item il microservizio nella sua interezza non è particolarmente complesso, anche
-    dal punto di vista algoritmico, a parte il trasferimento file ed il mappaggio
-    delle reti il codice è abbastanza semplice. 
-    Si tratta di circa 4000 righe di codice Python, escludendo i test ed ulteriori script,
-    che è una dimensione ragionevole.
-    \item Il microservizio svolge una precisa funzionalità, ovvero gestire tutto ciò
-    che riguarda la configurazione di OpenVPN  per MoonCloud.
-    \item Separare alcune parti, come ad esempio i moduli che si occupano solo di generare
-    file di configurazione, renderebbe le cose più complicate, perché dovrebbero essere
-    comunque trasferiti localmente una prima volta, per poter quindi essere spostati
-    sui server. 
+	\item il microservizio nella sua interezza non è particolarmente complesso, anche
+	      dal punto di vista algoritmico, a parte il trasferimento file ed il mappaggio
+	      delle reti il codice è abbastanza semplice. 
+	      Si tratta di circa 4000 righe di codice Python, escludendo i test ed ulteriori script,
+	      che è una dimensione ragionevole.
+	\item Il microservizio svolge una precisa funzionalità, ovvero gestire tutto ciò
+	      che riguarda la configurazione di OpenVPN  per MoonCloud.
 \end{itemize}
 Queste considerazioni hanno portato a lasciare questo microservizio come un \textit{unico}
 microservizio.
 
 \subsection{Certificate Management}
-Requisiti fondamentale per il funzionamento di OpenVPN è che il client e server dispongano
+Requisito fondamentale per il funzionamento di OpenVPN è che client e server dispongano
 di certificati X509 firmati da una stessa CA.
 A tale scopo, si dispone di una CA interna, la cui chiave pubblica e privata è deployata
-assieme a questo servizio\footnote{In futuro si potrebbero maggiori di protezione per la
+assieme a questo servizio\footnote{In futuro si adotteranno misure di protezione per la
 	chiave privata, oltre alla protezione \textit{fisica} (es: regole di firewall) dell'accesso
 al servizio.}. Attualmente il certificato è self-signed, in futuro potrebbe non essere così.
 
@@ -40,12 +37,13 @@ Il microservizio mantiene anche una CRL -- \textit{Certificate Revocation List},
 contiene l'elenco dei seriali dei certificati revocati, la ragione (nel cui caso è ``\texttt{unspecified}''),
 ed è firmata digitalmente dalla chiave privata della CA.\\
 Ogni volta che si revoca un nuovo client, occorre creare una nuova CRL inserendo tutti i
-precedenti certificati revocati aggiungendo quello nuovo. La CRL deve poi essere distribuita 
+precedenti certificati revocati ed aggiungendo quello del client in questione. La CRL deve
+poi essere distribuita 
 a tutti i server, ma questo è compito di un altro modulo.
 
 I certificati sono generati utilizzando l'algoritmo \texttt{ECDSA}, con livello di sicurezza
 128 bit per client e server. Secondo le raccomandazioni del NIST, un livello di sicurezza di
-128 è sicuro fino al 2030 \ref{add fucking ref}. Si può passare senza
+128 è sicuro fino al 2030 \ref{Barker:2016:SRK:2206273}. Si può passare senza
 problemi ad un livello di sicurezza maggiore (192 o 256), semplicemente modificando i settaggi
 del microservizio.
 
@@ -58,7 +56,8 @@ mediante il file \texttt{openssl.py}, di cui di seguito si mostra un estratto le
 modificato.
 Si può vedere come si crea un certificato ed una CRL vuota (metodo
 ``\texttt{create\_empty\_crl}'', per la quale vi
-si aggiunge un certificato fake il cui numero seriale vale 1.
+si aggiunge un certificato \textit{fake} il cui numero seriale vale 1 (questo per avere una
+CRL che contenga almeno un certificato, ed evitare problemi con CRL vuote).
 Il tipo di certificato (client o server), dipende dai parametri con cui si chiama il metodo
 ``\texttt{create\_keys\_and\_cert}''.
 Alcuni metodi sono omessi per brevità, tra essi il costruttore.
@@ -80,7 +79,7 @@ gestire il maggior numero di reti target diverse.
 Durante l'analisi dei requisiti è stato osservato che
 gli Execution Manager dedicati all'analisi di reti target sono posti
 ciascuno in una rete isolata rispetto al resto di MoonCloud, ciò ha portato
-alle seguenti osservazioni:
+alle seguenti conclusioni:
 \begin{itemize}
 	\item è possibile assegnare più volte la stessa rete mappata a diversi client,
 	      a patto che siano collegati a VPN server diversi, e quindi Execution Manager.
@@ -132,10 +131,10 @@ la creazione del file di script per nftables.
 \begin{figure}
 	\includegraphics[scale=0.65]{img/sequence_mapping}
 	\caption[Diagramma di interazione: assegnato reti]{Diagramma di interazione che mostra
-	le chiamate tra le vari classi che collaborano per assegnare nuove reti mappate
-	all'aggiunta di un nuovo client (altre azioni, come la creazione dei file di configurazione
-	vengono omesse). La classe \texttt{HLDB} si occupa dell'interazione con il database, mentre
-	\texttt{DNMCP} compie operazioni ad un più alto livello.}
+		le chiamate tra le vari classi che collaborano per assegnare nuove reti mappate
+		all'aggiunta di un nuovo client (altre azioni, come la creazione dei file di configurazione
+		vengono omesse). La classe \texttt{HLDB} si occupa dell'interazione con il database, mentre
+		\texttt{DNMCP} compie operazioni ad un più alto livello.}
 	\label{fig:sequence-mapping-assign}
 \end{figure}
 
@@ -144,7 +143,7 @@ Quando un client specifica un target per un'analisi, egli lo fà inserendo l'ind
 IP originale, per lui la questione dell'IP mapping è completamente trasparente. Ciò
 significa che occorre una funzione che, dato un indirizzo IP originale di un
 certo VPN client, ritorni quello mappato, poiché esso è l'unico noto a MoonCloud.
-Tale funzione viene quindi implementata dal mio microservizio, ed è molto performante.
+Tale funzione viene quindi implementata dal microservizio, ed è molto performante.
 I passi da compiere sono:
 \begin{itemize}
 	\item fare una query al database e ritornare la rete mappata cui corrisponde
@@ -174,7 +173,7 @@ caso molto veloce.
 \subsection{Trasferimento file}
 Vi sono diverse situazioni che richiedono il trasferimento di file
 verso i VPN server di MoonCloud. Qualsiasi sia il caso, esso viene effettuato
-lungo il protocollo SSH, mediante il quale si possono sia inviare comandi remoti
+usando il protocollo SSH, mediante il quale si possono sia inviare comandi remoti
 o trasferire file con il sottosistema SFTP -- Secure File Transfer Protocol. Si sfruttano
 delle librerie Python a tale scopo. L'autenticazione viene fatta mediante chiave
 pubblica.
@@ -216,9 +215,8 @@ Il trasferimento è richiesto nelle seguenti situazioni:
 	effetto.
 	\item[Rinnovo certificato client]E' necessario revocare il certificato precedente,
 	quindi propagare la nuova CRL ad ogni server di MoonCloud.
-	\item[Revoca certificato client]Similmenete al punto precedente, per ciò che concerne
-	il trasferimento file, l'unica azione da effettuare è propagare la nuova
-	CRL ai VPN server.
+	\item[Revoca certificato client]Come al punto precedente, occorre aggiornare e distribuire la
+	CRL.
 	\item[Refresh CRL]Quando si crea una CRL si specifica la data di prossimo aggiornamento,
 	ed essa viene controllata da OpenVPN server: se risulta scaduta non si accettano nuove
 	connessioni. Per questa ragione è importante aggiornarla, ovvero creare una nuova
@@ -240,13 +238,14 @@ che servono per trasferirlo sul server (o sui server) correttamente. I trasferim
 quindi sono eseguiti serialmente, nell'ordine con cui sono stati inseriti
 in una delle due code (\textit{FIFO}).
 Ogni volta che si deposita un nuovo job sulla coda, si riceve un \texttt{WorkID}, il quale
-è generato in maniera pseudocasuale nell'idea di identificare univocamente ogni job.
+è generato in maniera pseudocasuale allo scopo di identificare univocamente ogni job.
 
 Lo stato della computazione di un lavoro è mantenuto in memoria da Redis. Tra le varie informazioni
 che si memorizzano vi sono:
 \begin{itemize}
 	\item ID del lavoro (è la Key)
-	\item stato di avanzamento: non iniziato, in corso, concluso, concluso con errore
+	\item stato di avanzamento: non iniziato (``\texttt{Pending}''), in corso (``\texttt{Working}''),
+	      concluso (``\texttt{Executed}''), concluso con errore (``\texttt{Error}'')
 	\item tipo (es: \textit{trasferimento server}, \textit{rinnovo certificato}, ecc\ldots)
 	\item ulteriori informazioni, come una descrizione dell'errore in caso si verifichi.
 \end{itemize}
@@ -273,7 +272,8 @@ garantire l'integrità dei file sui server.
 Si pensi ad un semplice esempio, per cui si fanno due richieste a questo microservizio nello stesso
 momento, ed entrambe richiedono di aggiungere un nuovo client allo stesso server.
 Si supponga che vi siano due thread, ciascuno che gestisce una delle due risposte. Essi quindi
-accedono al file \texttt{client-down.sh} sul server, lo modificano aggiungendo informazioni
+accedono al file \texttt{client-down.sh} (e \texttt{client-up.sh}) sul server, lo modificano
+aggiungendo informazioni
 relative solo al proprio client, quindi il primo thread trasferisce il file, immediatamente dopo
 il secondo trasferisce la propria versione, ed ecco che la modifica fatta dal primo viene
 sovrascritta.
@@ -285,25 +285,22 @@ problema. Se si suppone che in totale vi siano 100 server e che la seconda richi
 mentre si concludeva il trasferimento verso il 50esimo, a quel punto si modifica la CRL
 e quella trasferita al 51esimo è diversa dalle precedenti.
 
-Un'esecuzione seriale mette al sicuro da questi problemi. Anche con quando il numero di server
-si farà potenzialmente alto, un thread è stato ritenuto sufficiente perché i file trasferiti
-sono sempre testuali e relativamente brevi. L'utilizzo di certificati su curva ellittica
-ha l'effetto di avere anche tali file di dimensioni contenute. In futuro si può prevedere,
-dopo un accurato studio, di aumentare il numero di thread a disposizione.
-Per ciò che concerne il problema appena descritto relativo alla CRL, la stessa modifica alla CRL
-viene schedulata in maniera seriale, non solo il trasferimento.
+Un'esecuzione seriale mette al sicuro da questi problemi.
+Per ciò che concerne le modifiche CRL, esse stesse sono
+schedulata in maniera seriale, non solo il suo trasferimento.
 
+%HERE EXPLAIN
 
 Inizialmente tutte le operazioni venivano eseguite da un unico thread, successivamente se ne
 è aggiunto un secondo.
 \begin{itemize}
 	\item \texttt{Main\_worker\_thread} si occupa del trasferimento di nuovi server, nuovi
-	client e, parzialmente, della revoca di un client chiamando lo script \texttt{deleteclient.py}.
-	Si noti che questo thread è l'\textit{unico} flusso di computazione che può modificare
-	i file \texttt{client-up.sh} e \texttt{client-down.sh}.
+	      client e, parzialmente, della revoca di un client chiamando lo script \texttt{deleteclient.py}.
+	      Si noti che questo thread è l'\textit{unico} flusso di computazione che può modificare
+	      i file \texttt{client-up.sh} e \texttt{client-down.sh}.
 	\item \texttt{CRL\_worker\_thread} è responsabile dell'aggiornamento e della propagazione
-	della CRL ai diversi server. Anche in questo caso, vi è un unico flusso che modifica
-	un file, per cui l'integrità è ancora garantita.
+	      della CRL ai diversi server. Anche in questo caso, vi è un unico flusso che modifica
+	      un file, per cui l'integrità è ancora garantita.
 \end{itemize}
 
 
@@ -323,11 +320,11 @@ Senza tale script, sarebbe stato necessario fare una prima query per ottenere la
 	\includegraphics[scale=0.5]{img/activity_generic_file_transfer}
 	\label{fig:activity-generic-file-transfer}
 	\caption[Diagramma di attività: trasferimento file]{Diagramma di attività:
-	trasferimento file. Il presente diagramma UML mostra cosa succede quando è necessario
-	trasferire dei file. Ad una generica richiesta arrivata a \texttt{controllers},
-	esso richiede di aggiungere un lavoro. Si decide quindi su quale coda
-	depositarlo in base al tipo, quindi si ritorna al chiamante.
-	Parallelamente, i due thread di trasferire svolgono il lavoro.}
+		trasferimento file. Il presente diagramma UML mostra cosa succede quando è necessario
+		trasferire dei file. Ad una generica richiesta arrivata a \texttt{controllers},
+		esso richiede di aggiungere un lavoro. Si decide quindi su quale coda
+		depositarlo in base al tipo, quindi si ritorna al chiamante.
+	Parallelamente, i due thread di trasferimento svolgono il lavoro.}
 \end{figure}
 
 
@@ -337,15 +334,15 @@ esclusivamente ad essere un VPN server, ed esso è raggiungibile anche dal Docke
 cui si trova il microservizio \texttt{MoonCloud\_VPN}.
 Viene messa a disposizione una API per questo scopo; i passi per creare un server sono:
 \begin{enumerate}
-    \item verificare che la chiave SSH fornita sia valida
-    \item creare una nuova istanza nel database per il nuovo server
-    \item creare i certificati ed i file di configurazione
-    \item registrare nel database le informazioni relative al nuovo certificato
-    \item mettere sulla coda di trasferimento un nuovo job, ovvero quello di
-    trasferire sul nuovo server tutti i file necessari.
+	\item verificare che la chiave SSH fornita sia valida
+	\item creare una nuova istanza nel database per il nuovo server
+	\item creare i certificati ed i file di configurazione
+	\item registrare nel database le informazioni relative al nuovo certificato
+	\item mettere sulla coda di trasferimento un nuovo job, ovvero quello di
+	      trasferire sul nuovo server tutti i file necessari.
 \end{enumerate}
 L'estratto di codice che si presenta ora è una versione leggermente modificata di ciò che
-\texttt{controllers} fà.
+\texttt{controllers} fa.
 \inputminted[tabsize=4, breaklines, fontsize=\footnotesize]{python}{code_samples/controllers_create_server.py}
 
 Alla fine, la API ritorna al chiamante l'ID del server che lo identifica univocamente
@@ -360,20 +357,20 @@ il client si connetterà e l'elenco delle reti che il client sarà in grado di
 raggiungere una volta portato nella rete target.
 Si compiono i seguenti step:
 \begin{enumerate}
-    \item fare un refresh della lista di nomi di dominio da escludere dal mapping
-    \item creare una nuova istanza nel database per il device client
-    \item creare i certificati ed i file di configurazione
-    \item definire il mapping
-    \item creare il file di script per nftables
-    \item mettere sulla coda di trasferimento un nuovo job di tipo ``\texttt{Trasferire Client}''.
+	\item fare un refresh della lista di nomi di dominio da escludere dal mapping
+	\item creare una nuova istanza nel database per il device client
+	\item creare i certificati ed i file di configurazione
+	\item definire il mapping
+	\item creare il file di script per nftables
+	\item mettere sulla coda di trasferimento un nuovo job di tipo ``\texttt{Trasferire Client}''.
 \end{enumerate}
 
-Si ritorna al chiamante l'ID del client ed un file zippato codificato in formato
+Si ritorna al chiamante l'ID del client, il \texttt{WorkID} ed un file zippato codificato in formato
 base64 che contiene:
 \begin{itemize}
-    \item file di configurazione principale per OpenVPN
-    \item certificato e chiave privata del VPN client
-    \item chiave pubblica della CA
+	\item file di configurazione principale per OpenVPN
+	\item certificato e chiave privata del VPN client
+	\item chiave pubblica della CA
 \end{itemize}
 Anche in questo caso si mostra un esempio.
 \inputminted[tabsize=4, breaklines, fontsize=\footnotesize]{python}{code_samples/controllers_create_client.py}
