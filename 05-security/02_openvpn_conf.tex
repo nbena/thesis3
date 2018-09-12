@@ -91,9 +91,11 @@ remote-cert-eku "TLS Web Server Authentication"
 \end{minted}
 
 
-E' infine possibile configurare anche direttive in cui si può specificare, ad esempio,
-come deve essere composto il certificato del remote, ad esempio quale debba essere il suo \texttt{CommonName}.
-Attualmente questa configurazione non è applicata, non si esclude che in futuro lo sia.
+Si utilizza infine, lato client, una direttiva che forza OpenVPN a verificare che
+il nome contenuto nel certificato del server sia corrispondente a quello specificato:
+\begin{minted}{bash}
+verify-x509-name <nome-certificato> name  
+\end{minted}
 
 
 \subsubsection{Certificate Revocation List}

@@ -164,6 +164,8 @@ dev server
 	
 persist-tun
 persist-key
+
+script-security 2
 	
 # privileges downgrading
 group nogroup
@@ -235,6 +237,8 @@ Linea per linea si descrive il contenuto del file:
 	indica di non chiudere e riaprire la scheda di rete virtuale tra i vari restart.
 	\item[\texttt{persist-key}]Indica di non rileggere la chiave privata quando una
 	sessione VPN finisce, o quando si ricevono particolari segnali dal sistema operativo.
+	\item[\texttt{script-security 2}]Specifica quale tipo di programmi esterni è consentito
+	chiamare, in questo caso si consentono script definiti dall'utente.
 	\item[\texttt{group nogroup}, \texttt{user-nobody}]Questa direttiva fa
 	sì che una volta partito, OpenVPN
 	non abbia più privilegi amministrativi.
@@ -393,7 +397,9 @@ client
 proto tcp
 	
 # IP porta del server
-remote 11.9.250.34 443
+remote openvpn.example.com 443
+
+verify-509-name openvpn.example.com name
 	
 dev-type tun
 dev client
@@ -430,6 +436,11 @@ sebbene manchino le direttive di routing. Ovviamente, ``\texttt{client}'' e
 	      server mediante ``\texttt{push}''
 	\item \texttt{tls-client} che è l'opposto di ``\texttt{tls-server}''.
 \end{itemize}
+``\texttt{verify-x509-name openvpn.example.com name}'' indica che occorre controllare che
+il nome (``\texttt{name}'') contenuto nel certificato combaci con quello specificato
+(``\texttt{openvpn.example.com}''). Si può notare la presenza di ``\texttt{remote openvpn.example.com 443}'',
+essa indica l'indirizzo IP pubblico mediante il quale è possibile contattare
+il server, e la porta su cui è in ascolto.\\
 La direttiva ``\texttt{push "route \ldots"}''
 non è presente perché può essere solo nel file di configurazione del server,
 mentre ``\texttt{route <rete-altro-peer>}'' non c'è ma il suo effetto, cioè aggiungere
@@ -439,9 +450,6 @@ Una volta che il collegamento tra i due è stato stabilito vi sarà una entry
 nella routing table del kernel così fatta: \textit{rete 192.168.100.0/24 via
 	IP-virtual-NIC}. Non possono nemmeno esserci direttive ``\texttt{iroute}'', perché
 il client si connette ad un solo altro endpoint che è il server.\\
-Si può notare la presenza di una direttiva nuova: ``\texttt{remote 11.9.250.34 443}'',
-essa indica l'indirizzo IP pubblico mediante il quale è possibile contattare
-il server, e la porta su cui è in ascolto.\\
 Non è presente l'opzione di ``\texttt{keepalive}'' perché, come detto in
 precedenza, è sufficiente specificarla solo sul server.\\
 L'indirizzo IP della scheda di rete virtuale del client sarà assegnato dal server scegliendo

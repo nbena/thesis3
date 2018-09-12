@@ -94,6 +94,8 @@ dev ovpn-server
 persist-tun
 persist-key
 
+script-security 2
+
 port 443
 
 # VPN subnet
@@ -181,6 +183,7 @@ client
 proto tcp
 
 remote ec2-52-15-172-187.us-east-2.compute.amazonaws.com 443
+verify-x509-name server-single name
 
 dev-type tun
 dev ovpn-client50
@@ -217,6 +220,7 @@ client
 proto tcp
 
 remote ec2-52-15-172-187.us-east-2.compute.amazonaws.com 443
+verify-x509-name server-single name
 
 dev-type tun
 dev ovpn-client200

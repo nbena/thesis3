@@ -50,6 +50,8 @@ dev ovpn-1
 persist-tun
 persist-key
 
+script-security 2
+
 # porta di ascolto 443
 port 443
 
@@ -157,6 +159,8 @@ proto tcp
 
 # server address and port
 remote ovpn1.moon-cloud.eu 443
+
+verify-x509-name ovpn1.moon-cloud.eu name
 
 # virtual NIC configuration
 dev-type tun
