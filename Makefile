@@ -11,6 +11,7 @@ latex ?= pdflatex
 bibtex ?= bibtex
 
 # img_directory = img
+pre_directory := 00-pre
 mooncloud_directory := 01-mooncloud
 vpn_directory := 02-vpn
 ovpn_directory := 03-ovpnconf
@@ -19,6 +20,10 @@ security_directory := 05-security
 microservice_directory := 06-microservice
 img_directory := img
 code_samples_directory := code_samples
+
+pre_files := $(pre_directory)/index.tex
+pre_files += $(pre_directory)/01_ack.tex
+pre_files += $(pre_directory)/02_intro.tex
 
 mooncloud_files := $(mooncloud_directory)/index.tex
 mooncloud_files += $(mooncloud_directory)/01_overview.tex
@@ -71,7 +76,8 @@ code_files += $(code_samples_directory)/works.lua
 bib_file = bibliography.bib
 bib_file_input = thesis
 
-files := $(mooncloud_files)
+files := $(pre_files)
+files += $(mooncloud_files)
 files += $(vpn_files)
 files += $(ovpn_files)
 files += $(nftables_files)
