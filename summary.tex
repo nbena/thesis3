@@ -90,22 +90,29 @@
             un software consolidato e molto flessibile: in MoonCloud si posizionano
             i VPN server, mentre il device che si porta nella rete target funge da
             VPN client.
-            \item Un'analisi delle problematiche di configurazione, derivanti anche
-            dall'uso
-            altamente automatizzato della VPN.
-            In particolare,
-            poiché si vuole far sì che un server possa servire il maggior numero
-            di client possibili, è stato necessario dover gestire la possibilità
-            che diversi client abbiano gli stessi indirizzi IP, causando quindi
-            dei conflitti. L'innovativa soluzione è stata chiamata \textit{IP
-            mapping}, e consiste nel \textit{mappare} le reti dei clienti su nuove
-            reti garantite univoche, il tutto in maniera trasparente.\\
-            Sempre ai fini della trasparenza di configurazioni per il cliente,
-            è stato introdotto il concetto di \textit{NAT al contrario}.
-            % una volta scelta la tecnologia VPN, si è trattato di capire come
-            % configurarla al meglio, risolvendo numerosi problemi che in una
-            % installazione VPN classica non si hanno. In particolare, in questa seconda
-            % fase si sono introdotti alcune soluzioni particolarmente innovative.
+            \item Un'analisi delle problematiche derivanti da un utilizzo
+            \textit{non standard} della VPN. Sono state utilizzate diverse ed
+            innovative soluzioni, tra cui il \textit{NAT al contrario} per evitare
+            di configurare rotte nella rete target, e si è introdotto un nuovo
+            concetto detto \textit{IP Mapping}. Quest'ultimo consiste nel
+            \textit{mappare} gli indirizzi IP delle reti target in nuovi
+            indirizzi garantiti univoci. Ciò consente
+            di gestire tutti i possibili conflitti di indirizzi IP tra le reti
+            dei clienti, portando infine MoonCloud a risparmiare sul numero
+            di VPN server necessari. Non solo, è completamente trasparente
+            al cliente finale ed automatizzato.
+            % Un'analisi delle problematiche di configurazione, derivanti anche
+            % dall'uso
+            % altamente automatizzato della VPN. 
+            % In particolare,
+            % poiché si vuole far sì che un server possa servire il maggior numero
+            % di client possibili, è stato necessario dover gestire la possibilità
+            % che diversi client abbiano gli stessi indirizzi IP, causando quindi
+            % dei conflitti. L'innovativa soluzione è stata chiamata \textit{IP
+            % mapping}, e consiste nel \textit{mappare} le reti dei clienti su nuove
+            % reti garantite univoche, il tutto in maniera trasparente.\\
+            % Sempre ai fini della trasparenza di configurazioni per il cliente,
+            % è stato introdotto il concetto di \textit{NAT al contrario}.
             \item La creazione di un microservizio a supporto dell'automazione
             della gestione della VPN. Esso è scritto in Python ed espone API REST che
             assolvono ai seguenti compiti:
