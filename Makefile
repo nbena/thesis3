@@ -21,8 +21,8 @@ microservice_directory := 06-microservice
 img_directory := img
 code_samples_directory := code_samples
 
-pre_files := $(pre_directory)/index.tex
-pre_files += $(pre_directory)/01_ack.tex
+#  pre_files := $(pre_directory)/index.tex
+pre_files := $(pre_directory)/01_ack.tex
 pre_files += $(pre_directory)/02_intro.tex
 
 mooncloud_files := $(mooncloud_directory)/index.tex

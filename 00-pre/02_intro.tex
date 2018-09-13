@@ -1,1 +1,52 @@
 \chapter*{Introduzione}
+
+Il successo del cloud computing ha imposto un grande cambiamento nell'ambiente dell'IT,
+portando indubbi benefici sotto numerosi punti di vista, anche economici. Dall'altro
+lato si pongono problemi di sicurezza derivanti proprio da questo outsourcing, per i
+quali sono richiesti nuovi approcci. Tra questi, uno molto efficace è quello basato
+sulla raccolta continua di evidenze presso il sistema cloud, al fine di valutare
+tramite esse quale sia l'effettivo stato della sicurezza.
+
+
+MoonCloud è un prodotto per \textit{Security Assessment}  e \textit{Security Assurance}
+basato su tale approccio, 
+i cui target sono proprio i sistemi cloud. L'obiettivo di questa tesi è stato
+estendere MoonCloud per permettere di effettuare attività di analisi di sicurezza anche
+verso sistemi IT tradizionali, compresi anche cloud privati. Poiché tali sistemi
+sono confinati entro un firewall e non accessibili dall'esterno, vi è stata la necessità
+di disporre di hook \textit{dall'interno} di queste reti target. In particolare,
+si è studiato come collegare la rete MoonCloud ai sistemi dei clienti mediante
+una VPN.\\
+Questo collegamento deve essere il più possibile trasparente per i clienti, nei limiti
+del possibile non si vuole effettuare alcun tipo di configurazione presso essi; inoltre,
+deve esserci un alto grado di automatizzazione nella gestione della VPN.
+Questo ha posto di fronte a sfide che in una tradizionale VPN non si hanno, ed ha portato
+a diverse soluzioni innovative, tra cui l'\textit{IP mapping} ed il \textit{NAT al contrario}.
+
+
+L'elaborato è organizzato come segue:
+\begin{description}
+    \item[Capitolo 1 -- MoonCloud] In questo capitolo si presenta MoonCloud, se ne
+    descrive il funzionamento e l'architettura, unitamente
+    alle motivazioni che hanno portato all'utilizzo di una VPN.
+    \item[Capitolo 2 -- VPN] Il secondo capitolo fornisce una panoramica sulle
+    principali tecnologie VPN disponibile. Per ciascuna si analizzano
+    i pro ed i contro, unitamente alle possibili integrazioni tra esse e MoonCloud.
+    \item[Capitolo 3 -- OpenVPN] \textit{OpenVPN} è la tecnologia scelta: nella
+    prima parte del capitolo la si descrive, mentre nella seconda si dettagliano
+    i problemi che sono stati incontrati unitamente alle loro soluzioni innovative.
+    Di particolare rilevanza vi è l'\textit{IP mapping} per gestire potenziali conflitti degli
+    indirizzi IP.
+    \item[Capitolo 4 -- nftables] \textit{nftables} è il successore di \textit{iptables},
+    e come tale porta numerose migliorie rispetto al precedente. Questo capitolo analizza
+    prima \textit{iptables}, identificandone le principali criticità, per mostrare
+    infine \textit{nftables} e come si integri nella soluzione proposta.
+    \item[Capitolo 5 -- Sicurezza della VPN] Il collegamento VPN \textit{espone}
+    parte della rete di MoonCloud che normalmente non sarebbe accessibile, per questo
+    sono state adotatte una serie di contromisure volte alla sua protezione: sono descritte
+    in questo capitolo.
+    \item[Capitolo 6 -- MoonCloud\_VPN] \textit{MoonCloud\_VPN} è il nome del
+    microservizio che è stato realizzato come contorno della soluzione VPN, e si
+    occupa della sua gestione. I suoi requisiti, la sua architettura, il suo
+    funzionamento sono dettagliati nel sesto capitolo.
+\end{description}
