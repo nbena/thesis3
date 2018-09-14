@@ -254,10 +254,10 @@ Quando un thread inizia la computazione per un job modifica lo stato da \texttt{
 a \texttt{Working}, infine ad \texttt{Executed} quando è finito.
 
 Inizialmente si utilizzava, al posto di Redis, un dizionario acceduto concorrentemente dai thread,
-tuttavia questo presupponeva un elevato uso di meccanismi di lock. Si è deciso quindi di
+tuttavia questo richiedeva un elevato uso di meccanismi di lock. Si è deciso quindi di
 passare a Redis, il quale, in quanto database di tipo Key--Value, è molto efficiente,
 inoltre tutte le operazioni svolte da esso sono atomiche per definizione.
-Inoltre, per svolgere operazioni complesse in esso, è possibile definire degli script Lua,
+Inoltre, per le interrogazioni più complesse, è possibile definire degli script Lua
 e richiamarne quindi la loro esecuzione; più avanti se ne mostra un esempio.
 
 Una volta che il job è stato depositato in una coda dal \texttt{controllers}, si ritorna immediatamente
@@ -289,7 +289,6 @@ Un'esecuzione seriale mette al sicuro da questi problemi.
 Per ciò che concerne le modifiche CRL, esse stesse sono
 schedulata in maniera seriale, non solo il suo trasferimento.
 
-%HERE EXPLAIN
 
 Inizialmente tutte le operazioni venivano eseguite da un unico thread, successivamente se ne
 è aggiunto un secondo.
@@ -302,6 +301,12 @@ Inizialmente tutte le operazioni venivano eseguite da un unico thread, successiv
 	      della CRL ai diversi server. Anche in questo caso, vi è un unico flusso che modifica
 	      un file, per cui l'integrità è ancora garantita.
 \end{itemize}
+L'unica operazione definibile problematica poiché coinvolge entrambi i due thread è la revoca
+di un client, poiché occorre sia modificare i file \texttt{client-up.sh} e \texttt{client-down.sh}
+sia aggiornare la CRL. In questo caso la soluzione adottata consiste nel dividere il lavoro in
+entrambi i thread, il primo si occupa solo di chiamare \texttt{deleclient.py}, il secondo
+di aggiornare e distribuire la CRL. Le strutture dati memorizzate da Redis sono organizzate in modo
+da poter tener conto del progresso parziali di ciascun thread.
 
 
 Di seguito si mostra un estratto di \texttt{SSHBackgroundWorker}, in particolare si mostrano
