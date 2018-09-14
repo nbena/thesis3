@@ -294,7 +294,8 @@ Inizialmente tutte le operazioni venivano eseguite da un unico thread, successiv
 è aggiunto un secondo.
 \begin{itemize}
 	\item \texttt{Main\_worker\_thread} si occupa del trasferimento di nuovi server, nuovi
-	      client e, parzialmente, della revoca di un client chiamando lo script \texttt{deleteclient.py}.
+		  client e, parzialmente, della revoca di un client chiamando lo script di cancellazione
+		  \texttt{deleteclient.py}.
 	      Si noti che questo thread è l'\textit{unico} flusso di computazione che può modificare
 	      i file \texttt{client-up.sh} e \texttt{client-down.sh}.
 	\item \texttt{CRL\_worker\_thread} è responsabile dell'aggiornamento e della propagazione
