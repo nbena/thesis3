@@ -183,3 +183,4 @@ clean:
 	rm -f *.pyg
 	rm -f *.bbl
 	rm -f *.blg
+	rm -f *.lof
