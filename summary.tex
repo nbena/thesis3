@@ -79,9 +79,9 @@
         Il cosìdetto \textit{hook dall'interno} è una VPN tra
         MoonCloud e le reti da analizzare, mediante un device che viene portato presso i clienti
         e responsabile di instaurare il collegamento. E' molto importante che questa soluzione
-        di VPN
         sia trasparente per il cliente finale (oltre che sicura), ovvero richieda di
-        effettuare il minor numero di configurazioni possibili, possibilmente nessuna.\\
+        effettuare il minor numero di configurazioni possibili, anche nessuna, al di là
+        di quelle necessarie sul device.
         Il lavoro svolto si può articolare in tre parti principali:
         \begin{enumerate}
             \item Uno studio sulle tecnologie VPN esistenti e delle topologie realizzabili
@@ -117,7 +117,7 @@
             della gestione della VPN. Esso è scritto in Python ed espone API REST che
             assolvono ai seguenti compiti:
             \begin{itemize}
-                \item creazione di tutti i file di configurazione per la VPN
+                \item creazione di tutti i file di configurazione per \textit{OpenVPN}
                 \item gestione dei certificati mediante i quali avviene l'autenticazione
                 nella VPN
                 \item gestione dell'\textit{IP mapping}: assegnare correttamente le reti
