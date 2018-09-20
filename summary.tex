@@ -7,6 +7,12 @@
     \usepackage{palatino}
     \usepackage[left=2cm, right=2cm]{geometry}
 
+    %\usepackage[a-1b]{pdfx}
+    \usepackage[pdftex,
+                pdfauthor={Nicola Bena},
+                pdftitle={Studio ed implementazione di una architettura avanzata
+                basata su VPN per Security Assessment}]{hyperref}
+
 
     \begin{document}
 
@@ -45,142 +51,51 @@
 
         \vspace{2cm}
 
-        % MoonCloud è un prodotto in grado di fornire valutazione e monitoraggio continuo
-        % di servizi cloud. In particolare, MoonCloud offre \textit{Security Assessment} e
-        % \textit{Security Assurance}, cioè la capacità di valutare, mediante
-        % la raccolta continua di evidenze, lo stato \textit{effettivo} della sicurezza
-        % di un sistema.
-
-        Il successo del cloud computing ha richiesto un nuovo modo di svolgere
-        \textit{Security Assessment} e \textit{Security Assurance}: modelli
-        basati sulla raccolta continua di evidenze per valutare lo stato effettivo della
-        sicurezza si stanno dimostrando sempre più utili ed efficaci.
-
-        Tra essi vi è MoonCloud, spin-off dell'Università di Milano, i cui target iniziali
-        sono stati proprio i sistemi cloud. L'ambito di questa tesi è stata una collaborazione
-        con tale azienda, al fine di espanderne i target anche a sistemi IT tradizionali
-        o cloud privati, comunque confinati nell'ambito di una o più reti aziendali
-        (dette \textit{reti target}).
-        Per fare ciò, è necessario disporre di \textit{hook dall'interno} di tali
-        reti, mentre per sistemi cloud si sfruttano hook messi a disposizione dal
-        cloud provider.
-        % Il target iniziale di MoonCloud sono i sistemi cloud, tutttavia si è voluto espandere
-        % tale target anche ai sistemi IT tradizionali, ovvero sistemi
-        % confinati all'interno di una classica rete aziendale (\textit{reti target}).
-        % Se, per quanto riguarda target nella
-        % cloud, ci si appoggia a degli \textit{hook} forniti dal cloud provider, per analizzare
-        % sistemi IT tradizionali è stato necessario ripensare a come MoonCloud possa dialogare
-        % con tali sistemi.
-        Inoltre, MoonCloud viene erogato come un servizio, ovvero l'utente finale
-        non deve installare niente per analizzare i propri asset nella cloud, e nella transizione
-        verso sistemi IT tradizionali si è cercato di mantenere questa caratteristica.
-
-
-        Il cosìdetto \textit{hook dall'interno} è una VPN tra
-        MoonCloud e le reti da analizzare, mediante un device che viene portato presso i clienti
-        e responsabile di instaurare il collegamento. E' molto importante che questa soluzione
-        sia trasparente per il cliente finale (oltre che sicura), ovvero richieda di
-        effettuare il minor numero di configurazioni possibili, anche nessuna, al di là
-        di quelle necessarie sul device.
-        Il lavoro svolto si può articolare in tre parti principali:
-        \begin{enumerate}
-            \item Uno studio sulle tecnologie VPN esistenti e delle topologie realizzabili
-            con esse, al fine di valutare quali
-            fossero le più adatte. La scelta è stata \textit{OpenVPN},
-            un software consolidato e molto flessibile: in MoonCloud si posizionano
-            i VPN server, mentre il device che si porta nella rete target funge da
-            VPN client.
-            \item Un'analisi delle problematiche derivanti da un utilizzo
-            \textit{non standard} della VPN. Sono state utilizzate diverse ed
-            innovative soluzioni, tra cui il \textit{NAT al contrario} per evitare
-            di configurare rotte nella rete target, e si è introdotto un nuovo
-            concetto detto \textit{IP Mapping}. Quest'ultimo consiste nel
-            \textit{mappare} gli indirizzi IP delle reti target in nuovi
-            indirizzi garantiti univoci. Ciò consente
-            di gestire tutti i possibili conflitti di indirizzi IP tra le reti
-            dei clienti, portando infine MoonCloud a risparmiare sul numero
-            di VPN server necessari. Non solo, è completamente trasparente
-            al cliente finale ed automatizzato.
-            % Un'analisi delle problematiche di configurazione, derivanti anche
-            % dall'uso
-            % altamente automatizzato della VPN. 
-            % In particolare,
-            % poiché si vuole far sì che un server possa servire il maggior numero
-            % di client possibili, è stato necessario dover gestire la possibilità
-            % che diversi client abbiano gli stessi indirizzi IP, causando quindi
-            % dei conflitti. L'innovativa soluzione è stata chiamata \textit{IP
-            % mapping}, e consiste nel \textit{mappare} le reti dei clienti su nuove
-            % reti garantite univoche, il tutto in maniera trasparente.\\
-            % Sempre ai fini della trasparenza di configurazioni per il cliente,
-            % è stato introdotto il concetto di \textit{NAT al contrario}.
-            \item La creazione di un microservizio a supporto dell'automazione
-            della gestione della VPN. Esso è scritto in Python ed espone API REST che
-            assolvono ai seguenti compiti:
-            \begin{itemize}
-                \item creazione di tutti i file di configurazione per \textit{OpenVPN}
-                \item gestione dei certificati mediante i quali avviene l'autenticazione
-                nella VPN
-                \item gestione dell'\textit{IP mapping}: assegnare correttamente le reti
-                ai client e, dato un indirizzo IP originale, ritornare la sua versione mappata
-                \item trasferimento dei file di configurazione per i server verso i server stessi,
-                mantenendone la coerenza.
-            \end{itemize}
-        \end{enumerate}
+        Con l'avvento del cloud computing risulta necessario rivoluzionare il modo di svolgere pratiche quali il
+        \textit{Security Assessment} e la \textit{Security Assurance}. I più efficaci approcci
+        proposti nel panorama scientifico ed industriale risultano essere quelli basati su raccolta continua
+        di evidenze per valutare l'evoluzione dello stato della sicurezza del sistema target.
+        Tra essi vi è MoonCloud, spin-off dell'Università di Milano, che fornisce una soluzione di
+        security governance per la cloud \textit{as a Service}, basata su raccolta di evidenze.
+        La tesi è stata sviluppata in collaborazione con tale azienda, al fine di poter eseguire
+        le verifiche di sicurezza anche in ambiti di cloud private o reti aziendali tradizionali,
+        senza sconvolgere il paradigma \textit{as a Service}. 
 
         
-        % Durante la prima fase si sono studiante le maggiori tecnologie VPN disponibili,
-        % tenendo presente che si richiedeva una VPN molto flessibile, anche a costo
-        % di non essere la più performante in assoluto. Naturalmente doveva essere
-        % molto sicura. La scelta è infine ricaduta su \textit{OpenVPN}, una soluzione open-source
-        % ampiamente diffusa, sicura, e, soprattutto, flessibile, grazie alle sua numerose
-        % opzioni di configurazione.
+        Il lavoro svolto si può articolare come segue:
+        \begin{enumerate}
+            % \item Studio delle possibili soluzioni architetturali che permettano di istaurare
+            % un ponte tra MoonCloud e la rete privata da ispezionare, mantenendo il paradigma \textit{as a Service}. %impalcatura as a Service
+            \item Studio delle possibili soluzioni architetturali basate su appliance VPN che permettano di istaurare
+            un ponte tra MoonCloud e la rete privata da ispezionare, mantenendo il paradigma \textit{as a Service}.
+            Si è effettuato uno studio approfondito sulle tecnologie VPN esistenti e sulle topologie realizzabili
+            con esse, al fine di valutare quali fossero le più adatte.
+            \item Design e realizzazione di una architettura VPN non standard basata su \textit{OpenVPN} tra
+            VPN appliance e MoonCloud. 
+            Vengono individuate e descritte diverse soluzioni innovative per la gestione delle reti target %il mapping della rete target all'interno di MoonCloud
+            (\textit{NAT al contrario} e \textit{IP Mapping}). Il
+            \textit{NAT al contrario} serve per evitare di impostare rotte presso il cliente, mentre
+            l'\textit{IP Mapping} consiste nel
+            \textit{mappare} gli indirizzi IP delle reti target in nuovi
+            indirizzi garantiti univoci e quindi utilizzabili dalle sonde MoonCloud per
+            identificare i target dell'ispezione. Ciò consente di gestire tutti i possibili
+            conflitti di indirizzi IP tra le reti
+            dei clienti. Il sistema sviluppato ha la caratteristica di essere completamente trasparente
+            al cliente finale oltre ad essere estremamente automatizzato.
+            \item La creazione di microservizi a supporto dell'automazione
+            della gestione della VPN, per svolgere le seguenti principali operazioni:
+            \textit{i)} creazione di tutti i file di configurazione per \textit{OpenVPN},
+            \textit{ii)} gestione dei certificati mediante i quali avviene l'autenticazione
+            nella VPN,
+            \textit{iii)} gestione dell'\textit{IP Mapping},
+            \textit{iv)} trasferimento coerente dei file di configurazione per e verso i server VPN in MoonCloud. % occorre specificare in MoonCloud
+            % perché non è stato mai detto prima dove sono i server.
+            % \end{itemize}
+        \end{enumerate}
 
-
-        % A questo punto si è affrontato il problema di configurare OpenVPN per
-        % MoonCloud. Posto che i server VPN verranno installati in MoonCloud, è stato
-        % fondamentale capire quali problemi tale soluzione
-        % presenta. In particolare, se ne sono individuati tre.
-        % \begin{description}
-        %     \item[Staticità della configurazione]OpenVPN si configura mediante
-        %     file di testo, che vengono letti solo all'avvio, tuttavia vi è la necessità
-        %     di aggiungere dinamicamente dei nuovi client e configurare
-        %     rotte, sia interne ad OpenVPN, sia nel kernel.
-        %     Per risolvere questo problema
-        %     si sono sfruttati degli \textit{hook} messi a disposizione da OpenVPN, che
-        %     consentono di eseguire degli script quando si compiono certe azioni
-        %     (es: quando un client si connette, aggiungi una rotta al sistema operativo).
-        %     \item[\textit{Configuration-free}]I pacchetti inviati da MoonCloud alla rete
-        %     target, una volta ricevuti nel target, hanno come indirizzo IP sorgente un IP appartenente
-        %     alla rete interna MoonCloud, e le risposte ad essi devono quindi passare
-        %     per il VPN client, anziché essere inviate al default gateway della rete target.
-        %     Tuttavia non è pensabile di dover chiedere al cliente di effettuare tali configurazioni,
-        %     pertanto si utilizza il cosidetto \textit{NAT al contrario}: il VPN
-        %     client invia i pacchetti sulla rete target facendo del NAT specificando come IP sorgente
-        %     il proprio. Poiché esso appartiene alla rete target, per definizione si trova
-        %     nello stesso spazio di indirizzi, e quindi le risposte tornano ad esso anziché essere
-        %     inviate al default gateway.
-        %     \item[Conflitti di IP]Si vuole far sì che un VPN server possa gestire il maggior numero
-        %     di VPN client, tuttavia bisogna rispettare un vincolo fondamentale: ogni rete che
-        %     partecipa alla VPN deve avere un NET ID diverso. E' ragionevole presumere che
-        %     le reti target utilizzino degli indirizzi IP privati, che sono limitati, e che prima
-        %     o poi vi sarà un conflitto. Per risolvere questo problema alla fonte, si è introdotto
-        %     il concetto dell'\textit{IP mapping}. Quando si registra un nuovo VPN client, ad ogni
-        %     rete target che esso raggiunge si assegna una nuova rete garantita univoca per
-        %     il server a cui il client è connesso, e tutta MoonCloud conoscerà solo queste
-        %     reti mappate, anziché le originali.
-        %     Il VPN client è responsabile di fare l'operazione inversa, quando riceve pacchetti
-        %     che hanno per destinazione la rete mappata, deve modificarli specificano come
-        %     destinazione l'IP reale, viceversa per le risposte.
-        %     Per realizzare questa funzionalità si utilizza \textit{nftables}, successore
-        %     di \textit{iptables}.
-        % \end{description}
-        % Come ultima parte, è stato realizzato un microservizio in Python 
-        % a supporto di questo nuova soluzione.
-        % In particolare, il microservizio mette a disposizione delle API REST che
-        % assolvono ai seguenti compiti:
 
         Come prospettiva futura si sta studiando un'architettura distribuita, basata sempre
-        su VPN, che sposti parte della computazione direttamente nelle reti target. In questo
+        su VPN, che sposti parte della computazione richiesta per l'ispezione direttamente nelle reti target. In questo
         modo le componenti di MoonCloud che effettivamente raccolgono evidenze agiscono direttamente
         dal cliente, e sulla VPN transitano solo richieste e risposte, diminuendo quindi
         il traffico generato.
