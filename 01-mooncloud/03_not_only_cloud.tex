@@ -1,7 +1,8 @@
 \section{Non solo cloud}\label{sec:mooncloud-not-only-cloud}
-MoonCloud è stata progettata per poter essere eseguita sul cloud, e, più di tutto,
-la si vuole \textit{as-a-service}\footnote{L'ultimo capitolo è dedicato ad ulteriori
-evoluzioni dell'architettura MoonCloud}, ciò significa che i clienti che vogliono
+MoonCloud è stata progettata per poter essere eseguita sulla cloud, e più di tutto,
+la si vuole \textit{as-a-service}
+%\footnote{L'ultimo capitolo è dedicato ad ulteriori evoluzioni dell'architettura MoonCloud}  who knows
+, ciò significa che i clienti che vogliono
 certificare parte della propria infrastruttura cloud, non devono installare alcun
 software, semplicemente usano la \texttt{Dashboard} per regolare i controlli
 che vogliono fare.
@@ -18,7 +19,8 @@ utilizzare le API di \texttt{Active Directory}, e come veicolo di accesso ad ess
 non più (ad esempio) HTTP, ma bisognerebbe aver accesso alla rete interna
 in cui Windows Server è in esecuzione.
 Infatti, l'obiettivo di MoonCloud per espandere i propri clienti è quello di non
-solo essere in grado di analizzare dei target nel cloud, ma anche in sistemi IT tradizionali.
+solo essere in grado di analizzare dei target nelle cloud pubbliche, ma anche in sistemi IT tradizionali
+o cloud private.
 Ciò pone un grande problema: l'accesso alla rete fisica, infatti non si potrebbero
 più utilizzare gli hook forniti dal cloud provider.
 
@@ -31,10 +33,11 @@ Occorre quindi cambiare metodo di accesso, in particolare occorre avere accesso
 sono ragionevolmente e auspicabilmente protette da un firewall.
 
 Nella fattispecie, si è investigato l'utilizzo di una soluzione basata su VPN,
-per la quale si porta fisicamente nella rete target un VPN client, responsabile
+per la quale si porta fisicamente nella rete target un VPN client (\textit{VPN appliance}),
+responsabile
 di connettersi alla rete MoonCloud e di fornire un canale di comunicazione
 altamente sicuro.
-Le Docker machine restano deployate nel cloud in cui MoonCloud stessa è, e le
+Le Docker machine restano deployate nella cloud in cui MoonCloud stessa è, e le
 loro richieste di analisi passano tramite la VPN.
 
 Sono stati definiti i seguenti requisiti:
