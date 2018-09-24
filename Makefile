@@ -4,11 +4,14 @@ all: build open clean tarr
 latex_summary_input := summary.tex
 latex_summary_output := summary.pdf
 
+latex_summary_pdfa := summary.pdfa
+
 latex_input := thesis.tex
 latex_output := thesis.pdf
 
 latex ?= pdflatex
 bibtex ?= bibtex
+gs ?= gs
 
 # img_directory = img
 pre_directory := 00-pre
@@ -155,6 +158,16 @@ $(latex_output): $(all_deps) Makefile
 $(latex_summary_output): $(summary_files)
 	$(latex) -file-line-error $(latex_summary_input)
 	$(latex) -file-line-error $(latex_summary_input)
+
+$(latex_summary_pdfa): $(latex_summary_output)
+	$(gs) -dCompatibilityLevel=1.4 \
+			-dPDFA -dBATCH -dNOPAUSE \
+			-dNOOUTERSAVE -sPDFACompatibilityPolicy=2 \
+			-sProcessColorModel=DeviceCMYK \
+			-sDEVICE=pdfwrite \
+			-sOutputFile=$(latex_summary_pdfa) \
+			$(latex_summary_output)
+
 
 $(tar_dest): $(tar_deps)
 	tar --exclude=$(tar_exclude) -cjf $(tar_dest) $(PWD)

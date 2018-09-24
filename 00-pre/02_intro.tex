@@ -12,7 +12,7 @@ MoonCloud è un prodotto per \textit{Security Assessment}  e \textit{Security As
 basato su tale approccio, 
 i cui target sono proprio i sistemi cloud. L'obiettivo di questa tesi è stato
 estendere MoonCloud per permettere di effettuare attività di analisi di sicurezza anche
-verso sistemi IT tradizionali, compresi anche cloud privati. Poiché tali sistemi
+verso sistemi IT tradizionali e cloud private. Poiché tali sistemi
 sono confinati entro un firewall e non accessibili dall'esterno, vi è stata la necessità
 di disporre di hook \textit{dall'interno} di queste reti target. In particolare,
 si è studiato come collegare la rete MoonCloud ai sistemi dei clienti mediante
@@ -30,15 +30,15 @@ L'elaborato è organizzato come segue:
     descrive il funzionamento e l'architettura, unitamente
     alle motivazioni che hanno portato all'utilizzo di una VPN.
     \item[Capitolo 2 -- VPN] Il secondo capitolo fornisce una panoramica sulle
-    principali tecnologie VPN disponibile. Per ciascuna si analizzano
-    i pro ed i contro, unitamente alle possibili integrazioni tra esse e MoonCloud.
+    principali tecnologie VPN disponibili. Per ciascuna si analizzano
+    i pro ed i contro, unitamente alle possibili integrazioni con MoonCloud.
     \item[Capitolo 3 -- OpenVPN] \textit{OpenVPN} è la tecnologia scelta: nella
     prima parte del capitolo la si descrive, mentre nella seconda si dettagliano
-    i problemi che sono stati incontrati unitamente alle loro soluzioni innovative.
+    i problemi che sono stati incontrati unitamente alle loro soluzioni.
     Di particolare rilevanza vi è l'\textit{IP mapping} per gestire potenziali conflitti degli
     indirizzi IP.
     \item[Capitolo 4 -- nftables] \textit{nftables} è il successore di \textit{iptables},
-    e come tale porta numerose migliorie rispetto al precedente. Questo capitolo analizza
+    e come tale porta numerose migliorie. Questo capitolo analizza
     prima \textit{iptables}, identificandone le principali criticità, per mostrare
     infine \textit{nftables} e come si integri nella soluzione proposta.
     \item[Capitolo 5 -- Sicurezza della VPN] Il collegamento VPN \textit{espone}
