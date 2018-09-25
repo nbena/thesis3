@@ -1,12 +1,12 @@
 \section{Testing}
-Dopo aver visto come configurare i partecipanti alla VPN, si passa a descrivere
-i due test che sono stati effettuati per verificare che il tutto funzionasse.
+Si passa a descrivere
+i due test che sono stati effettuati per verificare che il funzionamento di OpenVPN.
 
 \subsection{Test 1}
 Il primo test è stato eseguito sulla configurazione spiegata all'inizio del capitolo:
 \begin{itemize}
   \item OpenVPN server ospitato su AWS, raggiungibile da nome DNS, sistema
-  operativo \texttt{Ubuntu Server}, indirizzo IP privato \texttt{172.31.40.221}
+  operativo \texttt{Ubuntu Server}, indirizzo IP privato \texttt{172.31.40.221}\footnote{\url{https://www.ubuntu.com/}}
   \item \textit{Docker host} ospitato su AWS, nella stessa rete privata del
   server, sistema
   operativo \texttt{Ubuntu Server}, indirizzo IP privato \texttt{172.31.43.141}
@@ -15,8 +15,8 @@ Il primo test è stato eseguito sulla configurazione spiegata all'inizio del cap
     \item rete 1, detta \texttt{net50}, costituita da:
     \begin{itemize}
       \item firewall stateful, NAT verso l'esterno e traffico consentito solo
-      sulle porte 80 e 443 TCP, indirizzo IP \texttt{192.168.100.254},
-      sistema operativo \texttt{Alpine Linux}
+      sulle porte 80, 443 TCP e 53 UDP, indirizzo IP \texttt{192.168.100.254},
+      sistema operativo \texttt{Alpine Linux}\footnote{\url{https://www.alpinelinux.org/}}
       \item client VPN, sistema operativo \texttt{Ubuntu desktop}, indirizzo
       IP \texttt{192.168.100.20}, default gateway \texttt{192.168.100.254}
       \item due host \texttt{Alpine Linux}, indirizzi IP rispettivamente
@@ -25,10 +25,7 @@ Il primo test è stato eseguito sulla configurazione spiegata all'inizio del cap
     \end{itemize}
     \item rete 2, detta \texttt{net200}, costituita da:
     \begin{itemize}
-      \item firewall stateful, NAT verso l'esterno e traffico consentito solo
-      sulle porte 80 e 443 TCP (e 53 UDP -- DNS), indirizzo IP
-      \texttt{192.168.100.254},
-      sistema operativo \texttt{Alpine Linux}
+      \item firewall stringente, configurato analogamente a quello dell'altra rete
       \item client VPN, sistema operativo \texttt{Ubuntu desktop}, indirizzo
       IP \texttt{192.168.100.20}, default gateway \texttt{192.168.100.254}
       \item un host \texttt{Alpine Linux}, con indirizzo IP
@@ -39,8 +36,8 @@ Il primo test è stato eseguito sulla configurazione spiegata all'inizio del cap
     \end{itemize}
   \end{itemize}
 \end{itemize}
-Le due reti sono state appositamente scelte uguali per testare il funzionamento
-dell'\textit{IP mapping}. In particolare:
+Le due reti sono state appositamente scelte con NET ID uguali per testare il funzionamento
+dell'\textit{IP Mapping}. In particolare:
 \begin{itemize}
   \item \texttt{net50} è stata mappata su \texttt{192.168.50.0/24}
   \begin{itemize}
@@ -56,217 +53,220 @@ dell'\textit{IP mapping}. In particolare:
 La figure \ref{fig:openvpn-test1} dà una rappresentazione grafica della topologia
 realizzata.\\
 I due firewall sono stati configurati volutamente in modo restrittivo, al fine
-di verificare se OpenVPN fosse in grado di passarli. Si riportano i comandi
-\texttt{iptables} utilizzati (uguali per entrambi i firewall):
-\begin{minted}[breaklines]{bash}
-#!/bin/ash
-# ash è la shell di Alpine
+di verificare se OpenVPN fosse stato in grado di passarli.
+% Si riportano i comandi
+% \texttt{iptables} utilizzati (uguali per entrambi i firewall):
+% \begin{minted}[breaklines]{bash}
+% #!/bin/ash
+% # ash è la shell di Alpine
 
-# natting
-iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+% # natting
+% iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 
-# dns
-iptables -t filter -A FORWARD -p udp --dport 53 -s 192.168.100.0/24 -j ACCEPT
-iptables -t filter -A FORWARD -p udp --sport 53 -d 192.168.100.0/24 -j ACCEPT
+% # dns
+% iptables -t filter -A FORWARD -p udp --dport 53 -s 192.168.100.0/24 -j ACCEPT
+% iptables -t filter -A FORWARD -p udp --sport 53 -d 192.168.100.0/24 -j ACCEPT
 
-# http stateful
-iptables -t filter -A FORWARD -p tcp --dport 80 -s 192.168.100.0/24 -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
-iptables -t filter -A FORWARD -p tcp --sport 80 -d 192.168.100.0/24 -m state --state RELATED,ESTABLISHED -j ACCEPT
+% # http stateful
+% iptables -t filter -A FORWARD -p tcp --dport 80 -s 192.168.100.0/24 -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
+% iptables -t filter -A FORWARD -p tcp --sport 80 -d 192.168.100.0/24 -m state --state RELATED,ESTABLISHED -j ACCEPT
 
-# https stateful
-iptables -t filter -A FORWARD -p tcp --dport 443 -s 192.168.100.0/24 -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
-iptables -t filter -A FORWARD -p tcp --sport 443 -d 192.168.100.0/24 -m state --state RELATED,ESTABLISHED -j ACCEPT
-\end{minted}
-Sia i client sia il server sono stati configurati come indicato nel capitolo
-precedente. Qui di seguito sono mostrati i file di configurazione, a cominciare
-dal server, poi client in \texttt{net50}, infine quello in \texttt{net200}.
-\begin{minted}{squidconf}
-# server remoto
+% # https stateful
+% iptables -t filter -A FORWARD -p tcp --dport 443 -s 192.168.100.0/24 -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
+% iptables -t filter -A FORWARD -p tcp --sport 443 -d 192.168.100.0/24 -m state --state RELATED,ESTABLISHED -j ACCEPT
+% \end{minted}
+% Sia i client sia il server sono stati configurati come indicato nel capitolo
+% precedente. Qui di seguito sono mostrati i file di configurazione, a cominciare
+% dal server, poi client in \texttt{net50}, infine quello in \texttt{net200}.
+% \begin{minted}{squidconf}
+% # server remoto
 
-mode server
-tls-server
+% mode server
+% tls-server
 
-proto tcp
+% proto tcp
 
-dev-type tun
-dev ovpn-server
+% dev-type tun
+% dev ovpn-server
 
-persist-tun
-persist-key
+% persist-tun
+% persist-key
 
-script-security 2
+% script-security 2
 
-port 443
+% port 443
 
-# VPN subnet
-server 10.7.0.0 255.255.255.0
+% # VPN subnet
+% server 10.7.0.0 255.255.255.0
 
-topology subnet
+% topology subnet
 
-client-config-dir /etc/openvpn/server-single/ccd
+% client-config-dir /etc/openvpn/server-single/ccd
 
-# TLS configuration
-remote-cert-eku "TLS Web Client Authentication"
-tls-version-min 1.2
-tls-cipher TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384
-cipher AES-256-GCM
+% # TLS configuration
+% remote-cert-eku "TLS Web Client Authentication"
+% tls-version-min 1.2
+% tls-cipher TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384
+% cipher AES-256-GCM
 
-# chiavi e certificati
-ca /etc/openvpn/certs/ca.crt
-cert /etc/openvpn/server-single/certs/server-single.crt
-key /etc/openvpn/server-single/certs/server-single.key
+% # chiavi e certificati
+% ca /etc/openvpn/certs/ca.crt
+% cert /etc/openvpn/server-single/certs/server-single.crt
+% key /etc/openvpn/server-single/certs/server-single.key
 
-dh none
+% dh none
 
-reneg-sec 1200
+% reneg-sec 1200
 
-# log configuration
-log /var/log/openvpn/server-single/openvpn.log
-verb 4
-status /var/log/openvpn/server-single/openvpn-status.log
+% # log configuration
+% log /var/log/openvpn/server-single/openvpn.log
+% verb 4
+% status /var/log/openvpn/server-single/openvpn-status.log
 
-script-security-level 2
+% script-security-level 2
 
-client-connect /etc/openvpn/server-single/cs/client-up.sh
-client-disconnect /etc/openvpn/server-single/cs/client-down.sh
+% client-connect /etc/openvpn/server-single/cs/client-up.sh
+% client-disconnect /etc/openvpn/server-single/cs/client-down.sh
 
-keepalive 10 60
+% keepalive 10 60
 
-\end{minted}
-Il contenuto dello script eseguito quando un client si connette:
-\begin{minted}[breaklines]{bash}
-#!/bin/bash
+% \end{minted}
+% Il contenuto dello script eseguito quando un client si connette:
+% \begin{minted}[breaklines]{bash}
+% #!/bin/bash
 
-if [ "$common_name" == "client50" ]; then
-	ip route add 192.168.50.0/24 via 10.7.0.1
-	iptables -t nat -A POSTROUTING -d 192.168.50.0/24 -j MASQUERADE
-fi
+% if [ "$common_name" == "client50" ]; then
+% 	ip route add 192.168.50.0/24 via 10.7.0.1
+% 	iptables -t nat -A POSTROUTING -d 192.168.50.0/24 -j MASQUERADE
+% fi
 
-if [ "$common_name" == "client200" ]; then
-	ip route add 192.168.200.0/24 via 10.7.0.1
-	iptables -t nat -A POSTROUTING -d 192.168.200.0/24 -j MASQUERADE
-fi
+% if [ "$common_name" == "client200" ]; then
+% 	ip route add 192.168.200.0/24 via 10.7.0.1
+% 	iptables -t nat -A POSTROUTING -d 192.168.200.0/24 -j MASQUERADE
+% fi
 
-\end{minted}
-Mentre quello eseguito quando i client si disconnettono:
-\begin{minted}[breaklines]{bash}
-#!/bin/bash
+% \end{minted}
+% Mentre quello eseguito quando i client si disconnettono:
+% \begin{minted}[breaklines]{bash}
+% #!/bin/bash
 
-if [ "$common_name" == "client50" ]; then
-	ip route del 192.168.50.0/24 via 10.7.0.1
-	iptables -t nat -D POSTROUTING -d 192.168.50.0/24 -j MASQUERADE
-fi
+% if [ "$common_name" == "client50" ]; then
+% 	ip route del 192.168.50.0/24 via 10.7.0.1
+% 	iptables -t nat -D POSTROUTING -d 192.168.50.0/24 -j MASQUERADE
+% fi
 
-if [ "$common_name" == "client200" ]; then
-	ip routedel 192.168.200.0/24 via 10.7.0.1
-	iptables -t nat -D POSTROUTING -d 192.168.200.0/24 -j MASQUERADE
-fi
+% if [ "$common_name" == "client200" ]; then
+% 	ip routedel 192.168.200.0/24 via 10.7.0.1
+% 	iptables -t nat -D POSTROUTING -d 192.168.200.0/24 -j MASQUERADE
+% fi
 
-\end{minted}
-Il file \path{/etc/openvpn/server-single/ccd/client50} contiene la seguente
-linea:
-\begin{minted}{squidconf}
-iroute 192.168.50.0 255.255.255.0
-\end{minted}
-Parallelamente, ecco come si presenta
-\path{/etc/openvpn/server-single/ccd/client200}:
-\begin{minted}{squidconf}
-iroute 192.168.200.0 255.255.255.0
-\end{minted}
-Di seguito invece file di configurazione del client VPN in \texttt{net50}, il cui
-\texttt{Common Name} è \texttt{client50}.
-\begin{minted}{squidconf}
-# /etc/openvpn/client50.conf
+% \end{minted}
+% Il file \path{/etc/openvpn/server-single/ccd/client50} contiene la seguente
+% linea:
+% \begin{minted}{squidconf}
+% iroute 192.168.50.0 255.255.255.0
+% \end{minted}
+% Parallelamente, ecco come si presenta
+% \path{/etc/openvpn/server-single/ccd/client200}:
+% \begin{minted}{squidconf}
+% iroute 192.168.200.0 255.255.255.0
+% \end{minted}
+% Di seguito invece file di configurazione del client VPN in \texttt{net50}, il cui
+% \texttt{Common Name} è \texttt{client50}.
+% \begin{minted}{squidconf}
+% # /etc/openvpn/client50.conf
 
-client
+% client
 
-proto tcp
+% proto tcp
 
-remote ec2-52-15-172-187.us-east-2.compute.amazonaws.com 443
-verify-x509-name server-single name
+% remote ec2-52-15-172-187.us-east-2.compute.amazonaws.com 443
+% verify-x509-name server-single name
 
-dev-type tun
-dev ovpn-client50
+% dev-type tun
+% dev ovpn-client50
 
-persist-tun
-persist-key
+% persist-tun
+% persist-key
 
-group nogroup
-user nobody
+% group nogroup
+% user nobody
 
-# TLS configuration
-remote-cert-eku "TLS Web Server Authentication"
-tls-version-min 1.2
-tls-cipher TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384
-cipher AES-256-GCM
+% # TLS configuration
+% remote-cert-eku "TLS Web Server Authentication"
+% tls-version-min 1.2
+% tls-cipher TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384
+% cipher AES-256-GCM
 
-# chiavi e certificati
-ca /etc/openvpn/certs/ca.crt
-cert /etc/openvpn/client50/certs/client50.crt
-key /etc/openvpn/client50/certs/client50.key
+% # chiavi e certificati
+% ca /etc/openvpn/certs/ca.crt
+% cert /etc/openvpn/client50/certs/client50.crt
+% key /etc/openvpn/client50/certs/client50.key
 
-# log configuration
-log /var/log/openvpn/client50/openvpn.log
-verb 4
-status /var/log/openvpn/client50/openvpn-status.log
-\end{minted}
-Infine, il file del client in \texttt{net200}, dal \texttt{Common Name}:
-\texttt{client200}.
-\begin{minted}{squidconf}
-# /etc/openvpn/client200.conf
+% # log configuration
+% log /var/log/openvpn/client50/openvpn.log
+% verb 4
+% status /var/log/openvpn/client50/openvpn-status.log
+% \end{minted}
+% Infine, il file del client in \texttt{net200}, dal \texttt{Common Name}:
+% \texttt{client200}.
+% \begin{minted}{squidconf}
+% # /etc/openvpn/client200.conf
 
-client
+% client
 
-proto tcp
+% proto tcp
 
-remote ec2-52-15-172-187.us-east-2.compute.amazonaws.com 443
-verify-x509-name server-single name
+% remote ec2-52-15-172-187.us-east-2.compute.amazonaws.com 443
+% verify-x509-name server-single name
 
-dev-type tun
-dev ovpn-client200
+% dev-type tun
+% dev ovpn-client200
 
-persist-tun
-persist-key
+% persist-tun
+% persist-key
 
-group nogroup
-user nobody
+% group nogroup
+% user nobody
 
-# TLS configuration
-remote-cert-eku "TLS Web Server Authentication"
-tls-version-min 1.2
-tls-cipher TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384
-cipher AES-256-GCM
+% # TLS configuration
+% remote-cert-eku "TLS Web Server Authentication"
+% tls-version-min 1.2
+% tls-cipher TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384
+% cipher AES-256-GCM
 
-# chiavi e certificati
-ca /etc/openvpn/certs/ca.crt
-cert /etc/openvpn/client200/certs/client200.crt
-key /etc/openvpn/client200/certs/client200.key
+% # chiavi e certificati
+% ca /etc/openvpn/certs/ca.crt
+% cert /etc/openvpn/client200/certs/client200.crt
+% key /etc/openvpn/client200/certs/client200.key
 
-# log configuration
-log /var/log/openvpn/client200/openvpn.log
-verb 4
-status /var/log/openvpn/client200/openvpn-status.log
-\end{minted}
+% # log configuration
+% log /var/log/openvpn/client200/openvpn.log
+% verb 4
+% status /var/log/openvpn/client200/openvpn-status.log
+% \end{minted}
 Una volta messa a punto la connessione, l'obiettivo del test era riuscire a visualizzare
 le pagine web offerte dai target dal \textit{Docker host}.
-Mentre con SoftEther non si era nemmeno riusciti a completare la connessione, lo
-screenshot qui sotto mostrano che la mia soluzione funziona. Si tratta della mia
-shell connessa in SSH al \textit{Docker host} sul quale è in esecuzione un container
-\texttt{Alpine}. Come detto prima, i tre host che si vogliono raggiungere sono
-mappati su:
-\begin{itemize}
-  \item \texttt{192.168.50.30} (\texttt{net50})
-  \item \texttt{192.168.50.40} (\texttt{net50})
-  \item \texttt{192.168.200.30} (\texttt{net200})
-\end{itemize}
+% Come detto prima, i tre host che si vogliono raggiungere sono
+% mappati su:
+% \begin{itemize}
+%   \item \texttt{192.168.50.30} (\texttt{net50})
+%   \item \texttt{192.168.50.40} (\texttt{net50})
+%   \item \texttt{192.168.200.30} (\texttt{net200})
+% \end{itemize}
 Per far sì che il \textit{Docker host} possa raggiungere i target, è necessario
 configurare la routing table del suo kernel per instradare i pacchetti destinati
 ai target al VPN server. L'indirizzo IP di tale server è \texttt{172.31.40.221},
-per cui si eseguono i seguenti due comandi sul \textit{Docker host}:
+per cui si sono eseguiti i seguenti due comandi sul \textit{Docker host}:
 \begin{minted}{bash}
 ip route add 192.168.50.0/24 via 172.31.40.221
 ip route add 192.168.200.0/24 via 172.31.40.221
 \end{minted}
+
+Mentre con SoftEther non si era nemmeno riusciti a completare la connessione, la
+figura \ref{fig:test1-result} mostra che la soluzione funziona. Si tratta della
+shell dell'autore connessa in SSH al \textit{Docker host} sul quale è in esecuzione un container
+\texttt{Alpine}.
 
 \begin{figure}
   \includegraphics[scale=0.6]{img/openvpn_test1}
@@ -274,32 +274,31 @@ ip route add 192.168.200.0/24 via 172.31.40.221
   \label{fig:openvpn-test1}
 \end{figure}
 
-Ecco quindi il risultato:
 \begin{figure}[h]
   \includegraphics[scale=0.35]{img/test1-result}
   \caption{Il risultato dell'esecuzione del test}
   \label{fig:test1-result}
 \end{figure}
-A titolo di documetazione, si mostra anche l'output del comando curl eseguito
-direttamente sui tre host target.
-\begin{figure}
-  \includegraphics[scale=0.4]{img/alpine-internal-client1-net50}
-  \caption[Output di \texttt{curl} su target 1 in \texttt{net50}]
-  {L'output di \texttt{curl} su \texttt{192.168.50.30} (mappato)}
-  \label{fig:alpine-internal-client1-net50}
-\end{figure}
-\begin{figure}
-  \includegraphics[scale=0.4]{img/alpine-internal-client2-net50}
-  \caption[Output di \texttt{cur} su target 2 in \texttt{net50}]
-  {L'output di \texttt{curl} su \texttt{192.168.50.40} (mappato)}
-  \label{fig:alpine-internal-client2-net50}
-\end{figure}
-\begin{figure}
-  \includegraphics[scale=0.4]{img/alpine-internal-client1-net50}
-  \caption[Output di \texttt{curl} su target 3 in \texttt{net200}]
-  {L'output di \texttt{curl} su \texttt{192.168.200.30} (mappato)}
-  \label{fig:alpine-internal-client-net200}
-\end{figure}
+% A titolo di documetazione, si mostra anche l'output del comando \texttt{curl} eseguito
+% direttamente sui tre host target.
+% \begin{figure}
+%   \includegraphics[scale=0.4]{img/alpine-internal-client1-net50}
+%   \caption[Output di \texttt{curl} su target 1 in \texttt{net50}]
+%   {L'output di \texttt{curl} su \texttt{192.168.50.30} (mappato)}
+%   \label{fig:alpine-internal-client1-net50}
+% \end{figure}
+% \begin{figure}
+%   \includegraphics[scale=0.4]{img/alpine-internal-client2-net50}
+%   \caption[Output di \texttt{cur} su target 2 in \texttt{net50}]
+%   {L'output di \texttt{curl} su \texttt{192.168.50.40} (mappato)}
+%   \label{fig:alpine-internal-client2-net50}
+% \end{figure}
+% \begin{figure}
+%   \includegraphics[scale=0.4]{img/alpine-internal-client1-net50}
+%   \caption[Output di \texttt{curl} su target 3 in \texttt{net200}]
+%   {L'output di \texttt{curl} su \texttt{192.168.200.30} (mappato)}
+%   \label{fig:alpine-internal-client-net200}
+% \end{figure}
 
 \subsection{Test 2}
 Il secondo test è stato eseguito interamente su macchine virtuali messe
@@ -308,8 +307,8 @@ configurazione dettagliata del test, poiché a parte gli indirizzi IP
 che in sè sono diversi, il setup è stato di fatto lo stesso. L'unica
 differenza è che si è usata una sola rete target anziché due.
 L'obiettivo era testare una connessione SSH dalla \textit{Docker machine}
-nella stessa rete del VPN server verso un host nella rete target (passando
-ovviamente per il collegamento VPN).
+collegata al VPN server verso un host nella rete target (passando
+ovviamente per la VPN).
 Il test ha dato esito positivo, lo schema è mostrato figura \ref{fig:openvpn-test2}.
 \begin{figure}
   \includegraphics[scale=0.55]{img/openvpn_test2}
