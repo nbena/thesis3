@@ -2,15 +2,13 @@
 Nella precedente sezione si è descritto OpenVPN e si è mostrato una configurazione
 tipica. A questo punto, prima di dettagliare come OpenVPN è stata configurato
 per MoonCloud, è necessario soffermarsi su quali siano le problematiche che i particolari
-requisiti di VPN per MoonCloud introducono. Essi sono già stati accennati
-nel capitolo 2, tuttavia ora li si affrontano nel dettaglio. Per
+requisiti di VPN per MoonCloud introducono. Per
 ciascun problema si analizza anche la relativa soluzione adottata. Durante
 questa sezione si potrà notare l'elevata versatilità di OpenVPN, grazie alle numerosissime
 opzioni di configurazione possibili.\\
 Prima di procedere, si tenga presente che la configurazione \textit{definitiva}
 è di tipo \textit{Local Server - LS}, con i server OpenVPN installati
-in MoonCloud, e nella target vi sono i client. Maggiori dettagli naturalmente verranno
-discussi di seguito.
+in MoonCloud, e nelle reti target vi sono i client.
 
 \subsection{Impossibilità di aggiungere configurazioni alla rete target}\label{subsec:client-nat}
 \subsubsection{Il problema}
@@ -36,12 +34,12 @@ seguente scenario:
   \item \texttt{CommonName} del VPN client: \texttt{client100}
 \end{itemize}
 Sul \textit{Docker host} di MoonCloud è configurata le seguente rotta:
-\texttt{192.168.100.0/24 via 192.168.200.20}, che specifica che per contattare la rete target,
+\texttt{192.168.100.0/24 via 192.168.200.20} che specifica che per contattare la rete target
 è necessario passare per il VPN server. Oltre ad essa, naturalmente, il server ed il
 client VPN hanno configurato le rotte come si è visto nella sezione precdente
 (per cui si dice ``\textit{rete dietro l'altro endpoint via IP-virtual-NIC}'').\\
 Si supponga quindi che un \textit{probe}  generi un pacchetto di qualsiasi tipo destinato
-ad un host della rete target, tale host è, ad esempio, \texttt{192.168.100.254}.
+ad un host della rete target, ad esempio \texttt{192.168.100.254}.
 Il flusso seguito dal pacchetto è quello descritto di seguito.
 \begin{enumerate}
   \item Il \textit{probe} genera il pacchetto, la sorgente di tale pacchetto è
@@ -69,24 +67,23 @@ Il flusso seguito dal pacchetto è quello descritto di seguito.
   default gateway come avviene in tutti i casi in cui un host non abbia una rotta
   ben determinata per un pacchetto
   \item il default gateway della rete \texttt{192.168.100.0/24} riceve il pacchetto
-  destinato a \texttt{192.168.200.2}, poiché è un indirizzo IP privato ed esso
-  lo instraderebbe su Internet, se è configurato correttamente lo droppa, altrimenti
-  lo invia al suo default gateway ed il dropping del pacchetto viene solo posticipato.
+  destinato a \texttt{192.168.200.2}. Esso può dropparlo in quanto indirizzo privato, o
+  comunque inviarlo su Internet. In ogni caso non raggiungerà la destinazione corretta.
 \end{enumerate}
 In conclusione quindi, il problema sta nel fatto che nella rete target manca una rotta
 che dica che per raggiungere \texttt{192.168.200.0/24} occorre contattare il
 VPN client. Di nuovo, non è pensabile di dover configurare ogni rete target in questa
 maniera, poiché l'utilizzo di MoonCloud deve essere il più possibile \textit{leggero};
-la necessità di dover metter mano al router potrebbe infatti scoraggiare un potenziale
+la necessità di dover configurare al router potrebbe infatti scoraggiare un potenziale
 cliente dall'usare MoonCloud.
 
 \subsection{La soluzione}
 La soluzione a ciò è semplice, ovvero far sì che tutti i pacchetti inviati dal
-device VPN client provenienti dalla VPN e destinati alla rete target abbiano come
+VPN client provenienti dalla VPN e destinati alla rete target abbiano come
 indirizzo IP sorgente l'indirizzo IP del device stesso. In questo modo, quando si
 produce la risposta, la destinazione di tale pacchetto è un indirizzo IP appartenente
-alla stessa rete in cui si è, ovvero la rete target. L'OS quindi, mediante il protocollo
-\texttt{ARP}, invia il pacchetto al device client, il quale provvede quindi a modificare
+alla stessa rete in cui si è, ovvero la rete target. L'OS quindi invia il
+pacchetto al device client, il quale provvede quindi a modificare
 l'IP destinazione nell'IP di destinazione \textit{vero}, ovvero quello del Docker host.
 Ciò che avviene quindi è che il device client fa del NAT, come se la rete target
 fosse la rete \textit{esterna} verso la quale il NAT è tipicamente eseguito. Questa
@@ -101,7 +98,7 @@ solo risposte a richieste provenienti da \texttt{192.168.200.0/24} possono ``pas
 il NAT: in questo caso però non vi è alcun problema, proprio perché i pacchetti che
 vengono inviati da \texttt{192.168.100.0} \textit{sono} risposte a
 \texttt{192.168.200.0/24}.\\
-Si analizza ora nuovamente il flusso indicato sopra alla luce del NAT al contrario.
+Si analizza ora nuovamente il flusso indicato sopra alla luce del \textit{NAT al contrario}.
 \begin{enumerate}
   \item Il \textit{probe} genera il pacchetto, la sorgente di tale pacchetto è
   \texttt{192.168.200.2}, la destinazione \texttt{192.168.100.254}.
@@ -118,7 +115,7 @@ Si analizza ora nuovamente il flusso indicato sopra alla luce del NAT al contrar
   \item il pacchetto destinato a \texttt{192.168.100.254} viene ricevuto dal sistema
   operativo, dopo aver compiuto le dovute operazioni di routing decide di inviarlo
   sulla scheda di rete fisica dell'host
-  \item il sistema operativo esegue \texttt{POSTROUTING} modificando l'indirizzo IP
+  \item il pacchetto passa per l'hook di \texttt{POSTROUTING}, e si modifica l'indirizzo IP
   sorgente in \texttt{192.168.100.50}
   \item \texttt{192.168.100.254} riceve il pacchetto, lo elabora, produce una risposta,
   la destinazione di tale risposta è \texttt{192.168.100.50}
@@ -175,7 +172,7 @@ Ecco come si presentano i due file:
 \begin{minted}[breaklines]{bash}
  # /etc/openvpn/server/cs/client-up.sh
 
-#! /bin/bash
+#!/bin/bash
 
 
 if [ "$common_name" == "client100" ]; then
@@ -188,7 +185,7 @@ fi
 \begin{minted}[breaklines]{bash}
 # /etc/openvpn/server/cs/client-down.sh
 
-#! /bin/bash
+#!/bin/bash
 
 
 if [ "$common_name" == "client100" ]; then
@@ -214,7 +211,7 @@ si è trovato un modo per bypassare la staticità del file di configurazione del
 \subsubsection{Il problema}
 Questo problema è simile al precedente. La direttiva ``\texttt{push "route <server-net>"}''
 viene utilizzata nel server per indicare al client quale sia la/e rete/i che si trovano
-``dietro'' il server OpenVPN e che si vuole far sì che il client possa raggiungerli.
+``dietro'' il server OpenVPN e che si vuole far sì che il client possa raggiungere.
 Questo presuppone di sapere in partenza quali siano queste reti, ma in un ambiente
 dinamico quale MoonCloud ciò non è possibile. Può capitare che i \textit{Docker host}
 che vengono aggiunti on-demand appartengano alla stessa rete del server, come
@@ -222,10 +219,7 @@ può anche capitare che appartengano ad un'altra rete che il server a priori non
 Il quesito da
 risolvere in questo caso è il seguente: \textit{come gestire la dinamicità delle rotte
 lato server senza bisogno di riavviare il server?}
-Il punto di partenza di questo problema è la necessità del client di conoscere le
-reti ``dietro'' al server OpenVPN, che fin'ora era gestito mediante le direttive
-``\texttt{push "route <server-net>"}'', ma ora si è visto che non sono più utilizzabili.
-Prima di vedere la soluzione, si esamina il flusso di un pacchetto nel caso in cui
+Prima di vedere la soluzione si esamina il flusso di un pacchetto nel caso in cui
 tale direttiva non venga più inclusa, sempre assumendo le configurazioni precedenti.
 \begin{enumerate}
   \item Il \textit{probe} genera il pacchetto, la sorgente di tale pacchetto è
@@ -244,7 +238,7 @@ tale direttiva non venga più inclusa, sempre assumendo le configurazioni preced
   operativo del VPN client, dopo aver compiuto le dovute operazioni di routing decide
   di inviarlo
   sulla scheda di rete fisica dell'host
-  \item il sistema operativo esegue \texttt{POSTROUTING} modificando l'indirizzo IP
+  \item il pacchetto passa per l'hook di \texttt{POSTROUTING} e si modifica l'indirizzo IP
   sorgente in \texttt{192.168.100.50}
   \item \texttt{192.168.100.254} riceve il pacchetto, lo elabora, produce una risposta,
   la destinazione di tale risposta è \texttt{192.168.100.50}
@@ -263,16 +257,22 @@ tale direttiva non venga più inclusa, sempre assumendo le configurazioni preced
 \subsubsection{La soluzione}
 La soluzione è quella di far sì che tutti i pacchetti che provengono dalle reti interne
 dietro il server OpenVPN
-verso le reti target arrivino al client \textit{con l'indirizzo IP sorgente uguale
-all'indirizzo IP della scheda di rete virtuale OpenVPN del server}. Quale vantaggio dà questo?
-L'indirizzo IP della scheda di rete virtuale del client si trova nella stessa subnet
-di quello del server, quindi il sistema operativo aggiunge automaticamente una rotta
-alla propria routing table verso quella scheda di rete, nell'esempio in questione, quando
-tale scheda viene creata, la rotta aggiunta è la seguente:\texttt{10.7.0.0/24 via 10.7.0.2}.\\
-Per fare ciò lato server si applica
-NAT con \texttt{iptables}, ed i comandi sono ancora una volta presenti
-nei file specificati nelle direttive ``\texttt{client-disconnect}'' e ``\texttt{client-disconnect}'';
-nel seguente modo:
+verso le reti target arrivino ai client \textit{con l'indirizzo IP sorgente uguale
+all'indirizzo IP della scheda di rete virtuale OpenVPN del server}.
+Questo è vantaggioso poiché quando si assegna un indirizzo IP ad una scheda di rete, virtuale
+o meno, il sistema operativo aggiunge automaticamente una rotta verso il NET ID dell'indirizzo
+assegnato passando per tale scheda di rete. Ad esempio, se si assegna \texttt{10.7.0.2/24}
+a \texttt{ovpn-client}, il kernel crea una rotta così fatta: \texttt{10.7.0.0/24 dev ovpn-client1}.
+
+In questo modo le risposte ai pacchetti provenienti dalla VPN hanno come indirizzo IP di destinazione
+quello della scheda di rete virtuale del server, il quale si trova nella stessa subnet VPN
+della NIC del client, quindi il kernel del VPN client sa dove instradarlo senza che OpenVPN server
+pubblicizzi delle rotte.
+
+
+Lato server ciò viene fatto mediante
+NAT usando \texttt{iptables}, ed i comandi sono ancora una volta presenti
+nei file specificati nelle direttive ``\texttt{client-disconnect}'' e ``\texttt{client-disconnect}''.
 \begin{minted}[breaklines]{bash}
 # /etc/openvpn/server/cs/client-up.sh
 
@@ -303,8 +303,9 @@ if [ "$common_name" == "client50" ]; then
   iptables -t nat -D POSTROUTING -d 192.168.50.0/24 -j MASQUERADE
 fi
 \end{minted}
-Si veda quindi il flusso
-seguito da un pacchetto dall'invio di un pacchetto da parte di un probe.
+Si descrive quindi il flusso
+seguito da un pacchetto dall'invio di un pacchetto da parte di un probe con questa nuova
+soluzione.
 \begin{enumerate}
   \item Il \textit{probe} genera il pacchetto, la sorgente di tale pacchetto è
   \texttt{192.168.200.2}, la destinazione \texttt{192.168.100.254}.
@@ -312,8 +313,8 @@ seguito da un pacchetto dall'invio di un pacchetto da parte di un probe.
   ed instrada il pacchetto verso \texttt{192.168.200.20}
   \item il sistema operativo del VPN server riceve il pacchetto, consulta la
   routing table e trova l'entry \texttt{192.168.100.0/24 via 10.7.0.1}
-  \item il sistema operativo esegue \texttt{POSTROUTING} e modifica l'indirizzo IP
-  sorgente in \texttt{10.7.0.1}, quindi inoltra
+  \item il pacchetto transita per l'hook di \texttt{POSTROUTING}, si modifica l'indirizzo IP
+  sorgente in \texttt{10.7.0.1}, quindi viene inoltrato
   alla scheda di rete virtuale di OpenVPN
   \item OpenVPN riceve il pacchetto, consulta la propria routing table interna e
   trova l'entry che specifica che il client ``\texttt{client100}'' è responsabile per
@@ -323,7 +324,7 @@ seguito da un pacchetto dall'invio di un pacchetto da parte di un probe.
   \item il pacchetto destinato a \texttt{192.168.100.254} viene ricevuto dal sistema
   operativo, dopo aver compiuto le dovute operazioni di routing decide di inviarlo
   sulla scheda di rete fisica dell'host
-  \item il sistema operativo esegue \texttt{POSTROUTING} modificando l'indirizzo IP
+  \item il pacchetto passa per l'hook di \texttt{POSTROUTING} e si modifica l'indirizzo IP
   sorgente in \texttt{192.168.100.50}
   \item \texttt{192.168.100.254} riceve il pacchetto, lo elabora, produce una risposta,
   la destinazione di tale risposta è \texttt{192.168.100.50}
