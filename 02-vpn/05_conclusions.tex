@@ -13,12 +13,11 @@ in dettaglio, viene comunque inserito in questa lista grazie ai suoi vantaggi.
     \item topologie consigliate:
     \begin{enumerate}
       \item \textit{LS} con client in \textit{NAT al contrario}
-      \item \textit{RS} con port forwarding abilitato sulla rete target
     \end{enumerate}
     \item Contro:
     \begin{itemize}
       \item utilizzo di TLS su protocollo custom, quindi il traffico non riesce
-      ad essere spacciato completamente per HTTPS
+      ad essere \textit{spacciato} completamente per HTTPS
       \item necessaria gestione dei certificati
     \end{itemize}
   \end{itemize}
@@ -31,8 +30,8 @@ in dettaglio, viene comunque inserito in questa lista grazie ai suoi vantaggi.
         \item bypassa la maggior parte dei firewall
       \end{itemize}
       \item NAT Traversal del server
-      \item Dynamic DNS;
-      \item VPN over ICMP e over DNS;
+      \item Dynamic DNS
+      \item VPN over ICMP e over DNS
       \item topologia consigliate:
       \begin{enumerate}
         \item \textit{RS} senza bisogno di abilitare port forwarding sfruttando
@@ -87,4 +86,4 @@ potrebbero bloccare il traffico \textit{ESP}. In tal caso si può incapsulare \t
 ma comunque si richiede che il traffico UDP sia permesso (porta 500).
 
 Come prima soluzione si è scelta SoftEther, ma infine quella utilizzata è OpenVPN. Il
-prossimo capitolo affronta tutto nel dettaglio.
+prossimo capitolo ne affronta la configurazione nel dettaglio.
