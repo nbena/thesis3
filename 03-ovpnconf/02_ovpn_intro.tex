@@ -62,9 +62,9 @@ Entrambi i canali di OpenVPN garantiscono \textit{Authenticated Encryption}.
 Tutte le operazioni crittografiche sono effettuate mediante librerie esterne,
 attualmente OpenVPN supporta le seguenti tre:
 \begin{itemize}
-	\item \texttt{OpenSSL}
-	\item \texttt{LibreSSL} (fork di \texttt{OpenSSL}, supportata non ufficialmente)
-	\item \texttt{mbedTLS}
+	\item \texttt{OpenSSL}\footnote{\url{https://www.openssl.org/}}
+	\item \texttt{LibreSSL} (fork di \texttt{OpenSSL}, supportata non ufficialmente)\footnote{\url{https://www.libressl.org/}}
+	\item \texttt{mbedTLS}\footnote{\url{https://tls.mbed.org/}}
 \end{itemize}
 
 E' possibile autenticare i partecipanti alla VPN mediante
@@ -139,13 +139,11 @@ per quali reti (le cosìdette ``\textit{rotte interne}'').
 
 \subsection{Configurazione base}
 In questa sottosezione si propongono due esempi di una configurazione ``tipica''
-e minimale per OpenVPN, per realizzare una topologia LAN-to-LAN. Si riporta il
-contenuto del file di configurazione, ciascuna entry sarà quindi discussa in dettaglio.
-Si supponga che la sottorete del server abbia il suo indirizzo: \texttt{192.169.100.0/24},
+e minimale per OpenVPN per realizzare una topologia LAN-to-LAN. Si riporta il
+contenuto dei file di configurazione di client e server, ciascuna entry sarà quindi discussa in dettaglio.
+Si supponga che la sottorete del server abbia il seguente indirizzo: \texttt{192.169.100.0/24},
 mentre quella del client sia: \texttt{192.168.1.0/24}. Il server è raggiungibile
-tramite l'IP pubblico \texttt{11.9.250.34} (esso potrebbe essere l'IP pubblico del firewall
-configurato in port forwarding, ma questo non è importante ai fini della configurazione
-di OpenVPN).
+tramite l'IP pubblico \texttt{11.9.250.34}.
 
 \subsubsection{Configurazione del server}
 Ecco come si potrebbe presentare
@@ -197,7 +195,7 @@ cert /etc/openvpn/server/server.crt
 # ECDH anziché DH
 dh none
 	
-# nuove chiavi Data Channel ogni venti minuti
+# nuove chiavi Data Channel ogni 20 minuti
 reneg-sec 1200
 	
 # configurazioni log
@@ -224,18 +222,18 @@ Si supponga infine che il \texttt{CommonName} nel certificato del client sia
 Linea per linea si descrive il contenuto del file:
 \begin{description}
 	\item[\texttt{mode server}]Indica che OpenVPN opera in modalità server.
-	\item[\texttt{tls-server}]Questa direttiva specifica quale sia il ``ruolo'' nel TLS
+	\item[\texttt{tls-server}]Questa direttiva specifica quale sia il ruolo nel TLS
 	handshake.
-	\item[\texttt{proto tcp}]Indica quale è il protocollo di trasporto utilizzato,
+	\item[\texttt{proto tcp}]Indica qual'è il protocollo di trasporto utilizzato,
 	in questo caso è TCP.
-	\item[\texttt{dev-type tun}]Indica quale è il tipo di scheda di rete virtuale.
+	\item[\texttt{dev-type tun}]Quale tipo di scheda di rete virtuale utilizzare:
 	\texttt{TUN} è un modulo del kernel utilizzato per creare interfacce di rete virtuali
 	al livello 3.
 	\item[\texttt{dev server}]La direttiva ``\texttt{dev}'' indica che nome dare
 	alla scheda di rete virtuale, in questo caso la si chiama ``\texttt{server}''.
-	\item[\texttt{persist-tun}]Analogamente alla direttiva spiegata sopra, questa
-	indica di non chiudere e riaprire la scheda di rete virtuale tra i vari restart.
-	\item[\texttt{persist-key}]Indica di non rileggere la chiave privata quando una
+	\item[\texttt{persist-tun}]Specifica di non chiudere e riaprire la scheda di rete
+	virtuale tra i vari restart.
+	\item[\texttt{persist-key}]Similmente alla precedente, dice di non rileggere la chiave privata quando una
 	sessione VPN finisce, o quando si ricevono particolari segnali dal sistema operativo.
 	\item[\texttt{script-security 2}]Specifica quale tipo di programmi esterni è consentito
 	chiamare, in questo caso si consentono script definiti dall'utente.
@@ -245,11 +243,10 @@ Linea per linea si descrive il contenuto del file:
 	\item[\texttt{port 443}]Specifica su quale porta il server si deve mettere in ascolto per
 	ricevere connessioni dai client.
 	\item[\texttt{server 10.7.0.0 255.255.255.0}]Questa direttiva indica che la sottorete
-	assegnata al collegamento VPN è quella indicata. La NIC virtuale del server
-	avrà come IP il primo IP di tale subnet, che in questo caso è \texttt{10.7.0.1}.
+	assegnata al collegamento VPN è quella indicata.
 	\item[\texttt{topology subnet}]Indica di allocare un indirizzo IP alla scheda
 	di rete virtuale, esso appartiene al pool di IP presente nella direttiva \texttt{server}.
-	Il server avrà come IP il primo IP disponbile nella sottorete.
+	Il server avrà come IP il primo IP disponbile nella sottorete (quindi \texttt{10.7.0.1}).
 	\item[\texttt{client-to-client}]Si usa questa opzione per realizzare una connettività
 	completa tra le diverse reti client: se viene inserita nel file di configurazione essa
 	specifica che il server può fare il routing dei pacchetti \textit{tra} i client, e non
@@ -263,14 +260,9 @@ Linea per linea si descrive il contenuto del file:
 	\item[\texttt{tls-cipher TLS-ECDHE-ECDSA-WITH-AES-256-GCM-SHA384}]Questa direttiva
 	indica quali ciphersuite di TLS utilizzare nel \texttt{Control Channel}\footnote{E' bene
 		verificare quale versione di OpenVPN sia in uso e con quale libreria TLS sia
-		stata compilata: attualmente solo \texttt{LibreSSL} supporta anche le ciphersuite TLS
-		basate su \texttt{ChaCha20-Poly1305}, mentre nessuna libreria attualmente supporta
-		tali algoritmi per \texttt{DataChannel}. \texttt{OpenSSL} effettivamente supporta
-		l'algoritmo citato, ma solo nelle versioni più recenti, e OpenVPN non supporta, per ora,
-	tali versioni.}.
-	\item[\texttt{cipher AES-256-GCM}]Analogamente alla precedente che regolava il cifrario
-	da utilizzare sul \texttt{Control Channel}, la direttiva \texttt{cipher} specifica
-	quale algoritmo, ed in quale modalità, per il \texttt{Data Channel}.
+		stata compilata per una lista completa degli algoritmi supportati.}.
+	\item[\texttt{cipher AES-256-GCM}]La direttiva \texttt{cipher} specifica
+	quale algoritmo, ed in quale modalità, usare per il \texttt{Data Channel}.
 	\item[\texttt{ca /etc/openvpn/certs/ca.crt}]Specifica il percorso a cui si trova
 	il certificato della CA usato per creare i certificati dei client. E' indispensabile
 	ai fini della validazione degli stessi.
@@ -302,7 +294,7 @@ Linea per linea si descrive il contenuto del file:
 	niente dal client a cui è connesso. E' sufficiente specificare questa opzione
 	nel server, esso provvederà a trasmetterla al client.
 	\item[\texttt{push "route 192.168.100.0 255.255.255.0"}]Questa direttiva viene
-	usato lato server per inviare delle configurazioni ai client. In questo caso si indica
+	usata lato server per inviare delle configurazioni ai client. In questo caso si indica
 	ai client di aggiungere nella routing table del sistema operativo una rotta che
 	apparirà così: \textit{rete 192.168.100.0/24 via IP-virtual-NIC}. Essendo
 	\texttt{192.168.100.0/24} la rete in cui si trova il server, l'effetto di questa
@@ -336,23 +328,31 @@ Linea per linea si descrive il contenuto del file:
 \subsubsection{Hook}
 Oltre alle configurazioni \textit{tipiche} appena mostrate, ve ne sono molte altre. In effetti,
 uno dei punti di forza di OpenVPN è proprio l'elevatissima configurabilità.
-In particolare, OpenVPN consente di definire una serie di \textit{hook},
+Tra le altre cose consente di definire una serie di \textit{hook},
 cioè azioni da eseguire (lanciare programmi esterni) quando alcuni eventi si verificano.
 Esistono degli hook ben precisi, alcuni dei quali sono effettivamente utilizzati
 nella configurazione di MoonCloud. Per ciascun hook si specifica nel file di configurazione
-quale azione compiere, cioè quale programma deve essere eseguito;
-OpenVPN setterà per tali processi un certo numero di variabili d'ambiente.
+quale azione compiere, cioè quale programma deve essere eseguito.
 
-I programmi eseguiti devono ovviamente terminare con un valore di uscita secondo
+I programmi lanciati, tipicamente file di testo in un linguaggio di scripting, devono 
+terminare con un valore di uscita secondo
 la classica semantica per cui \texttt{0} indica \textit{successo}, un qualsiasi
-altro valore \textit{fallimento}. Sulla base
-di esso OpenVPN decide se proseguire nella connessione con un remote oppure terminarla.
-Alcuni hook sono disponibili solo in modalità server, in tal caso
-l'idea sarebbe quella di decidere se consentire ad un client di portare avanti
-la connessione al server oppure no, basandosi sui valori delle variabili d'ambiente.
-Ad esempio, un programma esterno potrebbe accedere al valore del seriale del certificato
-del client, verificare se è presente in un database, ritornare \texttt{0} in caso
-positivo, un altro valore in caso contrario.
+altro valore \textit{fallimento}. Molti di questi hook sono disponibili solo in modalità
+server. Alcuni di essi possono essere usati per validare il collegamento con
+un client: nel momento in cui OpenVPN riceve una connessione può invocare uno (o più)
+script, ed un valore di ritorno \texttt{0} indica di continuare il collegamento, e viceversa.
+
+Ogni script invocato ha a disposizione un certo numero di variabili d'ambiente settate
+da OpenVPN.
+
+% Sulla base
+% di esso OpenVPN decide se proseguire nella connessione con un remote oppure terminarla.
+% Alcuni hook sono disponibili solo in modalità server, in tal caso
+% l'idea sarebbe quella di decidere se consentire ad un client di portare avanti
+% la connessione al server oppure no, basandosi sui valori delle variabili d'ambiente.
+% Ad esempio, un programma esterno potrebbe accedere al valore del seriale del certificato
+% del client, verificare se è presente in un database, ritornare \texttt{0} in caso
+% positivo, un altro valore in caso contrario.
 
 Affinché il server possa eseguire programmi esterni è necessario specificare uno
 \texttt{script-security-level} nel file di configurazione principale. I valori possibili:
@@ -363,9 +363,8 @@ Affinché il server possa eseguire programmi esterni è necessario specificare u
 	\item \texttt{3}: tra le variabili d'ambiente vi possono essere anche password
 \end{itemize}
 
-Infine, la lista degli hook disponibili in ordine di esecuzione, si noti che ciascun hook
-prevede delle diverse
-variabili d'ambiente.
+Si presenta la lista degli hook disponibili in ordine di esecuzione, si noti che ciascun hook
+prevede delle diverse variabili d'ambiente.
 \begin{itemize}
 	\item \texttt{up}, eseguito dopo un socket bind
 	\item \texttt{tls-verify} eseguito durante il TLS handshake quando l'identità
@@ -389,17 +388,17 @@ variabili d'ambiente.
 \end{itemize}
 
 \subsubsection{Configurazione del client}
-Si passa quindi a descrivere la configurazione dell'ipotetico client OpenVPN in
-riferimento agli esempi precedenti.
+Si passa quindi a descrivere la configurazione di un ipotetico client OpenVPN in
+riferimento all'esempio precedente.
 \begin{minted}{squidconf}
 client
 	
 proto tcp
 	
 # IP porta del server
-remote openvpn.example.com 443
+remote 11.9.250.34 443
 
-verify-509-name openvpn.example.com name
+verify-x509-name openvpn.example.com name
 	
 dev-type tun
 dev client
@@ -438,7 +437,7 @@ sebbene manchino le direttive di routing. Ovviamente, ``\texttt{client}'' e
 \end{itemize}
 ``\texttt{verify-x509-name openvpn.example.com name}'' indica che occorre controllare che
 il nome (``\texttt{name}'') contenuto nel certificato combaci con quello specificato
-(``\texttt{openvpn.example.com}''). Si può notare la presenza di ``\texttt{remote openvpn.example.com 443}'',
+(``\texttt{openvpn.example.com}''). Si può notare la presenza di ``\texttt{remote 11.9.250.34 443}'',
 essa indica l'indirizzo IP pubblico mediante il quale è possibile contattare
 il server, e la porta su cui è in ascolto.\\
 La direttiva ``\texttt{push "route \ldots"}''
@@ -457,14 +456,14 @@ il primo IP libero nella subnet VPN.
 
 
 Infine, affinché si possa realizzare un collegamento LAN-to-LAN, è necessario che
-nelle due (in questo caso) reti coinvolte, sia stato configurato correttamente
+nelle due (in questo caso) reti coinvolte sia stato configurato correttamente
 il routing. In particolare si richiede che, per ciascuna rete, sia configurata una rotta
 che dica come raggiungere l'atra rete remota.\\
 Nell'esempio in questione, è necessario che tutti gli host della rete del server, cioè
-\texttt{192.168.100.0/24} sappia che per inviare pacchetti ad host di \texttt{192.168.1.0/24}
+\texttt{192.168.100.0/24} sappiano che per inviare pacchetti ad host di \texttt{192.168.1.0/24}
 (rete del client), occorre inoltrare tali pacchetti al VPN server. Allo stesso modo,
-nella rete \texttt{192.168.1.0/24} vi deve essere configurato che per raggiungere
-\texttt{192.168.100.0/24} occorre inoltrare i pacchetti al client.\\
+nella rete \texttt{192.168.1.0/24} vi deve essere configurata una rotta per raggiungere
+\texttt{192.168.100.0/24} tramite il client.\\
 Queste due configurazioni possono essere aggiunte su ciascun host delle due reti oppure,
 più ragionevolmente, esse saranno solo applicate sui dui default gateway. E' importante
 capire questo passaggio, poiché è alla base delle soluzioni descritte nella prossima
