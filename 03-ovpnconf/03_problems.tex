@@ -37,7 +37,7 @@ Sul \textit{Docker host} di MoonCloud è configurata le seguente rotta:
 \texttt{192.168.100.0/24 via 192.168.200.20} che specifica che per contattare la rete target
 è necessario passare per il VPN server. Oltre ad essa, naturalmente, il server ed il
 client VPN hanno configurato le rotte come si è visto nella sezione precdente
-(per cui si dice ``\textit{rete dietro l'altro endpoint via IP-virtual-NIC}'').\\
+(per cui si dice ``\textit{rete dietro l'altro endpoint via virtual NIC's IP}'').\\
 Si supponga quindi che un \textit{probe}  generi un pacchetto di qualsiasi tipo destinato
 ad un host della rete target, ad esempio \texttt{192.168.100.254}.
 Il flusso seguito dal pacchetto è quello descritto di seguito.
@@ -123,7 +123,7 @@ Si analizza ora nuovamente il flusso indicato sopra alla luce del \textit{NAT al
   \texttt{192.168.100.50}
   \item il sistema operativo di \texttt{192.168.100.50} riceve il pacchetto ed
   esegue l'inverso del NAT, l'indirizzo IP destinazione appare ora essere \texttt{192.168.200.2}.
-  Poiché il client ha una rotta che dice: \textit{rete 192.168.200.2 via IP-virtual-NIC}
+  Poiché il client ha una rotta che dice: \textit{rete 192.168.200.2 via virtual NIC's IP}
   tale pacchetto viene inoltrato alla scheda di rete virtuale,
   \item il pacchetto viene ricevuto da OpenVPN ed inviato al server
   \item il server OpenVPN riceve il pacchetto e lo scrive sulla scheda di rete virtuale
@@ -256,7 +256,7 @@ tale direttiva non venga più inclusa, sempre assumendo le configurazioni preced
 
 \subsubsection{La soluzione}
 La soluzione è quella di far sì che tutti i pacchetti che provengono dalle reti interne
-dietro il server OpenVPN
+``dietro'' il server OpenVPN
 verso le reti target arrivino ai client \textit{con l'indirizzo IP sorgente uguale
 all'indirizzo IP della scheda di rete virtuale OpenVPN del server}.
 Questo è vantaggioso poiché quando si assegna un indirizzo IP ad una scheda di rete, virtuale

@@ -1,5 +1,5 @@
 \section{Recap}
-Prima di passare ad analizzare come tutte le soluzioni appena indicate si combinano
+Prima di passare ad analizzare come tutte le soluzioni appena indicate si combinino
 tra loro, è utile fare un breve riassunto dei problemi affrontati
 e delle soluzioni attuate.
 \begin{description}
@@ -17,33 +17,38 @@ e delle soluzioni attuate.
   aggiuntiva,
   \item[\textit{Bypassing della direttiva ``\texttt{route \ldots}''}]Lo
   scopo di tale direttiva, sia essa posta nel client o nel server, è quella di
-  indicare quali rotte sono raggiungibili mediante l'\textit{altro}. Tuttavia, poiché
-  OpenVPN legge il file di configurazione solo all'avvio, e non si sa in principio
-  quali client saranno connessi al server, diventa un problema inserirla nel file
-  del server. L'effetto di questa opzione è di aggiungere una nuova rotta nel kernel
-  del sistema operativo così fatta: \texttt{<net> via <virtual-NIC's-IP>}. Per
-  ovviare a questo problema si aggiunge direttamente tale rotta con il relativo comando di
-  sistema al momento in cui un client si connette, e la si cancella quando si
-  disconnette; si sfruttano gli hook \texttt{client-connect} e \texttt{client-disconnect}
-  che consentono di specificare uno script da eseguire in uno dei due eventi
-  appena descritti.
+  indicare quali reti sono raggiungibili mediante l'\textit{altro}. Tuttavia, poiché
+  OpenVPN legge il file di configurazione solo all'avvio, diventa un problema aggiungere
+  nuovi client al server senza dover riavviarlo. L'effetto di questa direttiva
+  è quello di aggiungere una nuova rotta nella routing table del sistema operativo
+  così fatta: \texttt{<net> via <virtual NIC's IP>}. Si sfrutta l'hook \texttt{client-connect}
+  disponibile per OpenVPN server, che consente di eseguire un programma quando un client si
+  connette. Il programma che si lancia è uno script Bash che esegue direttamente i
+  comandi di aggiunta delle rotte sulla base del client che ha fatto scattare quell'hook.
+  Le rotte sono rimosse in maniera analoga sfruttando l'hook \texttt{client-disconnect}.
+  Quando si aggiunge un nuovo client è sufficiente aggiornare questi due script.
   \item[\textit{NAT lato server}]In OpenVPN
-  client i pacchetti ricevuti sulla scheda di rete virtuale sono risposte provenienti
+  client i pacchetti diretti alla scheda di rete virtuale sono risposte provenienti
   dagli host nella rete target, ed hanno come IP di destinazione un IP appartenente
-  alla rete in cui si trovano i \textit{Docker host}. Affinché OpenVPN sappia che
-  tali IP sianno raggiungibili tramite la VPN, è necessario che il server
-  pubblicizzi tale rotte, e questo viene normalmente fatto mediante la direttiva
-  \texttt{push "route <route-to-push>"}, il cui effetto è che il client aggiunga
+  alla/e rete/i in cui si trovano i \textit{Docker host}. Affinché OpenVPN sappia che
+  tali reti sianno raggiungibili tramite la VPN, è necessario che il server
+  le annunci mediante delle rotte, e questo viene normalmente fatto mediante la direttiva
+  \texttt{push "route <route-to-advertise>"}, il cui effetto è che il client aggiunga
   tale rotta alla routing table del kernel. Tuttavia, non si può sapere a priori
-  quali reti saranno dietro il server, a tale scopo l'OS del server
+  quali reti saranno ``dietro'' il server, a tale scopo l'OS del server
   effettua del NAT sui pacchetti diretti alla scheda di rete virtuale OpenVPN,
-  settando l'IP sorgente come l'IP della scheda di rete virtuale. Spostandosi
+  settando l'IP sorgente come l'IP della scheda di rete virtuale. Si ricorda che
+  tutte le NIC virtuali di una stessa VPN stanno nella stessa subnet VPN, cioè hanno
+  lo stesso NET ID.
+  Spostandosi
   nel client, si ha che i pacchetti di risposta a MoonCloud hanno come IP destinazione
-  quello virtuale del server, il quale si trova nello spazio di indirizzamente della
-  VPN, quindi il sistema operativo sa come instradarlo. Infatti, l'indirizzo IP
-  della scheda di rete virtuale del client, si trova nella stessa subnet di quello
-  del server, il cui effetto è quello di avere una rotta automaticamente aggiunta
-  dal sistema operativo: \texttt{<VPN-subnet> via <virtual-NIC's IP>}.
+  quello virtuale del server, il quale si trova nella stessa subnet della NIC
+  virtuale del client. Il sistema operativo sa quindi che deve inoltrare ad essa
+  tali pacchetti. 
+  Questo perché quando si assegna un indirizzo IP ad una scheda di rete (virtuale in
+  questo caso) si
+  aggiunge automaticamente la seguente rotta alla routing table dell'OS:
+  \texttt{<VPN-subnet> via <virtual NIC's IP>}.
   \item[\textit{IP mapping}]Per poter connettere tra di loro $n$ reti mediante
   una VPN è necessario che ciascuna rete partecipante abbia un NET ID diverso. Poiché
   si vuole utilizzare un server per connettere diverse reti target di diversi clienti,
