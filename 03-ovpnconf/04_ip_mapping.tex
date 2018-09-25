@@ -6,17 +6,16 @@ tutto il lavoro precedentemente fatto.
 \subsection{Il problema}
 Si è detto in precedenza che si è scelta infine una configurazione \textit{Local
 Server}, con i server OpenVPN installati in MoonCloud e raggiungibili mediante IP
-pubblici da i client presenti nella rete target. Per ragioni di costi, si vuole
+pubblici dai client presenti nella rete target. Per ragioni di costi, si vuole
 limitare il numero di VM in MoonCloud con OpenVPN in esecuzione, e quindi poter
 dedicare un singolo server a servire più reti target contemporaneamente. OpenVPN
 consente di isolare i singoli client connessi ad un server, infatti di default
 tali client possono comunicare solo con il server, e non con altri client (a meno
-che si utilizzi la direttiva ``\texttt{client-to-client}'', e, come si è visto,
-tale direttiva non viene utilizzata).\\
-Per poter quindi realizzare in maniera corretta una topologia del genere è
+che si utilizzi la direttiva ``\texttt{client-to-client}'').\\
+Per poter realizzare in maniera corretta una topologia del genere è
 \textit{fondamentale che ogni rete target abbia un spazio di indirizzamento diverso} \cite{openvpn-lan-to-lan}.
 Tuttavia qui sorge il problema: ciascuna LAN target ragionevolmente usa uno o più
-pool di indirizzi privati, i quali sono limitati. \cite{RFC1918}
+pool di indirizzi privati, i quali sono limitati. In \cite{RFC1918} si
 stabilisce che i seguenti spazi di indirizzi siano riservati per l'utilizzo esclusivo
 in una rete privata e che non siano instradabili su Internet:
 \begin{itemize}
@@ -43,7 +42,7 @@ costituiti da un VPN server e almeno da un \textit{Docker host}. Ciascun cluster
 quindi i conflitti non hanno nessun impatto. Si è deciso di lasciare questa strada per ultima,
 perché per quanto funzioni presenta un grosso incoveniente: farebbe aumentare di molti i
 costi. Più il numero di client aumenterebbe maggiore sarebbe il numero di VM per OpenVPN server
-da allocare, tanto più i costi aumenterebbero.\\
+da allocare, tanto più i costi salirebbero.\\
 Ecco quindi il problema che si è dovuto risolvere: \textit{come gestire
 la conflittualità tra gli indirizzi IP delle reti target senza dover allocare un
 server OpenVPN per ogni cliente?}
@@ -56,9 +55,6 @@ su una nuova rete, stabilita da MoonCloud e garantita univoca.
 \textit{spostare} gli indirizzi IP originali nel nuovo NET ID. Lato MoonCloud, i
 \textit{probe} conoscono gli indirizzi IP modificati (garantiti univoci), ed il rimappaggio
 verso quelli originali viene effettuato sul device VPN client.\\
-Entrambi concordi che questa fosse la soluzione corretta, si trattava ora di capire
-come potessa il client rimappare gli indirizzi IP, tenendo presente che tale
-rimappaggio deve essere perfettamente aderente a quello stabilito da MoonCloud.
 Prima di proseguire, si chiarisce meglio la terminologia che da qui in poi sarà utilizzata:
 \begin{itemize}
   \item ``\textit{rete originale -- OTN (Original Target Network)}'': l'indirizzo IP di rete della rete target così come
@@ -84,7 +80,7 @@ Prima di proseguire, si chiarisce meglio la terminologia che da qui in poi sarà
   ``\textit{mappare un indirizzo IP}''
   % \item ``\textit{SMTN (Set of Mappped Target Networks)}'': l'insieme di reti mappate
 \end{itemize}
-Il motivo per cui esistono due sinonimi sarà presto chiaro. Si definiscono quindi
+Si definiscono quindi
 le seguenti funzioni \textit{deterministiche} (con $S$ corrispondente ad un certo
 server OpenVPN):
 \begin{itemize}
@@ -121,9 +117,13 @@ Per queste funzioni valgono le seguenti uguaglianze:
     map\_address(OTN, OTI, MTN, S)^{-1}$
 \end{itemize}
 In altre parole, ogni funzione è l'inverso dell'altra.\\
-\textit{Come effettuare il mappaggio?} Per rispondere a questa domanda, si descrive
-il nuovo flusso dei pacchetti, in modo da mostrare dove queste funzioni siano
-applicate.\\
+\textit{Come effettuare il mappaggio?}
+La funzione $map\_network$ deve essere per forza di cose effettuata dai VPN client,
+in modo che i server ``vedano'' sempre reti univoche. Non solo, questa tecnica di mapping deve
+rispettare ed integrarsi alla perfezione con il \textit{NAT al contrario}, il cui
+utilizzo è imprescindibile.
+La soluzione implementativa è anche in questo caso iptables. 
+
 Si supponga di avere la seguente configurazione:
 \begin{itemize}
   \item rete target $OTN$: \texttt{192.168.100.0/24}
@@ -143,14 +143,32 @@ Si supponga di avere la seguente configurazione:
   \texttt{192.168.100.0/24},
   \texttt{192.168.1.0/24})=\texttt{192.168.1.254}$
 \end{itemize}
+
+
+% Quando il VPN client riceve dei pacchetti dalla NIC virtuale di OpenVPN iptables
+% esegue le seguenti operazioni:
+% \begin{enumerate}
+%   \item modificare l'indirizzo
+%   IP destinazione dei pacchetti appena sono stati ricevuti dalla VPN
+%   (applicando la funzione $remap\_address$), in modo che abbiano per destinazione quello reale
+%   \item applicare il \textit{NAT al contario} per modificare l'indirizzi IP sorgente
+% \end{enumerate}
+% Quando si ricevono dei pacchetti risposte a richieste
+% di MoonCloud si fa il procedimento opposto.
+% \begin{enumerate}
+%   \item Applicazione dell'inverso del \textit{NAT al contrario}
+%   \item modificare l'indirizzo IP sorgente applicando la funzione $map\_address$.
+% \end{enumerate}
+
+
 Le reti mappate sostituiscono le reti originali nella configurazione delle rotte lato
-MoonCloud. Quindi si mostra un estratto dei file \texttt{client-up.sh} e
-\texttt{client-down.sh}, come si può vedere, la rotte aggiunte e rimosse sono
+MoonCloud. Dall'estratto dei file \texttt{client-up.sh} e
+\texttt{client-down.sh} si può vedere infatti che le rotte aggiunte e rimosse sono
 quelle mappate.
 \begin{minted}[breaklines]{bash}
 # /etc/openvpn/server/cs/client-up.sh
 
-#! /bin/bash
+#!/bin/bash
 
 if [ "$common_name" == "client1" ]; then
   ip route add 192.168.1.0/24 via 10.7.0.1
@@ -160,7 +178,7 @@ fi
 \begin{minted}[breaklines]{bash}
 # /etc/openvpn/server/cs/client-down.sh
 
-#! /bin/bash
+#!/bin/bash
 
 
 if [ "$common_name" == "client1" ]; then
@@ -204,20 +222,22 @@ Si noti che in questo comando la rete di destinazione è la \textit{rete origina
   pacchetto in questione è ora \texttt{10.7.0.1}
   \item il pacchetto viene inviato all'interfaccia
   virtuale di OpenVPN, e da esso ricevuto
-  \item OpenVPN consulta la propria routing table interna, in conseguenza di ciò quindi
-  invia il pacchetto a \texttt{Client1} lungo la connessione TCP con esso
+  \item OpenVPN consulta la propria routing table interna, in conseguenza di ciò
+  invia il pacchetto a \texttt{client1} lungo la connessione TCP con esso
   \item il pacchetto viene ricevuto dal device client, l'indirizzo IP di destinazione è
   quello mappato, cioè \texttt{192.168.1.254}
   \item il pacchetto viene scritto sull'interfaccia virtuale e ricevuto dal kernel
   del sistema operativo
-  \item in un modo che poi verrà descritto, l'OS di \texttt{client1}
-  applica la seguente funzione
-  per ottenere $OTI=RTI$ cioè l'indirizzo IP effettivo del target: $OTI=remap\_address(
-  \texttt{192.168.1.254}, \texttt{192.168.1.0/24},\\ \texttt{192.168.100.254})$, il
-  risultato è \texttt{192.168.100.254}, il quale ovviamente corrisponde all'indirizzo IP
-  specificato dal cliente come target dell'analisi.
-  \item Si modifica l'indirizzo IP destinazione del pacchetto, inserendo come destinazione
-  $OTI$, cioè \texttt{192.168.100.254}
+  \item iptables applica la funzione $remap\_address$ su \texttt{192.168.1.254} ed ottiene
+  \texttt{192.168.100.254}. Questo indirizzo diventa il nuovo IP di destinazione
+  % \item in un modo che poi verrà descritto, l'OS di \texttt{client1}
+  % applica la seguente funzione
+  % per ottenere $OTI=RTI$ cioè l'indirizzo IP effettivo del target: $OTI=remap\_address(
+  % \texttt{192.168.1.254}, \texttt{192.168.1.0/24},\\ \texttt{192.168.100.254})$, il
+  % risultato è \texttt{192.168.100.254}, il quale ovviamente corrisponde all'indirizzo IP
+  % specificato dal cliente come target dell'analisi.
+  % \item Si modifica l'indirizzo IP destinazione del pacchetto, inserendo come destinazione
+  % $OTI$, cioè \texttt{192.168.100.254}
   \item a questo punto il pacchetto passa per l'hook di \texttt{POSTROUTING} e si applica il
   \textit{NAT al contrario}, l'indirizzo IP sorgente è ora \texttt{192.168.100.50}
   (cioè l'IP del device client)
@@ -229,20 +249,25 @@ Si noti che in questo comando la rete di destinazione è la \textit{rete origina
   si riapplica l'inverso di \textit{NAT al contrario}, modificando l'indirizzo IP
   destinazione in \texttt{10.7.0.1} (l'indirizzo IP sorgente del pacchetto di richiesta
   inviato dal server OpenVPN)
-  \item l'OS di \texttt{client1} modifica tale
-  pacchetto andando a specificare che l'indirizzo IP sorgente non è più
-  \texttt{192.168.100.254} (IP originale -- $OTI$), ma \texttt{192.168.1.254}
-  (IP mappato -- $MTI$). Per farlo, applica:
-  $source=map\_address(\texttt{192.168.100.254}, \texttt{192.168.100.0/24},\\
-  \texttt{192.168.1.0/24})$
-  ; a questo il pacchetto è conforme a quello inviato da OpenVPN server dopo il
+  \item iptables applica $map\_address$ su \texttt{192.168.100.254}, il risultato è
+  \texttt{192.168.1.254} e viene specificato come indirizzo IP sorgente.
+  Il pacchetto ora è conforme a quello inviato da OpenVPN server dopo il
   \textit{NAT lato server}, poiché l'indirizzo IP sorgente è quello mappato, cioè quello
   che MoonCloud conosce.
+  % \item l'OS di \texttt{client1} modifica tale
+  % pacchetto andando a specificare che l'indirizzo IP sorgente non è più
+  % \texttt{192.168.100.254} (IP originale -- $OTI$), ma \texttt{192.168.1.254}
+  % (IP mappato -- $MTI$). Per farlo, applica:
+  % $source=map\_address(\texttt{192.168.100.254}, \texttt{192.168.100.0/24},\\
+  % \texttt{192.168.1.0/24})$
+  % ; a questo il pacchetto è conforme a quello inviato da OpenVPN server dopo il
+  % \textit{NAT lato server}, poiché l'indirizzo IP sorgente è quello mappato, cioè quello
+  % che MoonCloud conosce.
   \item  L'OS quindi inoltra il pacchetto alla scheda di rete virtuale
   OpenVPN, il quale lo riceve e lo invia al server
   \item il server OpenVPN $S$ riceve il pacchetto, lo decifra, lo scrive sulla scheda di rete
   virtuale
-  \item il sistema operativo del server $S$ lo riceve, a questo punto si riapplica
+  \item il sistema operativo del server $S$ lo riceve, quindi riapplica
   il \textit{NAT lato server}, l'indirizzo IP destinazione passa da \texttt{10.7.0.1}
   a \texttt{192.168.200.2}: a questo punto preciso \textit{il pacchetto è esattamente
   la risposta precisa alla richiesta generata dal Docker host}.
@@ -253,7 +278,7 @@ e rimappaggio.
 
 
 Lato MoonCloud, $map\_network$ è una funzione eseguita dal microservizio
-\texttt{MoonCloud\_VPN} (si veda a partire da pagina \ref{ch:microservice}).
+\texttt{MoonCloud\_VPN} (si veda a partire da pagina \pageref{ch:microservice}).
 Per ora basti sapere che nel momento
 in cui avviene l'enrollment di un nuovo cliente, le sue reti sono mappate
 su nuove reti in modo che siano univoche.\\
@@ -268,18 +293,18 @@ Un server può gestire diversi clienti
 contamporaneamente, poiché l'univocità delle reti mappate è garantita \textit{per-server}.
 
 
-Rimane da capire è come effettuare mappaggio e rimappaggio lato client;
-si è tratta di un problema di non facile soluzione.
-Il software responsabile di questa traduzione deve imprescindibilmente
-funzionare di concerto con il \textit{NAT al contrario} (poiché quest'ultimo è
-fondamentale), e deve effettuare
-modifiche degli indirizzi IP che siano perfettamente aderente al mapping stabilito
-da MoonCloud\ldots
-Infine si è capito che queste modifiche altro non sono che del
-NAT 1:1, ed una volta afferrato questo è stato (relativamente) facile scrivere delle
-regole \texttt{iptables} che mi consentissero di farlo.\\
-In generale, supponendo di voler fare NAT (quindi mappaggio e rimappaggio) da
-\texttt{192.168.1.254} a \texttt{192.168.100.254},
+% Rimane da capire è come effettuare mappaggio e rimappaggio lato client;
+% si è tratta di un problema di non facile soluzione.
+% Il software responsabile di questa traduzione deve imprescindibilmente
+% funzionare di concerto con il \textit{NAT al contrario} (poiché quest'ultimo è
+% fondamentale), e deve effettuare
+% modifiche degli indirizzi IP che siano perfettamente aderente al mapping stabilito
+% da MoonCloud\ldots
+% Infine si è capito che queste modifiche altro non sono che del
+% NAT 1:1, ed una volta afferrato questo è stato (relativamente) facile scrivere delle
+% regole \texttt{iptables} che mi consentissero di farlo.\\
+Per ciò che concerne iptables, supponendo di voler mappare e rimappare
+da \texttt{192.168.100.254} a \texttt{192.168.1.254},
 con pacchetti provenienti dalla subnet \texttt{10.7.0.0/24}, è possibile
 utilizzare i seguenti
 due comandi:
@@ -287,10 +312,12 @@ due comandi:
 iptables -t nat -A PREROUTING -d 192.168.1.254 -s 10.7.0.0/24 -j DNAT --to-destination 192.168.100.254
 iptables -t nat -A POSTROUTING -s 192.168.100.254 -d 10.7.0.0/24 -j SNAT --to-source 192.168.1.254
 \end{minted}
-Il primo comando viene utilizzato per modificare l'indirizzo IP destinazione,
+Il primo comando viene utilizzato per modificare l'indirizzo IP destinazione (\texttt{DNAT --to-destination}),
 da quello mappato noto a MoonCloud ($MTI$) a quello originale ($OTI$); il secondo
-per modificare l'IP sorgente, da $OTI$ a $MTI$.\\
-Questa soluzione ha il vantaggio di integrarsi perfettamente con il \textit{NAT
+per modificare l'IP sorgente, da $OTI$ a $MTI$ (\texttt{SNAT --to-source}). Il microservizio \texttt{MoonCloud\_VPN}
+prepare un file contenente i comandi mostrati per tutti gli indirizzi IP che servono, esso viene
+poi eseguito sul client.\\
+La soluzione basata su iptables ha il vantaggio di integrarsi perfettamente con il \textit{NAT
 al contrario} (poiché è eseguita dallo stesso software), e sfrutta la
 possibilità di un pacchetto di poter passare per più \textit{hook}
 nel kernel Linux.
@@ -316,7 +343,7 @@ nel kernel Linux.
     IP Mapping: MoonCloud $\rightarrow$ Target. Si mostra un esempio di ciò che
     accade nel VPN client quando si riceve un pacchetto tramite la VPN.
     Per essere rigorosi occorre notare che una volta che OpenVPN invia qualcosa
-    su un socker, il controllo passa di nuovo al sistema operativo che scrive
+    su un socket il controllo passa di nuovo al sistema operativo che scrive
     quindi il pacchetto sulla scheda di rete fisica, ma questo non è di interesse
     per il problema in questione.}
 \end{figure}
