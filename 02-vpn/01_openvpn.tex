@@ -13,7 +13,7 @@ Per ciascun tunnel VPN, vengono create due collegamenti:
   di dati.
 \end{itemize}
 Entrambe i collegamenti sono multiplexati su di un unica connessione
-da OpenVPN, sia esso TCP o UDP\cite{openvpn-security}.\\
+da OpenVPN, sia essa TCP o UDP\cite{openvpn-security}.\\
 La figura \ref{fig:openvpn-sec} mostra un semplice schema del suo funzionamento.\\
 \begin{figure}[h!]
   \includegraphics[scale=0.4]{img/openvpn_sec}
@@ -33,7 +33,7 @@ le due versioni si veda
 L'infrastruttura OpenVPN si compone di:
 \begin{itemize}
   \item server: in grado di connettere tra loro diversi client, è possibile regolare
-  il fatto che diversi client possano \textit{vedersi} tra loro o meno
+  il fatto che diversi client possano comunicare tra loro o meno
   \item client, il quale si connette al server.
 \end{itemize}
 E' necessario che il server abbia un indirizzo IP pubblico, o meglio ancora un nome DNS, in ogni caso deve
@@ -50,7 +50,7 @@ L'autenticazione tra i diversi membri della VPN può essere fatta in due modi:
     \item il certificato della CA deve essere presente in ogni macchina partecipante
   \end{itemize}
   \item PSK: si generano a priori delle chiavi statiche, che devono essere distribuite
-  su ciascun host membro della VPN. Questa modalità non è consigliata, in quanto
+  a ciascun host membro della VPN. Questa modalità non è consigliata, in quanto
   se un host venisse in qualche modo compromesso, occorrerebbe cambiare tutte le chiavi.
   Inoltre non si garantisce \textit{perfect forward secrecy}: se un avversario
   intercettasse il traffico sull VPN e poi ottenesse queste chiavi potrebbe
@@ -78,7 +78,7 @@ da fare è decidere dove posizionare il server: nel cloud o nella rete target?
   Tale appliance deve rendere visibile l'intera rete (possibilmente anche più di una) nella VPN. In
   particolare si pone un problema di routing nella rete target a prescindere che lì vi sia
   il server od il client, pertanto è descritto tra qualche riga.
-  \item[\textbf{Remote Server}]Portare un server nella rete target subito un problema: deve
+  \item[\textbf{Remote Server}]Portare un server nella rete target pone subito un problema: deve
   essere raggiungibile dall'esterno, e questo non è per niente facile poiché la maggior parte
   delle reti target utilizzano NAT, e quindi gli host interni non sono direttamente raggiungibili
   dall'esterno, se non con port forwarding sul router. Chiedere ai clienti di configurare
@@ -131,6 +131,5 @@ ad esso direttamente.
 \subsection{Conclusioni}
 Per ciò che concerne OpenVPN, si è consigliato di realizzare una soluzione \textbf{\textit{Local Server}} per
 evitare di dover configurare port forwarding nella rete target. Nel caso in cui questo
-problema non si dovesse presentare, ad esempio perché la rete target dispone di un
+problema non si dovesse presentare, ad esempio perché la rete target disponesse di un
 pool di IP pubblici, sarebbe possibile tentare la strada di un \textit{Remote Server}.
-A causa di un mio errore, nella prima fase di studio avevo suggerito quest'ultima configurazione.
