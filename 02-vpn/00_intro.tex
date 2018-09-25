@@ -9,11 +9,11 @@ Si possono realizzare diverse topologie:
 \begin{description}
 	\item[Remote Access]Si realizza questa configurazione quando si vuole un connettere
 	uno o più host ad una rete. Un esempio classico è quello di dipendenti che connettono
-	il proprio dispositivo (PC, tablet, smartphone, etc \ldots) alla rete aziendale
+	il proprio dispositivo (PC, tablet, smartphone, ecc\ldots) alla rete aziendale
 	quando non si trovano in sede, potendo così accedere alle risorse che normalmente
 	avrebbero disponibili solo se si trovassero fisicamente nella sede dell'azienda.
 	\item[LAN-to-LAN]A volte ci si riferisce a questa topologia anche come \textit{Intranet
-	VPN}. In questo caso, si utilizza una VPN per connettere tra di loro due o più
+	VPN}. In questo caso si utilizza una VPN per connettere tra di loro due o più
 	reti che sono geograficamente dislocate in posti diversi. E' molto utile per aziende
 	che hanno più sedi sul territorio (anche in diversi stati), e che desiderano connettere
 	tra di loro le reti di ciascuna sede.
@@ -36,19 +36,22 @@ tra di loro in VPN:
 \begin{itemize}
 	\item livello 2: le reti si trovano all'interno di un unico spazio di indirizzi IP
 	      (con stesso indirizzo di rete), ed è \textit{come se fossero separate da uno switch}.
-	\item Livello 3: le diverse reti sono ciascune in uno spazio di indirizzamento separato,
+	\item Livello 3: le diverse reti sono ciascune in uno spazio di indirizzi separato,
 	      ed è \textit{come se fossero separate da un router}.
 \end{itemize}
-Supponendo che vi siano due reti, $A$ e $B$, connesse tramite una VPN al livello 3,
-un host della rete $A$ può accedere a \textit{tutte} le risorse della rete $B$,
-non solo quelle che $B$ espone verso la rete Internet.
+Un collegamento in VPN tra due reti al livello 2 o 3 consente a ciascun host di ogni rete di accedere
+a \textit{tutte} (o quasi) le risorse
+dell'altra.
+% Supponendo che vi siano due reti, $A$ e $B$, connesse tramite una VPN al livello 3,
+% un host della rete $A$ può accedere a \textit{tutte} le risorse della rete $B$,
+% non solo quelle che $B$ espone verso la rete Internet.
 
 
 Si distinguono tre tipologie di VPN:
 \begin{description}
 	\item[Secure VPN]Una VPN realizzata utilizzando crittografia dei dati in transito
-	tra i diversi host/reti coinvolte, \textit{secure} poiché l'utilizzo di algoritmi
-	crittografici (ammesso che siano utilizzati correttamente) garantiscono che nessun
+	tra i diversi host/reti coinvolti, \textit{secure} poiché l'utilizzo di algoritmi
+	crittografici (ammesso che siano utilizzati correttamente) garantisce che nessun
 	attaccante che intercetti tale traffico sia in grado di decifrarlo o alterarlo in
 	qualsiasi modo.
 	\item[Trusted VPN]Sono fornite dagli ISP, i quali garantiscono che nessun'altro
@@ -66,18 +69,15 @@ quella di interesse per MoonCloud.
 Nell'ambito delle VPN del primo tipo, un pricipio base su cui si fonda il loro
 funzionamento è quello dell'\textit{incapsulamento}. Si tratta di un termine
 ben noto nell'ambito dei protocolli di rete, che può essere sintetizzato come
-di seguito. Siano $A, B$ due protocolli di rete, con $A$ che si trova ad un livello
-più basso rispetto ad $B$ (quindi più vicino al \textit{fondo} della pila
-protocollare). Entrambi i protocolli hanno un \textit{header} ed un
-\textit{payload}.\\
+di seguito. Siano $A, B$ due protocolli di rete, non ha importanza
+che $B$ sia ad un livello più basso rispetto ad $A$. Entrambi i protocolli hanno un \textit{header} ed un
+\textit{payload}.
 Si dice che \textit{B incapsula A} quando il payload di $B$ è costituito dall'intero
 pacchetto di $A$ (cioè header e payload di $A$), come mostrato in figura \ref{fig:tunnelling}.
-E' importante notare che l'incapsulamento può essere ulteriormente generalizzato,
-non è richiesto che $A$ sia di un livello più basso rispetto a $B$. Nello pila
+Nello pila
 di protocolli di rete, sia essa ISO/OSI o TCP/IP, l'incapsulamento è il modo di
-procedere normale, per cui ad esempio un segmento TCP ha nel proprio payload
-un intero pacchetto IP, il cui a sua volta ha come payload un intero frame Ethernet.
-
+procedere normale, per cui ad esempio un pacchetto IP incapsula TCP, che a sua volta
+incapsula HTTP.
 
 \begin{figure}
 	\includegraphics[scale=0.7]{img/tunnelling}
@@ -86,14 +86,13 @@ un intero pacchetto IP, il cui a sua volta ha come payload un intero frame Ether
 \end{figure}
 
 
-Di seguito si procede a dare una descrizione del funzionamento della maggior parte
-delle VPN secure, iniziando con il definire con \textit{protocollo VPN}
+Si definisce \textit{protocollo VPN}
 il procollo utilizzato nel collegamento tra le reti/host.
 Generalmente si distingue tra VPN client e VPN server, sebbene
 una volta stabilito il collegamento il protocollo VPN sia spesso peer-to-peer
 (nel senso che lo scambio di dati è bidirezionale);
 in ogni caso vi è sempre un host che inizia la connessione.\\
-Il VPN server può ricevere più connessioni dai VPN client, i quali in quanto tali
+Il VPN server tipicamente gestisce più client contemporaneamente, i quali in quanto tali
 iniziano la connessione verso il server. A seconda della topologia/tecnologia,
 i client possono essere responsabili di connettere alla rete del server la rete
 a cui essi appartengono; viceversa, il server \textit{può} rendere visibile ai client
@@ -112,19 +111,20 @@ deve avere i seguenti \textit{punti di contatto}:
 \end{itemize}
 Il collegamento di cui al primo punto si realizza spesso (ma non sempre) con un socket,
 mentre gli ultimi due punti si realizzano con una \textit{scheda di rete virtuale}.\\
-Nel collegamento lungo il socket, la tecnologia VPN definisce un protocollo (che ovviamente
-garantisca proprità di sicurezza), può essere un protocollo già esistente come TLS,
+Nel collegamento lungo il socket, la tecnologia VPN definisce il \textit{protocollo VPN}
+da utilizzare, può essere un protocollo già esistente come TLS,
 oppure uno sviluppato ad hoc.\\
 Una scheda di rete virtuale (o virtual NIC -- Network Interface Card) è una
 scheda di rete che esiste nel kernel del sistema
 operativo ma che non ha un corrispettivo fisico. Se ne può creare una al livello 2
 od al livello 3 (utilizzando \texttt{TUN}, modulo del
-kernel implementato in diversi sistemi operativi). Una scheda di rete
-al livello 3 è dotata di un indirizzo IP proprio come ogni NIC reale.\\
+kernel implementato in diversi sistemi operativi).
+% Una scheda di rete
+% al livello 3 è dotata di un indirizzo IP proprio come ogni NIC reale.\\
 Una scheda di rete virtuale è associata ad un software che compie operazioni su essa,
 e, come per ogni scheda di rete, tali operazioni sono quelle di invio e ricezione.
 \begin{description}
-	\item[Inviare]Il software associato invia un pacchetto sulla NIC, l'effetto è che tale
+	\item[Inviare]Il software associato invia un pacchetto alla NIC, l'effetto è che tale
 	pacchetto viene \textit{ricevuto} dal kernel del sistema operativo e processato
 	come un qualsiasi altro pacchetto, pertanto l'OS deciderà
 	dove e come inviarlo, e se applicare ulteriori trasformazioni.
@@ -132,8 +132,7 @@ e, come per ogni scheda di rete, tali operazioni sono quelle di invio e ricezion
 	quello delle scheda di rete virtuale, l'OS quindi inoltra il pacchetto alla NIC
 	virtuale in questione, l'effetto è che il software associato riceve i dati
 	che il sistema operativo ha inoltrato. Il pacchetto che viene inoltrato alla NIC
-	può essere benissimo un pacchetto inviato da un altro host, e che quindi è arrivato
-	al sistema operativo mediante una scheda di rete reale (oppure un'altra virtuale).
+	può essere arrivare da un altro host od essere stato generato localmente.
 \end{description}
 A livello di processo associato alla NIC, \textit{inviare un dato alla NIC} significa
 chiamare la funzione \texttt{write()}, mentre \textit{ricevere} significa
@@ -143,28 +142,30 @@ utilizzare \texttt{read()} (o funzioni equivalenti).
 L'idea di base è che ciò che il software VPN legge dalla scheda di rete virtuale
 è ciò che è destinato ad un altro membro della VPN, e quindi venga incapsulato secondo
 il protocollo VPN usato. Allo stesso modo, ciò che si riceve dal socket è destinato
-alla proprio rete (salvo il caso si tratti di un server che connette più client), pertanto
+alla proprio rete (salvo il caso di un server che connette più client), pertanto
 viene scritto sulla NIC, per essere dato in gestione al proprio sistema operativo in
 modo che possa inoltrarlo al destinatario.\\
 Due note fondamentali che occorre sempre tenere presenti:
 \begin{itemize}
 	\item se si realizza una VPN al livello 3, tutte le reti partecipanti devono
-	      avere degli spazi di indirizzamento diversi.
+	      avere degli spazi di indirizzi diversi. Il protocollo incapsulato è IP
+	      (versione 4 o 6).
 	\item In una VPN al livello 2, tutte le reti partecipanti devono stare
-	      nella stessa rete IP.
+	      nella stessa rete IP. Si incapsula il protocollo Ethernet.
 \end{itemize}
 
-Anche le schede di rete virtuali sono dotate di un indirizzo IP, in particolar modo
-si definisce come \textit{subnet VPN} lo spazio di indirizzi dedicato alle NIC
+Anche le schede di rete virtuali sono dotate di un indirizzo IP e subnet mask.
+Si definisce come \textit{subnet VPN} lo spazio di indirizzi dedicato alle NIC
 che partecipano ad una stessa VPN. E' preferibile che tutte le NIC che compongono
 una VPN abbiano lo stesso NET ID. A seconda delle tecnologie, il VPN server
-può incorporare anche funzionalità di un DHCP server.
+può incorporare anche funzionalità di un DHCP server ed assegnare indirizzi
+IP alle schede virtuali dei client.
 
 
 Per capire meglio quanto spiegato, si procede con un esempio.
 Si supponga ora di voler configurare una certa \textit{VPN X}, e che si voglia realizzare una
 topologia LAN-to-LAN tra due rete $A, B$, in cui nella prima si trova il server VPN $X$,
-nella seconda naturalmente si trova il client.  Lo scenario è il seguente:
+nella seconda si trova il client.  Lo scenario è il seguente:
 \begin{itemize}
 	\item rete $A$: indirizzo di rete: \texttt{192.168.1.0/24}
 	\item rete $B$: indirizzo di rete: \texttt{192.168.10.0/24}
@@ -173,7 +174,7 @@ nella seconda naturalmente si trova il client.  Lo scenario è il seguente:
 	\item indirizzo interno del client VPN $c$ in $B$: \texttt{192.168.10.20}
 \end{itemize}
 Si definiscono
-infine gli host \texttt{192.168.1.5} come $a_5$, e \texttt{192.168.10.5} in $b_5$, infine
+infine gli host \texttt{192.168.1.5} come $a_5$, e \texttt{192.168.10.5} come $b_5$, infine
 si suppone che gli indirizzi IP
 dei default gateway delle due reti finiscano in \texttt{.254}.\\
 Per il momento non ci si concentra troppo sulla configurazione delle rotte, supponendo che i
@@ -202,7 +203,7 @@ di un qualsiasi protocollo di rete.
 Il protocollo di trasporto che viene in genere preferito è UDP in quanto introduce meno
 overhead rispetto a TCP. A causa
 dei particolari requisiti di MoonCloud, ci si è concentrati invece su soluzioni che
-supportassero quest'ultimo, questo perché è possibile che nelle reti target UDP sia bloccato,
+supportassero quest'ultimo, poiché è possibile che nelle reti target UDP sia bloccato,
 mentre è infattibile ritenere che TCP stesso sia bloccato (quanto meno si ritiene
 che almeno il traffico HTTP sia consentito). Probabilmente vi saranno
 delle restrizioni, e nel caso in cui la VPN non riesca a funzionare si può sempre
@@ -230,8 +231,8 @@ dettagliate.
 	\item[\textit{RSSC - Remote Server Single Client}]Simile ad \textit{RSMC}, il VPN
 	server è presente nella rete target, in MoonCloud si realizza, per ciascuna rete
 	target, un unico VPN client, a cui i Docker host responsabili per una certa rete target inviano
-  i pacchetti. Quest'unico VPN client fungerebbe quindi da gateway per i target.
-  Il client invia i pacchetti lungo la VPN al server,
+	i pacchetti. Quest'unico VPN client fungerebbe quindi da gateway per i target.
+	Il client invia i pacchetti lungo la VPN al server,
 	che provvede ad inoltrarli agli host nella rete target.
 \end{description}
 Nelle configurazioni di tipo \textit{Remote Server}, è necessario che il server sia
@@ -343,11 +344,11 @@ Tra queste topologie, si anticipa che quella scelta è \textit{LS}.
 		PPTP                            & GRE                     & PPP (IP and others)        & No                   & No                          \\
 		\hline
 	\end{tabular}
-  \caption[Tecnolgie per VPN. Con ``Protocollo di trasporto'' si intende
-  quale è il protocollo di più alto livello in cui si incapsulano i pacchetti indicati
-  dalla colonna ``Protocollo incapsulato''. Per ``fw stringenti'' si intendono firewall
-  in grado di fare filtraggio al livello applicativo.]{Principali tecnologie per VPN.}
-  \label{tbl:vpn-comparison}
+	\caption[Tecnolgie per VPN. Con ``Protocollo di trasporto'' si intende
+		quale è il protocollo di più alto livello in cui si incapsulano i pacchetti indicati
+		dalla colonna ``Protocollo incapsulato''. Per ``fw stringenti'' si intendono firewall
+	in grado di fare filtraggio al livello applicativo.]{Principali tecnologie per VPN.}
+	\label{tbl:vpn-comparison}
 \end{table}
 
 Questa sezione è demandata all'analisi delle principali tecnologie VPN. Per ciascuna
