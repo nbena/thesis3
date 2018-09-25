@@ -49,7 +49,7 @@ i parametri L2TP.
 
 Per realizzare VPN con IPsec tipicamente si utilizzano due configurazioni:
 \begin{itemize}
-  \item L2TP on IPsec (negoziazione di L2TP su un canale IPsec sicuro--\textit{ESP Transport Mode})
+  \item L2TP on IPsec (negoziazione di L2TP su un canale IPsec sicuro--\textit{ESP Transport Mode}
   \item IPsec with IKEv2.
 \end{itemize}
 
@@ -77,12 +77,12 @@ Il client è l'\textit{initiator},
 il server è il \textit{responder}.
 
 Da subito ci si è concentrati su un setup basato su IKEv2, non si è considerato IPsec con L2TP
-perché considerato \textit{legacy} dall'avvento della nuova versione di IKE
+perché considerato \textit{legacy} dall'avvento della nuova versione di IKE.
 
 Utilizzando strongSwan sono possibili moltissime forme di autenticazione, distinguendo tra:
 \begin{itemize}
   \item autenticazione degli host, può essere fatta con PSK (fortemente sconsigliato) o certificati X509
-  \item autenticazione degli utenti, in questo è possibile anche appoggiarsi ad un
+  \item autenticazione degli utenti, in questo caso è possibile usare anche un
   server RADIUS.
 \end{itemize}
 Si tenga presente che l'autenticazione degli utenti è fatta \textit{on top} dell'autenticazione
@@ -113,24 +113,21 @@ strongSwan offre NAT Traversal basato su UDP.
 
 
 \subsection{IPsec e MoonCloud}
-Si analizzano ora le topologie possibili per MoonCloud. In IPsec, una volta
-che le policy sono state stabilite, non vi è davvero distinzione tra chi sia client e server, pertanto,
-non vi è davvero la necessità di distinguere tra \textit{RS} ed \textit{LS}.
-Si distingue solamente nelle topologie che si realizzano, ed in base a dove si posiziona il server cioè
+In IPsec, una volta
+che le policy sono state stabilite, non vi è davvero distinzione tra chi sia client e server.
+Si distingue solamente nelle topologie che si realizzano, ed in base a dove si posiziona il client cioè
 l'\textit{initiator}.
-Sono quindi possibili sia configurazione \textit{RS} ed \textit{LS}, un server nella rete target
-potrebbe sfruttare il NAT Traversal che strongSwan offre, occorrerebbe testarne attentantamente
-le funzionalità. Tuttavia, è fondamentale che si configurino correttamente le policy
-relativamente af IP sorgente e destinazione.
+Sono quindi possibili sia configurazioni \textit{RS} ed \textit{LS}, un server nella rete target
+potrebbe sfruttare il NAT Traversal che strongSwan offre, occorrerebbe valutarne l'efficacia.
+La topologia \textit{LS} è sempre possibile.
 
 
 \subsection{Conclusioni}
 Si è consigliata una topologia \textit{RS}, posto che il NAT Traversal consente
-la raggiungibilità dall'esterno.
+la raggiungibilità dall'esterno, in caso contrario \textit{LS}.
 Vi sono diverse voci fondate dalle dichiarazioni di Snowden, secondo cui l'\textit{NSA avrebbe volontariamente
-indebolito il protocollo}\ldots\footnote{La bibliografia è il corso di Sicurezza dei Sistemi
-e delle Reti.}
-Altre voce invece riportano di come l'NSA sia in grado di rompere sessioni IPsec
+indebolito il protocollo}\ldots\footnote{La bibliografia in questo è il corso di Sicurezza delle Reti.}
+Altre voci invece riportano di come l'NSA sia in grado di rompere sessioni IPsec
 configurate con PSK (\cite{ipsec-nsa}).
 Si rilevano infine due problemi principali:
 \begin{itemize}
