@@ -21,7 +21,7 @@ Un pacchetto che entra in contatto con lo stack di rete di Linux transita per
 diverse parti di esso in diversi momenti; un hook non è un altro che un \textit{punto} dello stack
 in cui il pacchetto passa.
 L'intero stack di rete offre numerosi hook, e non tutti sono disponibili in netfilter.
-In particolare, gli hook disponibili per quest'ultimo sottosistema sono:
+In particolare, quelli disponibili sono:
 \begin{itemize}
   \item \texttt{NF\_IP\_PREROUTING}, raggiunto da tutti i pacchetti appena entrano nello
   stack di rete, la decisione di routing deve ancora essere presa.
@@ -64,11 +64,11 @@ mediante iptables sono delle \textit{regole}, esse sono organizzate in
 tabelle predefinite:
 \begin{itemize}
   \item \texttt{filter}: utilizzata per definire regole di firewalling
-  \item \texttt{mangle}: utilizzata per \textit{packet alteration}
+  \item \texttt{mangle}: usata per generiche modifiche ai pacchetti
   \item \texttt{nat}: utilizzata la traduzione NAT/PAT
-  \item \texttt{raw}: utilizzata principalmente operare sui pacchetti senza
-  il connection tracking
-  \item \texttt{security}: utilizzata in distribuzioni \texttt{SELinux}
+  \item \texttt{raw}: utilizzata principalmente per operare sui pacchetti senza
+  il tracking della connessione (più veloce)
+  \item \texttt{security}: per distribuzioni che sfruttano \texttt{SELinux}
 \end{itemize}
 E' possibile definire delle tabelle ulteriori.
 Le chain predefinite sono:
@@ -83,7 +83,7 @@ Le chain predefinite sono:
   dal sistema.
 \end{itemize}
 Non tutte le tabelle hanno a disposizione tutte le chain, ad esempio nella tabella
-di \texttt{nat} sono disponibili sono \texttt{PREROUTING} e \texttt{POSTROUTING}, mentre
+di \texttt{nat} vi sono \texttt{PREROUTING} e \texttt{POSTROUTING}, mentre
 in \texttt{filter} è possibile usare \texttt{INPUT}, \texttt{FORWARD}, \texttt{OUTPUT}.\\
 Come si può dedurre dal nome delle chain, esse corrispondono agli hook di
 netfilter:
@@ -131,17 +131,17 @@ target disponibili sono:
 
 
 Un'importante funzionalità offerta da netfilter è il tracking della connessione
-in una tabelle di stato (nota come ``\textit{Connection Tracking}''), che è la base
+in una tabella di stato (nota come ``\textit{Connection Tracking}''), che è la base
 per il NAT e statefull firewalling.\\
 Infine, sono disponibili numerose estensioni sia per matching sia per target;
-Ad esempio, esiste una versione di iptables
+ad esempio, esiste una versione di iptables
 (\textit{iptables L7}) che aggiunge comprensione anche dei protocolli
 applicativi\footnote{\url{http://l7-filter.clearos.com/start}}.
 iptables viene usato con il protocollo IP versione 4 (e protocolli di livello
 superiore che si appoggiano ad IPv4), se si vuole lavorare con protocolli
 di livello 3 diversi, o protocolli di livello inferiore vi sono:
 \begin{itemize}
-  \item \texttt{arptables}: manipolazione del protocollo ARP
-  \item \texttt{ebtables} per lavorare con protocolli di livello 2 (Ethernet)
+  \item \texttt{arptables}: manipolazione di pacchetti ARP
+  \item \texttt{ebtables} per lavorare con frame Ethernet
   \item \texttt{ip6tables} per pacchetti che usano IPv6 come protocollo di rete.
 \end{itemize}
