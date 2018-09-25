@@ -257,7 +257,7 @@ In configurazini \textit{Local Server} il problema non si pone perché la comuni
 	\includegraphics[scale=0.55]{img/rsmc}
 	\label{fig:rsmc}
 	\caption[Configurazione \textit{RSMC -- Remote Server Multi Client}]{Configurazione
-		\textit{RSMC -- Remote Server Multi Client}. Ciascun probe è \textit{anche} un VPN client.
+		\textit{RSMC -- Remote Server Multi Client}. Ciascun Docker host è \textit{anche} un VPN client.
 		La spunta verde sui firewall nelle reti target indica che deve essere consentito l'accesso
 	dall'esterno verso i VPN server.}
 \end{figure}
@@ -274,18 +274,18 @@ In configurazini \textit{Local Server} il problema non si pone perché la comuni
 Già in questa fase iniziale di studio si era previsto l'utilizzo del \textit{NAT al contrario},
 un termine coniato qui per indicare un particolare utilizzo del NAT. 
 Si supponga di realizzare una VPN tra due reti $A$ e $B$, e che
-nella rete $B$ non si possano modificare rotte. Si definisce $VPN\_A$ il dispositivo
+nella rete $B$ non si possano modificare rotte. Si definisce $VPN_A$ il dispositivo
 VPN nella rete $A$ (non
-importa se sia client e server), ed allo stesso modo si definisce la sua controparte $VPN\_B$.
-I pacchetti ricevuti da $VPN\_B$ provenienti da $VPN\_A$ hanno come indirizzo IP uno appartenente
+importa se sia client e server), ed allo stesso modo si definisce la sua controparte $VPN_B$.
+I pacchetti ricevuti da $VPN_B$ provenienti da $VPN_A$ hanno come indirizzo IP uno appartenente
 ad $A$, e sono immessi in $B$ senza modifiche. Le risposte a tali pacchetti dovrebbero essere inoltrate
-a $VPN\_B$, ma poiché non si è configurata nessuna rotta perché non è stato possibile, saranno invece
+a $VPN_B$, ma poiché non si è configurata nessuna rotta perché non è stato possibile, saranno invece
 inoltrate al default gateway di $B$.
 
-Il \textit{NAT al contrario} consiste nell'applicare la traduzione degli indirizzi su $VPN\_B$
+Il \textit{NAT al contrario} consiste nell'applicare la traduzione degli indirizzi su $VPN_B$
 ai pacchetti che provengono dalla VPN, in modo da immetterli in $B$ con l'indirizzo IP
-sorgente uguale a quello di $VPN\_B$. Le risposte a tali pacchetti modificati giungono 
-senza problemi a $VPN\_B$, perché hanno come destinazione un IP della stessa rete, per cui non
+sorgente uguale a quello di $VPN_B$. Le risposte a tali pacchetti modificati giungono 
+senza problemi a $VPN_B$, perché hanno come destinazione un IP della stessa rete, per cui non
 si contatta il default gateway.
 % Si supponga di
 % essere nella situazione delle due reti elencate precedentemente, ma in cui non vi sia
@@ -307,7 +307,7 @@ Questo meccanismo è stato descritto in maniere molto sintetica, e poiché è un
 davvero applicata, viene analizzato molto più nel dettaglio nel capitolo dedicato alle configurazioni
 di OpenVPN.
 
-Tra queste topologie, si anticipa che quella scelta è \textit{LS}.
+Tra queste topologie, si anticipa che quella scelta è \textbf{\textit{LS}}.
 
 
 % \section{Motivazioni}
@@ -316,38 +316,66 @@ Tra queste topologie, si anticipa che quella scelta è \textit{LS}.
 \section{Introduzione alle tecnologie}
 
 \begin{table}
-	\begin{tabular}{|p{3.3cm}|p{2.7cm}|p{3.1cm}|p{1.7cm}|p{3cm}|}
+	% \begin{tabular}{|p{3.3cm}|p{2.7cm}|p{3.1cm}|p{1.7cm}|p{3cm}|}
+	% 	\hline
+	% 	Technology                      & Procollo di trasporto   & Protocollo incapsulato     & Passa fw. stringenti & NAT Traversal               \\
+	% 	\hline
+	% 	OpenVPN                         & TLS over TCP/UDP        & Ethernet/IP                & No                   & Sì, keepalive-based        \\
+	% 	\hline
+	% 	IPsec (IKEv2)                   & IPsec                   & IP                         & No                   & Sì                         \\
+	% 	\hline
+	% 	SoftEther                       & HTTPS (anche ICMP, DNS) & Ethernet/IP                & Sì                  & Sì, parzialmeente          \\
+	% 	\hline
+	% 	L2TP/IPsec (IKEv1)              & IPsec                   & IP                         & No                   & Sì (con SoftEther)         \\
+	% 	\hline
+	% 	\hline
+	% 	SSTP                            & HTTPS                   & PPP (IP)                   & Sì                  & Sì (con SoftEther)         \\
+	% 	\hline
+	% 	OpenConnect (Cisco Any Connect) & DTLS e HTTPS            & IP                         & Sì con HTTPS        & ?                           \\
+	% 	\hline
+	% 	OpenSSH                         & SSH                     & Ethernet/IP/TCP            & No                   & ?                           \\
+	% 	\hline
+	% 	WireGuard                       & WireGuard (UDP)         & IP                         & No                   & Sì, keepalive-based        \\
+	% 	\hline
+	% 	L2TPv3/IPsec                    & IPsec                   & Ethernet (e altri layer 2) & No                   & Sì (con IKEv2 o SoftEther) \\
+	% 	\hline
+	% 	EtherIP/IPsec                   & IPsec                   & Ethernet                   & No                   & Sì (con IKEv2 o SoftEther) \\
+	% 	\hline
+	% 	PPTP                            & GRE                     & PPP (IP and others)        & No                   & No                          \\
+	% 	\hline
+	% \end{tabular}
+	\begin{tabular}{|p{3.5cm}|p{2.7cm}|p{3.1cm}|p{3cm}|p{5cm}|}
 		\hline
-		Technology                      & Procollo di trasporto   & Protocollo incapsulato     & Passa fw. stringenti & NAT Traversal               \\
+		Technology                      & Procollo di trasporto   & Protocollo incapsulato     & Passa fw. stringenti \\%& NAT Traversal               \\
 		\hline
-		OpenVPN                         & TLS over TCP/UDP        & Ethernet/IP                & No                   & Sì, keepalive-based        \\
+		OpenVPN                         & TLS over TCP/UDP        & Ethernet/IP                & No                   \\%& Sì, keepalive-based        \\
 		\hline
-		IPsec (IKEv2)                   & IPsec                   & IP                         & No                   & Sì                         \\
+		IPsec (IKEv2)                   & IPsec                   & IP                         & No                   \\%& Sì                         \\
 		\hline
-		SoftEther                       & HTTPS (anche ICMP, DNS) & Ethernet/IP                & Sì                  & Sì, parzialmeente          \\
+		SoftEther                       & HTTPS (anche ICMP, DNS) & Ethernet/IP                & Sì                  \\%& Sì, parzialmeente          \\
 		\hline
-		L2TP/IPsec (IKEv1)              & IPsec                   & IP                         & No                   & Sì (con SoftEther)         \\
+		L2TP/IPsec (IKEv1)              & IPsec                   & IP                         & No                   \\%& Sì (con SoftEther)         \\
 		\hline
 		\hline
-		SSTP                            & HTTPS                   & PPP (IP)                   & Sì                  & Sì (con SoftEther)         \\
+		SSTP                            & HTTPS                   & PPP (IP)                   & Sì                  \\%& Sì (con SoftEther)         \\
 		\hline
-		OpenConnect (Cisco Any Connect) & DTLS e HTTPS            & IP                         & Sì con HTTPS        & ?                           \\
+		OpenConnect (Cisco Any Connect) & DTLS e HTTPS            & IP                         & Sì con HTTPS        \\%& ?                           \\
 		\hline
-		OpenSSH                         & SSH                     & Ethernet/IP/TCP            & No                   & ?                           \\
+		OpenSSH                         & SSH                     & Ethernet/IP/TCP            & No                   \\%& ?                           \\
 		\hline
-		WireGuard                       & WireGuard (UDP)         & IP                         & No                   & Sì, keepalive-based        \\
+		WireGuard                       & WireGuard (UDP)         & IP                         & No                   \\%& Sì, keepalive-based        \\
 		\hline
-		L2TPv3/IPsec                    & IPsec                   & Ethernet (e altri layer 2) & No                   & Sì (con IKEv2 o SoftEther) \\
+		L2TPv3/IPsec                    & IPsec                   & Ethernet (e altri layer 2) & No                   \\%& Sì (con IKEv2 o SoftEther) \\
 		\hline
-		EtherIP/IPsec                   & IPsec                   & Ethernet                   & No                   & Sì (con IKEv2 o SoftEther) \\
+		EtherIP/IPsec                   & IPsec                   & Ethernet                   & No                   \\%& Sì (con IKEv2 o SoftEther) \\
 		\hline
-		PPTP                            & GRE                     & PPP (IP and others)        & No                   & No                          \\
+		PPTP                            & GRE                     & PPP (IP and others)        & No                   \\%& No                          \\
 		\hline
 	\end{tabular}
-	\caption[Tecnolgie per VPN. Con ``Protocollo di trasporto'' si intende
-		quale è il protocollo di più alto livello in cui si incapsulano i pacchetti indicati
-		dalla colonna ``Protocollo incapsulato''. Per ``fw stringenti'' si intendono firewall
-	in grado di fare filtraggio al livello applicativo.]{Principali tecnologie per VPN.}
+	\caption[Principali tecnologie per VPN.]{Tecnolgie per VPN. Con ``Protocollo di trasporto'' si intende
+	quale è il protocollo di più alto livello in cui si incapsulano i pacchetti indicati
+	dalla colonna ``Protocollo incapsulato''. Per ``fw stringenti'' si intendono firewall
+in grado di fare filtraggio al livello applicativo.}
 	\label{tbl:vpn-comparison}
 \end{table}
 
@@ -356,7 +384,7 @@ si elencano i principali passi da compiere per configurare una VPN, unitamente a
 della migliore topologia, tenendo sempre presente che si vuole limitare il più possibile
 il numero di configurazioni da effettuare nella rete target.
 
-Una nota prima di proseguire: durante tutto questo capitolo ed il prossimo, si utilizzerà
+Una nota prima di proseguire: durante le successive pagine di questo documento si utilizzerà
 il termine \textit{pacchetto} per indicare una generica sequenza di byte di un generico
 protocollo, presente in un certo momento in un host dopo essere stata ricevuta o prima
 di essere inviata, oppure in viaggio sulla rete. Sono perfettamente consapevole che per
@@ -365,10 +393,10 @@ sequenza, ad esempio \textit{frame} per il livello 2 con Ethernet, oppure \texti
 per il protocollo UDP, e così via. Tuttavia, come si è visto dalla tabella \ref{tbl:vpn-comparison},
 le VPN possono funzionare su diversi protocolli di trasporto (non solo al livello 4),
 e possono altresì incapsulare
-pacchetti di livelli divrersi. Per questa ragione ho scelto di utilizzare
-\textit{indiscriminatamente} il termine \textit{pacchetto} per riferirmi ad essi.
+pacchetti di livelli diversi. Per questa ragione si è scelto di utilizzare
+sempre il termine \textit{pacchetto} per riferirsi ad essi.
 
 
 % TODO check if I already said this
 Tra le soluzioni indicate di seguito, la prima scelta è stata SoftEther. Per motivi che
-verranno spiegati in seguito, la soluzione definitiva è poi OpenVPN.
+verranno spiegati in seguito, la soluzione definitiva è \textbf{OpenVPN}.
