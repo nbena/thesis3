@@ -13,11 +13,10 @@ che offre API basate su socket \cite{RFC3549}.}). Un elenco
 delle principali novità:
 \begin{itemize}
 	\item Il kernel non ha più conoscenza specifica
-	      dei protocolli di rete: per la VM fare match con una porta TCP o un flag dell'header Ethernet
+	      dei protocolli di rete per il match: per la VM matchare con una porta TCP o un flag dell'header Ethernet
 	      si traduce in semplici istruzioni come: \textit{carica x byte del pacchetto nel
 	      registro z a partire dall'offset y}. Questo significa che è molto facile estendere
 	      nftables con nuovi protocolli, e che il codice del kernel è molto più semplice.
-	\item Non ci sono tabelle e chain di default.
 	\item Le regole possono avere più target per volta.
 	\item Il programma \texttt{nft} diventa l'unico programma per la gestione delle regole,
 	      rimpiazzando iptables, ip6tables, arptables, ebtables.
@@ -30,6 +29,7 @@ delle principali novità:
 	\item Supporto a strutture dati avanzate basate su \texttt{set} che consentono un matching/targeting
 	      molto veloce.
 	\item La sintassi delle regole cambia e diventa più simile al parlato.
+	\item Non ci sono tabelle e chain di default.
 \end{itemize}
 
 La maggior parte dell'\textit{intelligenza} è spostata su \texttt{nft}, il quale compila
@@ -50,16 +50,16 @@ il compito di crearle. In nftables, ogni tabella ha una certa \textit{famiglia}:
 	\item \texttt{ip} è la famiglia per operare su pacchetti dal livello 3 in su e
 	      che usano IPv4 come protocollo di rete; è la famiglia di default se non è specificata.
 	\item \texttt{ip6} è la famiglia per operare con pacchetti di protocolli che utilizzano
-	      il protocollo IPv6.
-	\item \texttt{arp} viene utilizzata per processare pacchetti ARP.
+		il protocollo IPv6
 	\item \texttt{inet} è la famiglia che consente di lavorare con pacchetti sia IPv4
-	      sia IPv6.
-	\item \texttt{bridge} è usata per lavorare con frame Ethernet.
+	      sia IPv6
+	\item \texttt{arp} viene utilizzata per processare pacchetti ARP
+	\item \texttt{bridge} è usata per lavorare con frame Ethernet
 	\item \texttt{netdev} consente di \textit{attaccarsi} direttamente ad una interfaccia
 	      di rete.
 \end{itemize}
-Le tabelle sono solo dei contenitori vuoti, il cui nome non ha alcuna semantica (rispetto
-ad iptables). Comunque, la scelta della famiglia influenza quali hook possono
+Le tabelle sono solo dei contenitori vuoti il cui nome non ha alcuna semantica, rispetto
+ad iptables. Comunque, la scelta della famiglia influenza quali hook possono
 essere utilizzati (es: l'hook \texttt{ingress} è disponibile solo per \texttt{netdev}).
 
 Le tabelle a loro volta racchiudono delle chain, ed anche in questo caso non vi
