@@ -1,8 +1,8 @@
 \section{Dettagli}
 In questa sezione si affrontano in maniera più dettagliata le principali funzionalità
-offerte dal microservizio. In letteratura \cite{7030212} \cite{8229914} vi è un ampio
+offerte dal microservizio. In letteratura (es: \cite{7030212}, \cite{8229914}) vi è un ampio
 dibattito su quale sia
-l'effettiva dimensione di un microservizio, e di fatto il risultato è che un esso
+l'effettiva dimensione di un microservizio, e di fatto si dice che esso
 dovrebbe fare una cosa ed una soltanto. Si potrebbe quindi dire che questo principio
 non è completamente rispettato in \texttt{MoonCloud\_VPN}. A tale proposito, vanno fatte
 le seguenti osservazioni:
@@ -43,12 +43,12 @@ a tutti i server, ma questo è compito di un altro modulo.
 
 I certificati sono generati utilizzando l'algoritmo \texttt{ECDSA}, con livello di sicurezza
 128 bit per client e server. Secondo le raccomandazioni del NIST, un livello di sicurezza di
-128 è sicuro fino al 2030 \cite{Barker:2016:SRK:2206273}. Si può passare senza
+128 bit è sicuro fino al 2030 \cite{Barker:2016:SRK:2206273}. Si può passare senza
 problemi ad un livello di sicurezza maggiore (192 o 256), semplicemente modificando i settaggi
 del microservizio.
 
 Per il certificato della CA, si utilizza invece una curva ellittica con livello di sicurezza
-di 256.
+di 256 bit.
 
 
 Tutto il codice per la gestione di queste funzionalità è implementato nel modulo \texttt{openssl}
@@ -74,8 +74,8 @@ modifica.
 
 
 \subsection{IP Mapping}
-L'IP mapping è una funzionalità fondamentale per poter far sì che un VPN server possa
-gestire il maggior numero di reti target diverse.
+L'IP Mapping è una funzionalità fondamentale per poter far sì che un VPN server possa
+gestire il maggior numero possibile di reti target diverse.
 Durante l'analisi dei requisiti è stato osservato che
 gli Execution Manager dedicati all'analisi di reti target sono posti
 ciascuno in una rete isolata rispetto al resto di MoonCloud, ciò ha portato
@@ -83,7 +83,7 @@ alle seguenti conclusioni:
 \begin{itemize}
 	\item è possibile assegnare più volte la stessa rete mappata a diversi client,
 	      a patto che siano collegati a VPN server diversi, e quindi Execution Manager.
-	\item è possibile assegnare \textit{qualsiasi} indirizzo IP, non solo quell
+	\item E' possibile assegnare \textit{qualsiasi} indirizzo IP, non solo quell
 	      indicati come \textit{privati}, questo perché tali indirizzi sono utilizzati
 	      sono nel contesto degli Execution Manager. Per evitare eventuali conflitti,
 	      come ad esempio assegnare una rete mappata che contiene l'indirizzo IP
@@ -93,7 +93,7 @@ alle seguenti conclusioni:
 
 \subsubsection{Assegnamento reti}
 Il grafico \ref{fig:sequence-mapping-assign} rappresenta, mediante la notazione UML per
-i diagrammi di sequenza, quali azioni sono svolte per l'assegnamento delle reti, che
+i diagrammi di interazione, quali azioni sono svolte per l'assegnamento delle reti, che
 qui viene descritto a parole.
 \begin{enumerate}
 	\item Per ciascuna rete in input da mappare, si crea un corrispondente oggetto (detto
@@ -120,7 +120,7 @@ qui viene descritto a parole.
 	      per creare il file di script per nftables.
 \end{enumerate}
 Si noti che nel database si salvano, di fatto, delle coppie \texttt{Rete Originale -- Rete Mappata}.
-Si può vedere un indirizzo IP originale nel come l'offset tra esso e il NET ID, ed
+Si può vedere un indirizzo IP originale come l'offset tra esso e il NET ID, ed
 allo steso modo, il corrispondente indirizzo mappato si calcola sommando l'offset dell'IP
 originale al NET ID mappato.
 
@@ -143,7 +143,7 @@ Quando un client specifica un target per un'analisi, egli lo fà inserendo l'ind
 IP originale, per lui la questione dell'IP mapping è completamente trasparente. Ciò
 significa che occorre una funzione che, dato un indirizzo IP originale di un
 certo VPN client, ritorni quello mappato, poiché esso è l'unico noto a MoonCloud.
-Tale funzione viene quindi implementata dal microservizio, ed è molto performante.
+Tale funzione viene implementata dal microservizio, ed è molto performante.
 I passi da compiere sono:
 \begin{itemize}
 	\item fare una query al database e ritornare la rete mappata cui corrisponde
@@ -184,7 +184,7 @@ Il trasferimento è richiesto nelle seguenti situazioni:
 	la chiave pubblica della CA, la CRL.
 	Vengono trasferiti anche due script:
 	\begin{itemize}
-		\item \texttt{move-files-server.sh}: dopo aver trasferito i file appena elencati
+		\item \texttt{move\_files\_server.py}: dopo aver trasferito i file appena elencati
 		      in una cartella sul server, viene lanciato questo script, il quale legge il file
 		      di configurazione principale e da esso deduce la struttura di directory e file
 		      richiesta, e quindi la crea.
@@ -215,8 +215,9 @@ Il trasferimento è richiesto nelle seguenti situazioni:
 	effetto.
 	\item[Rinnovo certificato client]E' necessario revocare il certificato precedente,
 	quindi propagare la nuova CRL ad ogni server di MoonCloud.
-	\item[Revoca certificato client]Come al punto precedente, occorre aggiornare e distribuire la
-	CRL.
+	\item[Revoca certificato client]Occorre aggiornare e distribuire la
+	CRL ed invocare \\\texttt{deleteclient.py} sul server a cui quel client si collegava (oltre
+	ad eliminare i dati inerenti al client dal database).
 	\item[Refresh CRL]Quando si crea una CRL si specifica la data di prossimo aggiornamento,
 	ed essa viene controllata da OpenVPN server: se risulta scaduta non si accettano nuove
 	connessioni. Per questa ragione è importante aggiornarla, ovvero creare una nuova
@@ -280,13 +281,13 @@ sovrascritta.
 
 Un altro problema a cui si può pensare è il seguente: si fà una richiesta di revoca di un certificato,
 la CRL viene quindi modificata ed inizia la propagazione verso tutti i server.
-Poi si fà una richiesta di refresh, quindi la si ricrea ed inzila la distribuzione\ldots Qua c'è il
+Poi si fà una richiesta di refresh, quindi la si ricrea ed inizia la distribuzione\ldots Qua c'è il
 problema. Se si suppone che in totale vi siano 100 server e che la seconda richiesta sia arrivata
 mentre si concludeva il trasferimento verso il 50esimo, a quel punto si modifica la CRL
 e quella trasferita al 51esimo è diversa dalle precedenti.
 
 Un'esecuzione seriale mette al sicuro da questi problemi.
-Per ciò che concerne le modifiche CRL, esse stesse sono
+Per ciò che concerne le modifiche alla CRL, esse stesse sono
 schedulata in maniera seriale, non solo il suo trasferimento.
 
 
@@ -294,13 +295,13 @@ Inizialmente tutte le operazioni venivano eseguite da un unico thread, successiv
 è aggiunto un secondo.
 \begin{itemize}
 	\item \texttt{Main\_worker\_thread} si occupa del trasferimento di nuovi server, nuovi
-		  client e, parzialmente, della revoca di un client chiamando lo script di cancellazione
-		  \texttt{deleteclient.py}.
+	      client e, parzialmente, della revoca di un client chiamando lo script di cancellazione
+	      \texttt{deleteclient.py}.
 	      Si noti che questo thread è l'\textit{unico} flusso di computazione che può modificare
 	      i file \texttt{client-up.sh} e \texttt{client-down.sh}.
 	\item \texttt{CRL\_worker\_thread} è responsabile dell'aggiornamento e della propagazione
 	      della CRL ai diversi server. Anche in questo caso, vi è un unico flusso che modifica
-	      un file, per cui l'integrità è ancora garantita.
+	      un file, per cui l'integrità della CRL è ancora garantita.
 \end{itemize}
 L'unica operazione definibile problematica poiché coinvolge entrambi i due thread è la revoca
 di un client, poiché occorre sia modificare i file \texttt{client-up.sh} e \texttt{client-down.sh}
@@ -315,7 +316,8 @@ i due loop eseguiti dai due thread.
 
 \inputminted[tabsize=4, breaklines, fontsize=\footnotesize]{python}{code_samples/sshworker_loops.py}
 
-Il prossimo codice presentato è uno script Lua che viene eseguito su Redis. E' utilizzato
+Il prossimo codice presentato è uno script Lua che viene eseguito su Redis\footnote{\url{https://www.lua.org/}}.
+E' utilizzato
 per ritornare, in una sola query a tale database, l'intera lista dei job.
 Senza tale script, sarebbe stato necessario fare una prima query per ottenere la lista degli
 \texttt{WorkID}, poi, per ciascuno di essi, richiedere l'oggetto completo.

@@ -8,13 +8,13 @@ Il microservizio implementa delle API REST per le seguenti funzionalità:
   \item[Gestione dei certificati]Client e server hanno bisogno di certificati
   X509 per poter stabilire un collegamento VPN. E' richiesto di creare tali
   certificati, sia per client sia per server, e di gestirne il loro ciclo di vita,
-  compreso di rinnovo ed eventuale revoca.
+  compreso di rinnovo.
   \item[Trasferimento file]Una volta che file di configurazione e certificati
-  sono stati creati, devono essere trasferiti sul VPN server in maniera \textit{sicura}.
+  sono stati creati, devono essere trasferiti sui VPN server in maniera \textit{sicura}.
   Allo stesso modo, ogni volta che si crea un nuovo client, occorre aggiornare
   la configurazione del server a cui si connetterà (si pensi ai file \texttt{client-up.sh}
-  e \texttt{client-down.sh}). Questo trasferimento deve inoltre preservare l'integrità
-  della configurazione del server.
+  e \texttt{client-down.sh}). Questo trasferimento deve preservare l'integrità
+  della configurazione dei server.
   \item[Visualizzare informazioni]Devono essere disponbili delle API che ritornino informazioni
   su specifici client e server, incluse anche informazioni sui certificati.
   \item[Gestione dell'IP mapping]Questa attività si scompone in:
@@ -29,7 +29,7 @@ Il microservizio implementa delle API REST per le seguenti funzionalità:
   \end{itemize}
   \item[Revocare client]Per varie ragioni deve essere necessario poter revocare un
   client. Questa attività si traduce nell'invalidare il certificato ad esso relativo
-  ed alla cancellazione del mappaggio dal database.
+  e nella cancellazione del mappaggio dal database.
   La revoca deve essere propagata ad ogni server in modo che esso non riesca per nessun
   motivo a connettersi nuovamente alla VPN di MoonCloud.
 \end{description}
