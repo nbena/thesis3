@@ -16,8 +16,8 @@ il quale sostanzialmente sfrutta l'utilizzo di cifrari con una dimensione del bl
 \textit{piccola} (minore di 128 bit) in modalità \texttt{CBC}. Registrando
 una sufficiente quantità di traffico (circa 700 GB), un attaccante riesce con successo
 a decifrare il plaintext, supponendo che esso conosca ne conosca una buona parte.
-Ad esempio, i ricercatori propongono l'esempio di una pagina servita su HTTPS che l'attaccante
-conosce, e ad esempio vuole scoprire il valore di un cookie. Questo attacco si applica
+I ricercatori propongono l'esempio di una pagina servita su HTTPS che l'attaccante
+conosce, e di cui vuole scoprire il valore di un cookie. Questo attacco si applica
 a qualsiasi protocollo che utilizzi un cifrario con le caratteristiche sopra citate, e richiede
 molto traffico per poter aver successo, tuttavia nel caso di una VPN il fatto che
 vi sia molto traffico è la normalità.\\
@@ -44,7 +44,7 @@ cipher AES-GCM-256
 
 \paragraph{Configurazione di TLS}
 Allo stesso modo, si è deciso di specificare in maniera esplicita quali siano
-le ciphersuite TLS, e sono stato molto stringente. Anche in questo caso
+le ciphersuite TLS, e si è stati molto stringenti. Anche in questo caso
 l'unica possibile è quella basata su \texttt{AES-256-GCM}, cioè:\\
 \texttt{TLS-ECDHE-ECDSA-AES-GCM-256-SHA384}.
 Si può notare che è si utilizza una ciphersuite
@@ -55,11 +55,11 @@ Per specificare questo si usa la direttiva:
 \begin{minted}{bash}
 tls-cipher TLS-ECHDE-AES-265-GCM-SHA384
 \end{minted}
-Esistono ciphersuite basate su \texttt{ChaCha20-Poly1305}, tuttavia non
-sono incluse nei file di configurazioni perché non sono ancora supportate nella
-versione di \texttt{OpenSSL} utilizzata da OpenVPN. E' supportata in alcune versioni
-di OpenVPN compilate con \texttt{LibreSSL}, tuttavia solo come ciphersuite di TLS,
-per il \texttt{Data Channel} ancora non vi è nessun supporto.\\
+% Esistono ciphersuite basate su \texttt{ChaCha20-Poly1305}, tuttavia non
+% sono incluse nei file di configurazioni perché non sono ancora supportate nella
+% versione di \texttt{OpenSSL} utilizzata da OpenVPN. E' supportata in alcune versioni
+% di OpenVPN compilate con \texttt{LibreSSL}, tuttavia solo come ciphersuite di TLS,
+% per il \texttt{Data Channel} ancora non vi è nessun supporto.\\
 Per forzare all'utlizzo dello scambio di chiavi Diffie-Hellman su curva ellittica, oltre
 a specificare le ciphersuite che lo utilizzano, occorre anche inserire il valore
 ``\texttt{none}'' alla direttiva ``\texttt{dh}'':
@@ -104,7 +104,7 @@ revocati (mediante i loro seriali), la data di revoca, ed eventualmente la ragio
 Essa è emessa dalla CA che ha precedentemente emesso i certificati revocati, ed è firmata digitalmente
 dalla CA, in modo da attestarne l'autenticità e l'integrità.
 
-OpenVPN supporta la verifica mediante CRL, tale verifica è fatta lato server: quando
+OpenVPN supporta la verifica mediante CRL fatta lato server: quando
 un client si connette, OpenVPN legge tale CRL e, se il numero seriale del certificato
 del client è presente nella lista, la connessione con esso viene terminata.
 A differenza dei file di configurazione in \texttt{/etc/} che vengono letti solo all'avvio
@@ -112,8 +112,7 @@ dal software, la CRL viene riletta ad ogni nuova connessione, pertanto è possib
 preoccuparsi di dover riavviare il server.
 
 La gestione della CRL (aggiornamento e trasferimento verso i server) viene effettuata dal microservizio
-\texttt{MoonCloud\_VPN}, vi è una API REST dedicata alla revoca/cancellazione dei client, uno
-dei suoi effetti è appunto la revoca del certificato di quel client.
+\texttt{MoonCloud\_VPN}, vi è una API REST dedicata alla revoca/cancellazione dei client.
 
 La direttiva per utilizzare una CRL nel server è la seguente, assumendo che il file della CRL
 si trovi nella posizione indicata:

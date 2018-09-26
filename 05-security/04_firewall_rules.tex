@@ -4,7 +4,7 @@ target presenta un semplice problema di sicurezza: la VPN \textit{apre}
 un nuovo punto di ingresso in MoonCloud, e come tale deve essere protetto
 il più possibile.\\
 A tale scopo sono state predisposte delle regole iptables da applicare
-al server OpenVPN, essendo esso il \textit{punto di esposizione}.
+ai server OpenVPN, essendo essi i \textit{punti di esposizione}.
 
 
 Sebbene il \textit{NAT lato server} di fatto agisca come una sorta
@@ -30,7 +30,7 @@ Gli si presentano però alcuni problemi:
 	      passando per il VPN server, dovrebbe conoscerne l'indirizzo IP
 	\item non avrebbe modo di vedere le risposte alle proprie richieste, poiché
 	      esse sono fatte con l'IP sorgente reale e non mappato, e le \textit{Docker machine}
-	      non hanno nessuna configurata che dica che le risposte verso tali indirizzi
+	      non hanno nessuna rotta configurata che dica che le risposte verso tali indirizzi
 	      IP \textit{reali} debbano passare per il VPN server. Alla peggio, l'indirizzo IP
 	      sorgente originale della rete target usato dall'attaccante corrisponde
 	      ad un'altra rete rimappata, a cui eventualmente tornerebbero risposte.
@@ -50,7 +50,7 @@ L'idea delle regole applicate si può riassumare così:
 	\item usare una politica \texttt{DEFAULT DENY} sul VPN server per cui \textit{solo
 		il traffico da MoonCloud verso la rete target e le risposte ad esso} possono passare sul server
 		\item ogni volta che un nuovo client si connette, si \textit{concede alle reti
-			mappate di tale client} l'accesso
+			mappate di tale client} l'accesso.
 \end{itemize}
 		
 Naturalmente, queste regole devono riguardare solo il traffico proveniente/destinato
@@ -101,8 +101,8 @@ iptables -t filter -I FORWARD -i ovpn+ -j DROP
 		
 		Queste regole si attivano ogni volta che un client si connette al server, e per
 		questo motivo si sfrutta ancora una volta l'hook \texttt{client-connect} di OpenVPN.
-		Nello script che viene eseguito dal server quando un client si è connesso, si
-		hanno quindi anche le regole iptables per consentire \textit{solo le richieste
+		Nello script che viene eseguito dal server quando un client si è connesso vi sono
+		anche delle regole iptables per consentire \textit{solo le richieste
 		dalle Docker machine alle reti mappate di tale client ed alle sue risposte}
 		di transitare.
 		Supponendo che la rete rimappata di un client dal \texttt{CommonName = client100} sia
@@ -113,11 +113,13 @@ iptables -t filter -I INPUT -s 192.168.100.0/24 -i ovpn+ -m state --state RELATE
 iptables -t filter -I FORWARD -s 192.168.100.0/24 -i ovpn+ -m state --state RELATED,ESTABLISHED -j ACCEPT
 \end{minted}
 		
-		Innanzitutto, si utilizzano regole \textit{stateful}, per cui iptables mantiene
-		una tabella \textit{di stato}, ad ogni nuova connessione, se consentita, si inserisce
-		una nuova entry in tale tabella, tutte gli altri pacchetti di tale connessione non
-		verranno più verificati ma saranno consentiti; ciò rende più difficile
-		attacchi di \texttt{TCP SESSION HIJACKING}, dove un attaccante tenta di inserirsi in
+		Innanzitutto, si utilizzano regole stateful, per cui iptables mantiene
+		una tabella di stato: per ogni nuova connessione, se consentita, si inserisce
+		una nuova entry in tale tabella. Tutti i successivi pacchetti in arrivo sono consentiti
+		senza ulteriori verifiche
+		se appartengono ad una connessione già iniziata.
+ 		Ciò rende più difficile
+		attacchi di \textit{TCP Session Hijacking}, dove un attaccante tenta di inserirsi in
 		una connessione TCP.
 		
 		\begin{itemize}
