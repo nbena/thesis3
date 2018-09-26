@@ -40,7 +40,7 @@ l'attaccante può sfruttare:
 \begin{itemize}
 	\item mandare pacchetti al server
 	\item mandare pacchetti alle \textit{Dokcer machine}, assumendo di conoscerne
-	      l'indirizzo IP, senza curarsi delle risposte
+	      l'indirizzo IP, senza curarsi delle risposte.
 \end{itemize}
 
  
@@ -102,7 +102,7 @@ iptables -t filter -I FORWARD -i ovpn+ -j DROP
 		Queste regole si attivano ogni volta che un client si connette al server, e per
 		questo motivo si sfrutta ancora una volta l'hook \texttt{client-connect} di OpenVPN.
 		Nello script che viene eseguito dal server quando un client si è connesso vi sono
-		anche delle regole iptables per consentire \textit{solo le richieste
+		anche delle regole iptables per consentire alle \textit{sole richieste
 		dalle Docker machine alle reti mappate di tale client ed alle sue risposte}
 		di transitare.
 		Supponendo che la rete rimappata di un client dal \texttt{CommonName = client100} sia
