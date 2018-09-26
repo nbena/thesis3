@@ -1,6 +1,6 @@
 \section{Come è stato usato}
 Si supponga di voler configurare un VPN client che gestisce una singola rete classe C:
-con il vecchio approccio di iptables, come guà detto, sono necessarie esattamente
+con il vecchio approccio di iptables sono necessarie esattamente
 509 regole:
 \begin{itemize}
   \item 254 per trasformare gli indirizzi IP mappati negli indirizzi IP originali
@@ -12,9 +12,9 @@ in cui si potessero misurare le performance della soluzione basata su iptables,
 quindi
 non è stato possibile determinare quale fosse la scalabilità effettiva della vecchia
 proposta, certo è che con con nftables \textit{si riduce il numero di regole
-da 509 a 3}! Non solo, le nuove regole sono create utilizzando strutture
-dati performanti, e sono e rimangono sempre 3, a prescindere che si il client VPN
-rimappi una o $n$ reti.
+da 509 a 3}. Non solo, le nuove regole sono create utilizzando strutture
+dati performanti, e sono e rimarranno sempre 3, a prescindere che il client VPN
+mappi e rimappi una o $n$ reti.
 
 In particolare si è sfruttata la struttura dati \textit{map} proprio come è stata
 descritta nella sezione precedente. Si definiscono due \textit{named maps},
@@ -47,7 +47,9 @@ table ip ovpn_nat {
       192.168.100.6: 192.168.1.6,
       192.168.100.7: 192.168.1.7,
       192.168.100.8: 192.168.1.8,
-      192.168.100.9: 192.168.1.9      
+      192.168.100.9: 192.168.1.9
+      ...
+      192.168.100.254: 192.168.1.254   
     }
   }
 
@@ -62,6 +64,8 @@ table ip ovpn_nat {
       192.168.1.6: 192.168.100.6,
       192.168.1.8: 192.168.100.8,
       192.168.1.9: 192.168.100.9,
+      ...
+      192.168.1.254: 192.168.100.254
     }
   }
 

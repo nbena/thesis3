@@ -4,14 +4,14 @@ di regole, il programma in userspace ottiene dal kernel il \textit{blob}
 di \textit{tutte} le regole, vi applica le modifiche, invia la versione
 modificata al kernel.
 Questo porta a numerosi problemi, tra cui il fatto che più il numero di regole
-aumenta, più la modifica delle regole è lenta. In sostanza, ciò che
-si vorrebbe è un aggiunta \textit{atomica} delle regole, che sia
-più veloce ad affidabile.
+aumenta, più la modifica delle regole è lenta.
+Si vorrebbe un'aggiunta delle regole in batch ed \textit{atomica}, che
+sia al contempo più veloce ed affidabile.
 
 Ci sono vari altri problemi con iptables che negli anni sono emersi, e la
 maggior parte di essi non sono attualmente risolvibili se non con un grosso
 cambio a livello progettuale, cambio che non è possibile perché richiederebbe
-dei \textit{breaking changes}, e vista la vasta diffusione di iptables, questo
+dei \textit{breaking changes}, e vista la vasta diffusione di iptables questo
 non è possibile.
 Alcuni dei problemi sono:
 \begin{description}
@@ -25,14 +25,21 @@ Alcuni dei problemi sono:
   \item[Target multipli]Si supponga che si voglia loggare un pacchetto
   \textit{e} dropparlo, in una sola regola non è possibile, è necessario, ad
   esempio, creare una nuova tabella.
-  \item[Matching avanzato]iptables supprta matching di fatto controllando l'header
-  del protocollo di trasporto e l'header IP, tuttavia non è possibile scrivere
-  in una \textit{regola} il fatto che il traffico TCP sulla porta 8 \textit{e}
-  443 sono consentite: occore scrivere almeno due regole. Questo diventa
-  particolarmente tedioso quando il numero di regole aumenta molto (esistono
-  estensioni come \texttt{multiport} per il matching di porte multiple, ma ne
-  supporta solo fino a 15).
-  \item[Multipli programmi]Un altra criticità è il fatto che vi sono 4 programmi
+  \item[Matching avanzato]Se non si usano estensioni per ogni match si può specificare
+  un solo valore per un certo campo. Ad esempio si può definire un match che controlli
+  sia la porta TCP mittente sia quella del destinatario, ma comunque si
+  deve specificare \textit{un solo} valore con cui fare match, \textit{solo} una porta mittente
+  e \textit{solo} una destinatario.
+  Quindi, se si vuole scrivere una regola che abiliti il traffico in entrata verso
+  le porte 80 e 443 bisogna scrivere due regole, poiché vi sono due valori per uno stesso campo.
+  % \item[Matching avanzato]iptables supprta matching controllando l'header
+  % del protocollo di trasporto e l'header IP, tuttavia non è possibile scrivere
+  % in una \textit{regola} il fatto che il traffico TCP sulla porta 8 \textit{e}
+  % 443 sono consentite: occore scrivere almeno due regole. Questo diventa
+  % particolarmente tedioso quando il numero di regole aumenta molto (esistono
+  % estensioni come \texttt{multiport} per il matching di porte multiple, ma ne
+  % supporta solo fino a 15).
+  \item[Multipli programmi]Un'altra criticità è il fatto che vi sono 4 programmi
   userspace diversi, particolarmente problematica è la gestione separata di IPv4
   e IPv6.
   \item[Scalabilità]Come si comporta iptables/netfilter quando vi sono

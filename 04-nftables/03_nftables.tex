@@ -58,7 +58,7 @@ il compito di crearle. In nftables, ogni tabella ha una certa \textit{famiglia}:
 	\item \texttt{netdev} consente di \textit{attaccarsi} direttamente ad una interfaccia
 	      di rete.
 \end{itemize}
-Le tabelle sono solo dei contenitori vuoti il cui nome non ha alcuna semantica, rispetto
+Le tabelle sono solo dei contenitori vuoti il cui nome non ha alcuna semantica, contrariamente
 ad iptables. Comunque, la scelta della famiglia influenza quali hook possono
 essere utilizzati (es: l'hook \texttt{ingress} è disponibile solo per \texttt{netdev}).
 
@@ -87,20 +87,21 @@ l'azione da compiere se non si matcha nessun'altra regola; il valore di default 
 
 
 \subsection{Set e altre strutture dati}
-nftables introduce tre strutture dati pensate indirizzando i problemi
+nftables introduce tre strutture dati pensate per indirizzare i problemi
 presenti in iptables (e sue controparti):
 \begin{itemize}
 	\item matching limitato, per cui è problematico specificare più di una porta
 	      o più di un singolo indirizzo IP in una regola; il che porta a:
 	\item elevato numero di regole a causa della suddetta limitazione, con conseguente
-	diminuzione delle performance a causa del loro attraversamento lineare.
+	diminuzione delle performance a causa del loro attraversamento lineare. Anziché usare
+	$n$ regole, se ne usa solo una con una struttura dati da $n$ elementi.
 \end{itemize}
-E' possibile dichiarare queste strutture dati in due modi:
+E' possibile dichiararle in due modi:
 \begin{itemize}
 	\item \textit{anonymous}: vengono create ed istanziate all'interno di una regola
 	      e sono immutabili, non è possibile modificarle dopo la loro creazione.
 	\item \textit{Named}: sono vere e proprie variabili che vivono nello \textit{scope}
-	      di una tabella in cui sono definite. Una volta create è possibile modificarle
+	      della tabella in cui sono definite. Una volta create è possibile modificarle
 	      in seguito. Per riferirsi ad una variabile, occorre preporre \texttt{@} al nome
 	      della variabile.
 \end{itemize}
@@ -111,38 +112,37 @@ dimostrate efficaci; per una dettagliata comparazione delle performance tra
 iptables e nftables si veda \cite{nftables-iptables-thesis}.
 
 \subsubsection{Set}
-La struttura dati avanzata di nftables si chiama \textit{Set}, ed è implementata
-utilizzando alberi rosso-neri, tabelle di hash, bitmap.
-Un set è, come dice il nome, un insieme di elementi di un certo \textit{tipo},
+La struttura dati base di nftables si chiama \textit{Set}, ed è implementata
+utilizzando alberi rosso-neri, tabelle di hash oppure bitmap.
+Un \textit{Set} è, come dice il nome, un insieme di elementi di un certo \textit{tipo},
 esso può essere un tipo \textit{base} predefinito come \texttt{ipv4\_addr} o
 \texttt{inet\_service} (numero di porta di protocolli L4), oppure un tipo complesso
 \textit{composto} da altri tipi, ad esempio un nuovo tipo \texttt{ipv4\_port}.
 Quando si crea una nuova struttura dati è possibile specificare vari parametri,
 tra cui una \texttt{policy}: per cosa deve essere ottimizzata la struttura?
-I valori possibili sono \texttt{performance} o \texttt{memory}
-Un esempio è il seguente.
+I valori possibili sono \texttt{performance} o \texttt{memory}.
 
-I set sono utilizzati per:
+I \textit{Set} sono utilizzati per:
 \begin{itemize}
 	\item fare match su più elementi in un unico regola, ad esempio, se si vogliono
 	      bloccare connessioni da 10 indirizzi IP diversi, è possibile definire un set
 	      che contenga questi 10 IP, anziché scrivere 10 regole diverse. Si consideri che
 	      i set sono molto performanti.
-	\item Essere la struttura dati base su cui si creano ulteriori strutture dati.
+	\item Essere la struttura dati base su cui nftables ne costruisce ulteriori.
 \end{itemize}
 
 
 \subsubsection{Map}
-Le \textit{Map} sono costruite sui set, infatti possono essere visti come dei set in cui
-ciascun elemento è composto a sua volta da due elementi: il primo di essi
-è la \textit{chiave}, il secondo è il \textit{valore} associato alla chiave. Essi
+Le \textit{Map} sono costruite sui \textit{Set}, possono essere viste come dei set in cui
+ciascun elemento è composto da due parti: la prima
+è la \textit{chiave}, la secondo è il \textit{valore} associato alla chiave. Esse
 si comportano effettivamente come una mappa poiché definiscono un \textit{mappaggio}
 tra la chiave ed il valore, e sono utilizzati in contesti in cui si \textit{trasforma}
 un input in un certo output secondo il mappaggio definito in questa struttura dati.
 Si può forse intuire l'utilizzo delle map nel mappaggio delle reti\ldots
 
 
-In particolare, le map sono molto utili con target di tipo \texttt{dnat} ed \texttt{snat}.
+In particolare, le \textit{Map} sono molto utili con target di tipo \texttt{dnat} ed \texttt{snat}.
 Si supponga che si voglia modificare l'indirizzo IP destinazione da \texttt{192.168.1.0/24}
 nel corrispondente indirizzo in \texttt{192.168.100.0/24} (mantenendo lo stesso
 offset) in \texttt{PREROUTING}, ed il viceversa in \texttt{POSTROUTING}. Farlo in iptables
@@ -153,26 +153,25 @@ capitolo.
 
 
 \subsubsection{Dictionary}
-La struttura dati \textit{dictionary}, a vole nota anche come \textit{vmap -- verdict map}
+La struttura dati \textit{Dictionary}, a volte nota anche come \textit{vmap -- verdict map}
 , è concettualmente
-molto simile alle map, tuttavia gli elementi di questo insieme sono nelle forma:
-\texttt{key: verdict}, dove \texttt{verdict} indica l'azione da applicare nel
+molto simile alle \textit{Map}, tuttavia gli elementi di questo insieme sono nelle forma:
+\texttt{key: verdict}, dove \texttt{verdict} indica l'azione (es: \texttt{accept}, \texttt{drop})
+da applicare nel
 momento in cui si la chiave viene
 matchata.
 
 \paragraph{Esempi}
 Di seguito si riportano degli esempi che mostrano il funzionamento di nftables.
-Si noti in particolare come, nelle ultime quattro regole l'utilizzo dei set
-consente di specificare match multipli in un'unica regola. Questo non significa
-solo una comodità per chi scrive le regole, infatti i set sono molto performanti
-e sono le strutture dati base su cui nftables costruisce altre strutture
-più avanzate, che verranno descritte in seguito.
+Si noti in particolare come, nelle ultime quattro regole l'utilizzo dei \textit{Set}
+consenta di specificare match multipli in un'unica regola, quindi di diminuire il
+numero complessivo di regole da attraversare.
 
 Supponendo che ciò che si vede listato qui sotto sia il contenuto di un file,
 si può notare lo shebang all'inizio, in modo che sia eseguito da \texttt{nft} nella
 modalità nativa di shell che offre: tutte queste regole sono inserite atomicamente
 in una transazione. Invocando questi comandi in una shell normale invece si
-perderebbe l'atomicità perché ciascun comando è una invocazione separata al programma nft
+perderebbe l'atomicità perché ciascun comando è una invocazione separata al programma \texttt{nft}
 (si noti che qui tutte le regole non sono appunto prefisse da ``\textit{nft}'').
 % BIG WARNING: state {related, established} and state related,established seems to be the same
 \begin{minted}[tabsize=3]{squidconf}
@@ -200,11 +199,11 @@ related, established accept
 	
 # consentire tutto il traffico in uscita sulle
 # porte 80 e 443 usando un set
-add rule inet output tcp dport { 80, 443 } ct state \
+add rule inet filter output tcp dport { 80, 443 } ct state \
 new, related, established accept
 	
 # consentire le risposte
-add rule input tcp sport { 80, 443 } ct state \
+add rule inet filter input tcp sport { 80, 443 } ct state \
 related, established accept
 	
 # creazione di un set chiamato 'allowed'
@@ -220,10 +219,10 @@ add element filter allowed {
 	
 # consentire tutte le connessioni in entrata dagli IP
 # elencati sulla porta 8080
-add rule input ip saddr @allowed tcp dport 8080 \
+add rule inet filter input ip saddr @allowed tcp dport 8080 \
 ct state {new, related, established } accept
 # consentire le risposte
-add rule output ip daddr @allowed tcp sport 8080 \
+add rule inet filter output ip daddr @allowed tcp sport 8080 \
 ct state {related, established }accept
 \end{minted}
 E' possibile ottenere lo stesso risultato usando una sintassi \textit{strutturata}:
@@ -263,12 +262,12 @@ table inet filter {
 	apppena mostrato.
 	
 	L'esempio seguente si concentra invece sull'utilizzo dei dizionari.
-	Si supponga di dover gestire una serie di regole relative alla porta 22:
+	Si supponga di dover gestire una serie di regole relative alla porta destinazione 22:
 	\begin{itemize}
 		\item consentito dalle reti \texttt{192.168.100.0/24}, \texttt{192.168.101.0/24},
 		      \texttt{192.168.200.0/24}
-		\item proveniente dalla rete \texttt{192.168.1.0/24} occorre \texttt{REJECT}
-		\item tutto il resto non è consentito.
+		\item proveniente dalla rete \texttt{192.168.1.0/24} occorre fare \texttt{REJECT}
+		\item tutto il resto del traffico verso tale porta non è consentito.
 	\end{itemize}
 \begin{minted}[breaklines]{bash}
 iptables -t filter -A INPUT -p tcp --dport 22 -s 192.168.100.0/24 -j ACCEPT
