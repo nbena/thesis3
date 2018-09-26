@@ -1,7 +1,7 @@
 \section{Scenari di attacco}\label{sec:attacks}
 
 In questa sezione si discutono alcuni scenari di attacco
-che sfruttano la VPN.
+che sfruttano il collegamento VPN.
 Per ciascuno di essi, si utilizza la seguente struttura:
 \begin{description}
     \item[Scenario]Una breve descrizione dello scenario.
@@ -51,7 +51,7 @@ di criticità alto.
     \item[Livello di difficoltà]Basso, è sufficiente disporre
     di sufficiente potenza di calcolo. 
     \item[In caso di successo]L'operatività di MoonCloud sarebbe
-    compressa per tutta la durata dell'attacco. 
+    compromessa per tutta la durata dell'attacco. 
     \item[Criticità]Alta, anche grazie alla relativa facilità dell'attacco.
     \item[Prevenzione]Sebbene si assume che l'attaccante non disponga di
     certificati validi, e che quindi la connessione VPN non andrebbe a buon
@@ -69,8 +69,38 @@ di criticità alto.
     a bloccare il traffico malevolo in anticipo.
 \end{description}
 
-
 \subsection{Scenario 2}
+\begin{description}
+    \item[Scenario]Inviare pacchetti malevoli alla rete MoonCloud da
+    un host della rete target.
+    \item[Livello di difficoltà]Alto. In questo caso si ipotizza che
+    vi sia un host compromesso in una rete target connessa a MoonCloud
+    mediante un VPN client legittimo. La compromissione dell'host è
+    avvenuta \textit{a prescindere} da MoonCloud. La difficoltà sta
+    nel passare tutte le misure di protezione poste in essere.
+    \item[In caso di successo]L'attaccante riuscirebbe ad inviare dei
+    pacchetti malevole verso i \textit{Docker host} ed il VPN server.
+    \item[Criticità]Bassa, l'attacco non dipende da vulnerabilità nell'infrastruttura
+    MoonCloud.
+    \item[Prevenzione]Vi sono due misure principali che ostacolano grandemente
+    la possibilità di successo per l'attaccante:
+    \begin{itemize}
+        \item le regole nftables lato server che consentono solo alle
+        richieste provenienti da MoonCloud ed alle risposte di transitare
+        \item il \textit{NAT al contrario}, per definizione stessa
+        di NAT, consente in entrata (dalla rete target verso il VPN
+        client) solo il traffico in risposta.
+    \end{itemize}
+    Per queste due ragioni i pacchetti generati specificamente dall'host
+    compromesso e diretti a MoonCloud non passerebbero.
+    \item[Ulteriori misure preventive]Nessuna.
+    \item[Cosa fare in caso di attacco]Scollegare il client VPN
+    dalla rete compromessa o dal VPN server metterebbe completamente
+    al riparo.
+\end{description}
+
+
+\subsection{Scenario 3}
 \begin{description}
     \item[Scenario]Inviare pacchetti malevoli alla rete MoonCloud
     mediante un VPN client non legittimo.
@@ -79,16 +109,17 @@ di criticità alto.
     voglia connettersi ad un VPN server e sfruttarlo per inviare
     pacchetti malevoli alla rete MoonCloud.
     \item[In caso di successo]Non vi sono possibilità di successo, perché
-    non disponendo di un VPN client valido, non riuscirebbe a connettersi 
+    non disponendo di un VPN client valido, non riuscirebbe a connettersi.
     \item[Criticità]Bassa a causa dell'impossibilità di successo.
     \item[Prevenzione]OpenVPN rifiuta connessioni da client che non riesce
     a verificare. 
     \item[Ulteriori misure preventive]Nessuna.
     \item[Cosa fare in caso di attacco]Se non si tratta di un attacco DoS,
-    non c'è molto da fare. 
+    non c'è molto da fare, se non ovviamente identificare la fonte, eventualmente
+    spegnere i VPN server sotto attacco.
 \end{description}
 
-\subsection{Scenario 3}
+\subsection{Scenario 4}
 \begin{description}
     \item[Scenario]Inviare pacchetti malevoli alla rete MoonCloud
     mediante un VPN client legittimo (in tutto o in parte).
@@ -114,8 +145,7 @@ di criticità alto.
     passo da seguire.
 \end{description}
 
-
-\subsection{Scenario 4}
+\subsection{Scenario 5}
 \begin{description}
     \item[Scenario]Compromissione della chiave private della CA
     \item[Livello di difficoltà]Alto: la chiave privata della CA 
