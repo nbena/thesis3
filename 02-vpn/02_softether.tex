@@ -135,9 +135,7 @@ SoftEther possiede alcune caratteristiche molto interessanti, oltre a quelle gi�
   automaticamente tale nome sulla base degli assegnamenti degli ISP (verificando quale sia l'IP
   del server che si connette all'infrastruttura SoftEther).
   \item[\textbf{SecureNAT}]Si tratta di una tecnologia sviluppata appositamente per SoftEther ed è integrata
-  nel server, e consiste di un DHCP+NAT. Va notato che questa funzione non richiede privilegi particolari,
-  poiché è eseguita in user-space (in Windows, mentre per Linux occorrerebbe verificare se non siano
-  richiesti i privilegi di root)\cite{softether-exploit-securenat}.
+  nel server e nel \textit{VPN Bridge}, e consiste di un DHCP+NAT eseguiti interamente in userspace\cite{softether-exploit-securenat}.
   Per ciascun \textit{Virtual Hub} è possibile abilitare questa funzione, ciò fa sì che si crei
   una nuova interfaccia di rete virtuale connessa al \textit{Virtual Hub}
   come se fosse un altro computer collegato in VPN, ed infatti, per gli altri host, la scheda virtuale appare proprio
