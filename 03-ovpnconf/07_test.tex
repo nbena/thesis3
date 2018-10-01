@@ -5,50 +5,50 @@ i due test che sono stati effettuati per verificare che il funzionamento di Open
 \subsection{Test 1}
 Il primo test è stato eseguito sulla configurazione spiegata all'inizio del capitolo:
 \begin{itemize}
-  \item OpenVPN server ospitato su AWS, raggiungibile da nome DNS, sistema
-  operativo \texttt{Ubuntu Server}, indirizzo IP privato \texttt{172.31.40.221}\footnote{\url{https://www.ubuntu.com/}}
-  \item \textit{Docker host} ospitato su AWS, nella stessa rete privata del
-  server, sistema
-  operativo \texttt{Ubuntu Server}, indirizzo IP privato \texttt{172.31.43.141}
-  \item due reti virtuali, create con VirtualBox:
-  \begin{itemize}
-    \item rete 1, detta \texttt{net50}, costituita da:
-    \begin{itemize}
-      \item firewall stateful, NAT verso l'esterno e traffico consentito solo
-      sulle porte 80, 443 TCP e 53 UDP, indirizzo IP \texttt{192.168.100.254},
-      sistema operativo \texttt{Alpine Linux}\footnote{\url{https://www.alpinelinux.org/}}
-      \item client VPN, sistema operativo \texttt{Ubuntu desktop}, indirizzo
-      IP \texttt{192.168.100.20}, default gateway \texttt{192.168.100.254}
-      \item due host \texttt{Alpine Linux}, indirizzi IP rispettivamente
-      \texttt{192.168.100.30} e \texttt{192.168.100.40}, entrambi con un server
-      web in ascolto sulla porta 80
-    \end{itemize}
-    \item rete 2, detta \texttt{net200}, costituita da:
-    \begin{itemize}
-      \item firewall stringente, configurato analogamente a quello dell'altra rete
-      \item client VPN, sistema operativo \texttt{Ubuntu desktop}, indirizzo
-      IP \texttt{192.168.100.20}, default gateway \texttt{192.168.100.254}
-      \item un host \texttt{Alpine Linux}, con indirizzo IP
-      \texttt{192.168.100.30} ed un server
-      web in ascolto sulla porta 80\footnote{Non si è creato un secondo host anche
-      in questa rete perché il carico di lavoro sul PC utilizzato iniziava ad
-      essere elevato.}
-    \end{itemize}
-  \end{itemize}
+	\item OpenVPN server ospitato su AWS, raggiungibile da nome DNS, sistema
+	      operativo \texttt{Ubuntu Server}, indirizzo IP privato \texttt{172.31.40.221}\footnote{\url{https://www.ubuntu.com/}}
+	\item \textit{Docker host} ospitato su AWS, nella stessa rete privata del
+	      server, sistema
+	      operativo \texttt{Ubuntu Server}, indirizzo IP privato \texttt{172.31.43.141}
+	\item due reti virtuali, create con VirtualBox:
+	      \begin{itemize}
+	      	\item rete 1, detta \texttt{net50}, costituita da:
+	      	      \begin{itemize}
+	      	      	\item firewall stateful, NAT verso l'esterno e traffico consentito solo
+	      	      	      sulle porte 80, 443 TCP e 53 UDP, indirizzo IP \texttt{192.168.100.254},
+	      	      	      sistema operativo \texttt{Alpine Linux}\footnote{\url{https://www.alpinelinux.org/}}
+	      	      	\item client VPN, sistema operativo \texttt{Ubuntu desktop}, indirizzo
+	      	      	      IP \texttt{192.168.100.20}, default gateway \texttt{192.168.100.254}
+	      	      	\item due host \texttt{Alpine Linux}, indirizzi IP rispettivamente
+	      	      	      \texttt{192.168.100.30} e \texttt{192.168.100.40}, entrambi con un server
+	      	      	      web in ascolto sulla porta 80
+	      	      \end{itemize}
+	      	\item rete 2, detta \texttt{net200}, costituita da:
+	      	      \begin{itemize}
+	      	      	\item firewall stringente, configurato analogamente a quello dell'altra rete
+	      	      	\item client VPN, sistema operativo \texttt{Ubuntu desktop}, indirizzo
+	      	      	      IP \texttt{192.168.100.20}, default gateway \texttt{192.168.100.254}
+	      	      	\item un host \texttt{Alpine Linux}, con indirizzo IP
+	      	      	      \texttt{192.168.100.30} ed un server
+	      	      	      web in ascolto sulla porta 80\footnote{Non si è creato un secondo host anche
+	      	      	      	in questa rete perché il carico di lavoro sul PC utilizzato iniziava ad
+	      	      	      essere elevato.}
+	      	      \end{itemize}
+	      \end{itemize}
 \end{itemize}
 Le due reti sono state appositamente scelte con NET ID uguali per testare il funzionamento
 dell'\textit{IP Mapping}. In particolare:
 \begin{itemize}
-  \item \texttt{net50} è stata mappata su \texttt{192.168.50.0/24}
-  \begin{itemize}
-    \item \texttt{192.168.100.30} $\leftrightarrow$ \texttt{192.168.50.30}
-    \item \texttt{192.168.100.40} $\leftrightarrow$ \texttt{192.168.50.40}
-  \end{itemize}
-  \item \texttt{net200} è stata mappata su \texttt{192.168.200.0/24}
-  \begin{itemize}
-    \item \texttt{192.168.100.30} $\leftrightarrow$ \texttt{192.168.200.30}
-    % \item \texttt{192.168.100.40} $\leftrightarrow$ \texttt{192.168.200.40}
-  \end{itemize}
+	\item \texttt{net50} è stata mappata su \texttt{192.168.50.0/24}
+	      \begin{itemize}
+	      	\item \texttt{192.168.100.30} $\leftrightarrow$ \texttt{192.168.50.30}
+	      	\item \texttt{192.168.100.40} $\leftrightarrow$ \texttt{192.168.50.40}
+	      \end{itemize}
+	\item \texttt{net200} è stata mappata su \texttt{192.168.200.0/24}
+	      \begin{itemize}
+	      	\item \texttt{192.168.100.30} $\leftrightarrow$ \texttt{192.168.200.30}
+	      	      % \item \texttt{192.168.100.40} $\leftrightarrow$ \texttt{192.168.200.40}
+	      \end{itemize}
 \end{itemize}
 La figure \ref{fig:openvpn-test1} dà una rappresentazione grafica della topologia
 realizzata.\\
@@ -259,8 +259,8 @@ configurare la routing table del suo kernel per instradare i pacchetti destinati
 ai target al VPN server. L'indirizzo IP di tale server è \texttt{172.31.40.221},
 per cui si sono eseguiti i seguenti due comandi sul \textit{Docker host}:
 \begin{minted}{bash}
-ip route add 192.168.50.0/24 via 172.31.40.221
-ip route add 192.168.200.0/24 via 172.31.40.221
+	ip route add 192.168.50.0/24 via 172.31.40.221
+	ip route add 192.168.200.0/24 via 172.31.40.221
 \end{minted}
 
 Mentre con SoftEther non si era nemmeno riusciti a completare la connessione, la
@@ -269,15 +269,15 @@ shell dell'autore connessa in SSH al \textit{Docker host} sul quale è in esecuz
 \texttt{Alpine}.
 
 \begin{figure}
-  \includegraphics[scale=0.6]{img/openvpn_test1}
-  \caption{Test 1 per OpenVPN}
-  \label{fig:openvpn-test1}
+	\includegraphics[scale=0.6]{img/openvpn_test1}
+	\caption{Test 1 per OpenVPN}
+	\label{fig:openvpn-test1}
 \end{figure}
 
 \begin{figure}[h]
-  \includegraphics[scale=0.35]{img/test1-result}
-  \caption{Il risultato dell'esecuzione del test}
-  \label{fig:test1-result}
+	\includegraphics[scale=0.35]{img/test1-result}
+	\caption{Il risultato dell'esecuzione del test}
+	\label{fig:test1-result}
 \end{figure}
 % A titolo di documetazione, si mostra anche l'output del comando \texttt{curl} eseguito
 % direttamente sui tre host target.
@@ -311,7 +311,7 @@ collegata al VPN server verso un host nella rete target (passando
 ovviamente per la VPN).
 Il test ha dato esito positivo, lo schema è mostrato figura \ref{fig:openvpn-test2}.
 \begin{figure}
-  \includegraphics[scale=0.55]{img/openvpn_test2}
-  \caption{Test 2 per OpenVPN}
-  \label{fig:openvpn-test2}
+	\includegraphics[scale=0.55]{img/openvpn_test2}
+	\caption{Test 2 per OpenVPN}
+	\label{fig:openvpn-test2}
 \end{figure}

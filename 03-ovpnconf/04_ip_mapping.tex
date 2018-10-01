@@ -192,7 +192,7 @@ fi
 		iroute 192.168.1.0 255.255.255.0
 	\end{minted}
 	Infine, per applicare la soluzione di \textit{NAT al contrario}, sul device client
-	sarà eseguito il comando \texttt{iptables}:
+	sarà eseguito il comando iptables:
 	\begin{minted}[breaklines]{bash}
 		iptables -t nat -A POSTROUTING -d 192.168.100.0/24 -s 10.7.0.0/24 -j MASQUERADE
 	\end{minted}
