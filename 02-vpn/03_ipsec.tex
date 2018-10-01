@@ -40,11 +40,11 @@ di vista, ed è fortemente consigliata una implementazione di IPsec che supporti
 La porta standard utilizzata è la 500 UDP.
 
 
-L2TP (Layer 2 Forwarding Protocol) è un protocollo standardizzato il cui scopo è quello
+L2TP (Layer 2 Forwarding Protocol) è un protocollo standard il cui scopo è quello
 di realizzare una connessione punto-punto, per cui non include vere funzionalità
-di sicurezza. L'RFC 3193 (e successive) standardizza l'uso combinato di IPsec per creare una
+di sicurezza. L'RFC 3193 standardizza l'uso combinato di IPsec per creare una
 connessione sicura, sulla quale si negoziano
-i parametri L2TP.
+i parametri L2TP \cite{RFC3193}.
 
 
 Per realizzare VPN con IPsec tipicamente si utilizzano due configurazioni:
@@ -76,8 +76,9 @@ Nella terminologia IPsec con strongSwan si definiscono i seguenti termini:
 Il client è l'\textit{initiator},
 il server è il \textit{responder}.
 
-Da subito ci si è concentrati su un setup basato su IKEv2, non si è considerato IPsec con L2TP
-perché considerato \textit{legacy} dall'avvento della nuova versione di IKE.
+Da subito ci si è concentrati su un setup basato su IKEv2, poiché si tratta della
+versione più recente del protocollo. Non si è considerato IPsec con L2TP
+visto che utilizza tipicamente IKEv1, ed è considerato \textit{legacy} \cite{nordvpn}.
 
 Utilizzando strongSwan sono possibili moltissime forme di autenticazione, distinguendo tra:
 \begin{itemize}
