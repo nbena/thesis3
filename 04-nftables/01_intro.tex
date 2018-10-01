@@ -16,7 +16,7 @@ Sia netfilter sia iptables si scrivono senza maiuscole.
 
 netfilter è composto da una serie di \textit{hook} a cui è possibile registrare
 delle \textit{callback} che sono chiamate ogni volta che un pacchetto passa per
-un certo hook.\\
+un certo hook. \cite{digitalocean-iptables} \\
 Un pacchetto che entra in contatto con lo stack di rete di Linux transita per
 diverse parti di esso in diversi momenti; un hook non è un altro che un \textit{punto} dello stack
 in cui il pacchetto passa.
@@ -35,7 +35,7 @@ In particolare, quelli disponibili sono:
   sono stati \textit{routed} e stanno per uscire dal sistema.
   \item \texttt{NF\_IP\_INGRESS} è un hook disponibile nelle versioni più recenti di
   Linux, avviene prima di \texttt{NF\_IP\_PREROUTING} per pacchetti in ingresso.
-  E' utile per il cosìdetto ``\textit{early packet dropping}''.
+  E' utile per il cosìdetto ``\textit{early packet dropping}''\cite{netfilter-hooks}.
 \end{itemize}
 
 \begin{figure}

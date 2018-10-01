@@ -60,10 +60,10 @@ il compito di crearle. In nftables, ogni tabella ha una certa \textit{famiglia}:
 \end{itemize}
 Le tabelle sono solo dei contenitori vuoti il cui nome non ha alcuna semantica, contrariamente
 ad iptables. Comunque, la scelta della famiglia influenza quali hook possono
-essere utilizzati (es: l'hook \texttt{ingress} è disponibile solo per \texttt{netdev}).
+essere utilizzati (es: l'hook \texttt{ingress} è disponibile solo per \texttt{netdev}) \cite{nftables-families}.
 
 Le tabelle a loro volta racchiudono delle chain, ed anche in questo caso non vi
-sono delle chain predefinite ma occorre crearle. Quando si crea una chain occorre
+sono delle chain predefinite ma occorre crearle \cite{nftables-chains}. Quando si crea una chain occorre
 specificare
 almeno tre cose:
 \begin{itemize}
@@ -113,7 +113,7 @@ iptables e nftables si veda \cite{nftables-iptables-thesis}.
 
 \subsubsection{Set}
 La struttura dati base di nftables si chiama \textit{Set}, ed è implementata
-utilizzando alberi rosso-neri, tabelle di hash oppure bitmap.
+utilizzando alberi rosso-neri, tabelle di hash oppure bitmap \cite{nftables-sets}.
 Un \textit{Set} è, come dice il nome, un insieme di elementi di un certo \textit{tipo},
 esso può essere un tipo \textit{base} predefinito come \texttt{ipv4\_addr} o
 \texttt{inet\_service} (numero di porta di protocolli L4), oppure un tipo complesso
@@ -135,7 +135,7 @@ I \textit{Set} sono utilizzati per:
 \subsubsection{Map}
 Le \textit{Map} sono costruite sui \textit{Set}, possono essere viste come dei set in cui
 ciascun elemento è composto da due parti: la prima
-è la \textit{chiave}, la secondo è il \textit{valore} associato alla chiave. Esse
+è la \textit{chiave}, la secondo è il \textit{valore} associato alla chiave \cite{nftables-maps}. Esse
 si comportano effettivamente come una mappa poiché definiscono un \textit{mappaggio}
 tra la chiave ed il valore, e sono utilizzati in contesti in cui si \textit{trasforma}
 un input in un certo output secondo il mappaggio definito in questa struttura dati.
@@ -159,7 +159,7 @@ molto simile alle \textit{Map}, tuttavia gli elementi di questo insieme sono nel
 \texttt{key: verdict}, dove \texttt{verdict} indica l'azione (es: \texttt{accept}, \texttt{drop})
 da applicare nel
 momento in cui si la chiave viene
-matchata.
+matchata \cite{nftables-dictionaries}.
 
 \paragraph{Esempi}
 Di seguito si riportano degli esempi che mostrano il funzionamento di nftables.
@@ -172,7 +172,7 @@ si può notare lo shebang all'inizio, in modo che sia eseguito da \texttt{nft} n
 modalità nativa di shell che offre: tutte queste regole sono inserite atomicamente
 in una transazione. Invocando questi comandi in una shell normale invece si
 perderebbe l'atomicità perché ciascun comando è una invocazione separata al programma \texttt{nft}
-(si noti che qui tutte le regole non sono appunto prefisse da ``\textit{nft}'').
+(si noti che qui tutte le regole non sono appunto prefisse da ``\textit{nft}'') \cite{nftables-scripting}.
 % BIG WARNING: state {related, established} and state related,established seems to be the same
 \begin{minted}[tabsize=3]{squidconf}
 #!/usr/sbin/nft -f
