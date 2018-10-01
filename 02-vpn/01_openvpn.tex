@@ -8,19 +8,19 @@ nel prossimo.
 
 Per ciascun tunnel VPN, vengono create due collegamenti:
 \begin{itemize}
-  \item \texttt{Control Channel} cifrato con TLS per scambiarsi informazioni di servizio
-  \item \texttt{Data Channel} cifrato con un protocollo simile a TLS per lo scambio
-  di dati.
+	\item \texttt{Control Channel} cifrato con TLS per scambiarsi informazioni di servizio
+	\item \texttt{Data Channel} cifrato con un protocollo simile a TLS per lo scambio
+	      di dati.
 \end{itemize}
 Entrambe i collegamenti sono multiplexati su di un unica connessione
 da OpenVPN, sia essa TCP o UDP\cite{openvpn-security}.\\
 La figura \ref{fig:openvpn-sec} mostra un semplice schema del suo funzionamento.\\
 \begin{figure}[h!]
-  \includegraphics[scale=0.4]{img/openvpn_sec}
-  \caption[Il multiplexing di OpenVPN]{Il multiplexing di OpenVPN: si vede come
-  le due connessioni siano multiplexate su un unico protocollo L4, in questo caso UDP.
-  \url{https://openvpn.net/index.php/open-source/documentation/security-overview.html}}
-  \label{fig:openvpn-sec}
+	\includegraphics[scale=0.4]{img/openvpn_sec}
+	\caption[Il multiplexing di OpenVPN]{Il multiplexing di OpenVPN: si vede come
+		le due connessioni siano multiplexate su un unico protocollo L4, in questo caso UDP.
+		\url{https://openvpn.net/index.php/open-source/documentation/security-overview.html}}
+	\label{fig:openvpn-sec}
 \end{figure}
 OpenVPN viene distribuitpo anche in una versione \textit{enterprise} a pagamento: si chiama
 \textit{OpenVPN AS -- Access Server}, offre una web GUI, sicuramente più intuitiva
@@ -32,29 +32,29 @@ le due versioni si veda
 
 L'infrastruttura OpenVPN si compone di:
 \begin{itemize}
-  \item server: in grado di connettere tra loro diversi client, è possibile regolare
-  il fatto che diversi client possano comunicare tra loro o meno
-  \item client, il quale si connette al server.
+	\item server: in grado di connettere tra loro diversi client, è possibile regolare
+	      il fatto che diversi client possano comunicare tra loro o meno
+	\item client, il quale si connette al server.
 \end{itemize}
 E' necessario che il server abbia un indirizzo IP pubblico, o meglio ancora un nome DNS, in ogni caso deve
 essere raggiungibile da Internet.
 E' possibile avere il server dietro un firewall, a patto di abilitare il port forwarding dal gateway al server.\\
 L'autenticazione tra i diversi membri della VPN può essere fatta in due modi:
 \begin{itemize}
-  \item certificate-based, cioè autenticazione basata su chiavi private e certificati
-  X509. I passi da seguire sono:
-  \begin{itemize}
-    \item creazione di una nuova CA, quindi della coppia di chiavi e di un certificato
-    self-signed
-    \item ciascun membro della VPN deve avere la propria coppia di chiavi e certificato
-    \item il certificato della CA deve essere presente in ogni macchina partecipante
-  \end{itemize}
-  \item PSK: si generano a priori delle chiavi statiche, che devono essere distribuite
-  a ciascun host membro della VPN. Questa modalità non è consigliata, in quanto
-  se un host venisse in qualche modo compromesso, occorrerebbe cambiare tutte le chiavi.
-  Inoltre non si garantisce \textit{perfect forward secrecy}: se un avversario
-  intercettasse il traffico sull VPN e poi ottenesse queste chiavi potrebbe
-  decifrarlo senza problemi.
+	\item certificate-based, cioè autenticazione basata su chiavi private e certificati
+	      X509. I passi da seguire sono:
+	      \begin{itemize}
+	      	\item creazione di una nuova CA, quindi della coppia di chiavi e di un certificato
+	      	      self-signed
+	      	\item ciascun membro della VPN deve avere la propria coppia di chiavi e certificato
+	      	\item il certificato della CA deve essere presente in ogni macchina partecipante
+	      \end{itemize}
+	\item PSK: si generano a priori delle chiavi statiche, che devono essere distribuite
+	      a ciascun host membro della VPN. Questa modalità non è consigliata, in quanto
+	      se un host venisse in qualche modo compromesso, occorrerebbe cambiare tutte le chiavi.
+	      Inoltre non si garantisce \textit{perfect forward secrecy}: se un avversario
+	      intercettasse il traffico sull VPN e poi ottenesse queste chiavi potrebbe
+	      decifrarlo senza problemi.
 \end{itemize}
 E' possibile inoltre configurare anche username e password per ciascun client.\\
 Si possono realizzare sia topologie \textit{Remote Access} sia \textit{LAN-to-LAN},
@@ -70,26 +70,26 @@ nello stesso singolo programma, la distinzione viene fatta nel file di configura
 Si passa ora ad analizzare le possibilità di implementare OpenVPN in MoonCloud al livello 3. Il primo step
 da fare è decidere dove posizionare il server: nel cloud o nella rete target?
 \begin{description}
-  \item[\textbf{Local Server}]Con questa opzione si preparano nella rete MoonCloud una serie
-  di VM destinate ad essere VPN server; se esse sono configurate propriamente, ciascun server
-  può servire diverse reti target. I probe
-  hanno delle rotte configurate del tipo \texttt{rete target via VPN server}.
-  Nelle reti dei client si porta quindi un device che funge da VPN client.
-  Tale appliance deve rendere visibile l'intera rete (possibilmente anche più di una) nella VPN. In
-  particolare si pone un problema di routing nella rete target a prescindere che lì vi sia
-  il server od il client, pertanto è descritto tra qualche riga.
-  \item[\textbf{Remote Server}]Portare un server nella rete target pone subito un problema: deve
-  essere raggiungibile dall'esterno, e questo non è per niente facile poiché la maggior parte
-  delle reti target utilizzano NAT, e quindi gli host interni non sono direttamente raggiungibili
-  dall'esterno, se non con port forwarding sul router. Chiedere ai clienti di configurare
-  questo non è pensabile, pertanto questa opzione non è stata consigliata ed infatti
-  non è stata presa effettivamente in considerazione come soluzione.
-  In via del tutto ipotetica, se si fosse scelta questa strada si sarebbe poi
-  dovuto decidere anche come configurare i client VPN, cioè se scegliere tra \textit{RSMC}
-  o \textit{RSSC}.
+	\item[\textbf{Local Server}]Con questa opzione si preparano nella rete MoonCloud una serie
+	di VM destinate ad essere VPN server; se esse sono configurate propriamente, ciascun server
+	può servire diverse reti target. I \textit{probe}
+	hanno delle rotte configurate del tipo \texttt{rete target via VPN server}.
+	Nelle reti dei client si porta quindi un device che funge da VPN client.
+	Tale appliance deve rendere visibile l'intera rete (possibilmente anche più di una) nella VPN. In
+	particolare si pone un problema di routing nella rete target a prescindere che lì vi sia
+	il server od il client, pertanto è descritto tra qualche riga.
+	\item[\textbf{Remote Server}]Portare un server nella rete target pone subito un problema: deve
+	essere raggiungibile dall'esterno, e questo non è per niente facile poiché la maggior parte
+	delle reti target utilizzano NAT, e quindi gli host interni non sono direttamente raggiungibili
+	dall'esterno, se non con port forwarding sul router. Chiedere ai clienti di configurare
+	questo non è pensabile, pertanto questa opzione non è stata consigliata ed infatti
+	non è stata presa effettivamente in considerazione come soluzione.
+	In via del tutto ipotetica, se si fosse scelta questa strada si sarebbe poi
+	dovuto decidere anche come configurare i client VPN, cioè se scegliere tra \textit{RSMC}
+	o \textit{RSSC}.
 \end{description}
 Il problema comune ad entrambe queste due opzioni è il seguente: in una configurazione
-\textit{normale} i pacchetti provenienti dai probe e diretti ai target, una volta che
+\textit{normale} i pacchetti provenienti dai \textit{probe} e diretti ai target, una volta che
 sono decifrati ed immessi nella rete dal VPN client (poiché l'opzione server
 è stata scartata) hanno come indirizzo IP sorgente un IP che si trova nella rete MoonCloud,
 ed i target non hanno modo di sapere che le risposte a tali pacchetti devono passare

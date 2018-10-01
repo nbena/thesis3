@@ -53,13 +53,13 @@ Gli agent di esecuzione a loro volta si dividono in due categorie:
 	\item[\texttt{Meta-probe}]Si occupano di verificare eventuali violazioni ai
 	vincoli di tempo, probabilità, configurazioni. 
 \end{description}
-Si può dire che mentre il primo tipo di probe sia \textit{invasivo}, il secondo invece
+Si può dire che mentre il primo tipo di \textit{probe} sia \textit{invasivo}, il secondo invece
 ha un minore overhead in quanto si limita a verificare una certa proprietà
 senza interferire con il normale funzionamento del sistema.
 Poiché prevedono una forma di analisi meno intrusiva, il minor overhead comporta
 anche una minore qualità delle evidenze raccolte.
-Ad esempio, un probe potrebbe utilizzare \texttt{nmap} per verificare che
-una certa comunicazione sia cifrata con TLS, mentre un meta-probe si
+Ad esempio, un \textit{probe} potrebbe utilizzare \texttt{nmap} per verificare che
+una certa comunicazione sia cifrata con TLS, mentre un \textit{meta-probe} si
 potrebbe limitare a leggere un file di configurazione alla ricerca dell'opzione
 che abiliti la cifratura TLS.
 
