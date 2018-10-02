@@ -123,7 +123,7 @@ Prima di proseguire, si chiarisce meglio la terminologia che da qui in poi sarà
 	rispettare ed integrarsi alla perfezione con il \textit{NAT al contrario}, il cui
 	utilizzo è imprescindibile.
 	La soluzione implementativa è anche in questo caso iptables. 
-	
+		
 	Si supponga di avere la seguente configurazione:
 	\begin{itemize}
 		\item rete target $OTN$: \texttt{192.168.100.0/24}
@@ -143,8 +143,8 @@ Prima di proseguire, si chiarisce meglio la terminologia che da qui in poi sarà
 		      \texttt{192.168.100.0/24},
 		      \texttt{192.168.1.0/24})=\texttt{192.168.1.254}$
 	\end{itemize}
-	
-	
+		
+		
 	% Quando il VPN client riceve dei pacchetti dalla NIC virtuale di OpenVPN iptables
 	% esegue le seguenti operazioni:
 	% \begin{enumerate}
@@ -159,32 +159,32 @@ Prima di proseguire, si chiarisce meglio la terminologia che da qui in poi sarà
 	%   \item Applicazione dell'inverso del \textit{NAT al contrario}
 	%   \item modificare l'indirizzo IP sorgente applicando la funzione $map\_address$.
 	% \end{enumerate}
-	
-	
+		
+		
 	Le reti mappate sostituiscono le reti originali nella configurazione delle rotte lato
 	MoonCloud. Dall'estratto dei file \texttt{client-up.sh} e
 	\texttt{client-down.sh} si può vedere infatti che le rotte aggiunte e rimosse sono
 	quelle mappate.
 	\begin{minted}[breaklines]{bash}
-# /etc/openvpn/server/cs/client-up.sh
-		
-#!/bin/bash
-		
-if [ "$common_name" == "client1" ]; then
-	ip route add 192.168.1.0/24 via 10.7.0.1
-	iptables -t nat -A POSTROUTING -d 192.168.1.0/24 -j MASQUERADE
-fi
+		# /etc/openvpn/server/cs/client-up.sh
+				
+		#!/bin/bash
+				
+		if [ "$common_name" == "client1" ]; then
+		ip route add 192.168.1.0/24 via 10.7.0.1
+		iptables -t nat -A POSTROUTING -d 192.168.1.0/24 -j MASQUERADE
+		fi
 	\end{minted}
 	\begin{minted}[breaklines]{bash}
-# /etc/openvpn/server/cs/client-down.sh
-		
-#!/bin/bash
-		
-		
-if [ "$common_name" == "client1" ]; then
-	ip route del 192.168.1.0/24 via 10.7.0.1
-	iptables -t nat -D POSTROUTING -d 192.168.1.0/24 -j MASQUERADE
-fi
+		# /etc/openvpn/server/cs/client-down.sh
+				
+		#!/bin/bash
+				
+				
+		if [ "$common_name" == "client1" ]; then
+		ip route del 192.168.1.0/24 via 10.7.0.1
+		iptables -t nat -D POSTROUTING -d 192.168.1.0/24 -j MASQUERADE
+		fi
 	\end{minted}
 	Allo stesso modo, il file \texttt{client1} che contiene le direttive client-specific
 	avrà il seguente contenuto:
@@ -275,8 +275,8 @@ fi
 	\end{enumerate}
 	Non resta che spiegare \textit{come} sono eseguite le funzioni di mappaggio
 	e rimappaggio.
-	
-	
+		
+		
 	Lato MoonCloud, $map\_network$ è una funzione eseguita dal microservizio
 	\texttt{MoonCloud\_VPN} (si veda a partire da pagina \pageref{ch:microservice}).
 	Per ora basti sapere che nel momento
@@ -291,8 +291,8 @@ fi
 	dei mapping in comune, grazie all'isolamento questo non crea problemi.
 	Un server può gestire diversi clienti
 	contamporaneamente, poiché l'univocità delle reti mappate è garantita \textit{per-server}.
-	
-	
+		
+		
 	% Rimane da capire è come effettuare mappaggio e rimappaggio lato client;
 	% si è tratta di un problema di non facile soluzione.
 	% Il software responsabile di questa traduzione deve imprescindibilmente
@@ -309,8 +309,8 @@ fi
 	utilizzare i seguenti
 	due comandi:
 	\begin{minted}[breaklines]{bash}
-iptables -t nat -A PREROUTING -d 192.168.1.254 -s 10.7.0.0/24 -j DNAT --to-destination 192.168.100.254
-iptables -t nat -A POSTROUTING -s 192.168.100.254 -d 10.7.0.0/24 -j SNAT --to-source 192.168.1.254
+		iptables -t nat -A PREROUTING -d 192.168.1.254 -s 10.7.0.0/24 -j DNAT --to-destination 192.168.100.254
+		iptables -t nat -A POSTROUTING -s 192.168.100.254 -d 10.7.0.0/24 -j SNAT --to-source 192.168.1.254
 	\end{minted}
 	Il primo comando viene utilizzato per modificare l'indirizzo IP destinazione (\texttt{DNAT --to-destination}),
 	da quello mappato noto a MoonCloud ($MTI$) a quello originale ($OTI$); il secondo
@@ -335,7 +335,7 @@ iptables -t nat -A POSTROUTING -s 192.168.100.254 -d 10.7.0.0/24 -j SNAT --to-so
 		      	\item modifice IP sorgente (\textit{hook} \texttt{POSTROUTING})
 		      \end{enumerate}
 	\end{itemize}
-	
+		
 	\begin{figure} 
 		\includegraphics[scale=0.7]{img/ip_mapping_send}
 		\label{fig:ip-mapping-send}
@@ -347,7 +347,7 @@ iptables -t nat -A POSTROUTING -s 192.168.100.254 -d 10.7.0.0/24 -j SNAT --to-so
 			quindi il pacchetto sulla scheda di rete fisica, ma questo non è di interesse
 		per il problema in questione.}
 	\end{figure}
-	
+		
 	\begin{figure}
 		\includegraphics[scale=0.7]{img/ip_mapping_recv}
 		\label{fig:ip-mapping-recv}

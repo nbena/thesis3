@@ -84,7 +84,7 @@ indirizzo IP sorgente l'indirizzo IP del device stesso. In questo modo, quando s
 produce la risposta, la destinazione di tale pacchetto è un indirizzo IP appartenente
 alla stessa rete in cui si è, ovvero la rete target. L'OS quindi invia il
 pacchetto al device client, il quale provvede quindi a modificare
-l'IP destinazione nell'IP di destinazione \textit{vero}, ovvero quello del Docker host.
+l'IP destinazione nell'IP di destinazione \textit{vero}, ovvero quello del \textit{Docker host}.
 Ciò che avviene quindi è che il device client fa del NAT, come se la rete target
 fosse la rete \textit{esterna} verso la quale il NAT è tipicamente eseguito. Questa
 configurazione di NAT viene qui chiamata ``\textit{NAT al contrario}'', ed è eseguita con
