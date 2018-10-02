@@ -12,7 +12,11 @@
   \usepackage{url}
   \usepackage[htt]{hyphenat} % linebreaks in \texttt
 
-  \usepackage[nottoc,notlot,notlof]{tocbibind} % bib to toc
+  % \usepackage[nottoc,notlot,notlof]{tocbibind} % bib to toc
+
+  \usepackage{csquotes}
+  \usepackage[backend=biber, style=numeric, sorting=nty]{biblatex}
+  \addbibresource{bibliography.bib}
   
   % \usepackage{hyperref}
   \usepackage[hidelinks,
@@ -113,9 +117,10 @@
 \input{05-security/index}
 \input{06-microservice/index}
 
-\bibliographystyle{ieeetr}
-\bibliography{bibliography}
+% \bibliographystyle{ieeetr}
+% \bibliography{bibliography}
 
 % \include{bib}
+\printbibliography[heading=bibintoc]
 
 \end{document}

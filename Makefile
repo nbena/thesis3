@@ -10,7 +10,8 @@ latex_input := thesis.tex
 latex_output := thesis.pdf
 
 latex ?= pdflatex
-bibtex ?= bibtex
+# bibtex ?= bibtex
+biber ?= biber
 gs ?= gs
 
 # img_directory = img
@@ -77,7 +78,7 @@ code_files += $(code_samples_directory)/sshworker_loops.py
 code_files += $(code_samples_directory)/works.lua
 
 bib_file = bibliography.bib
-bib_file_input = thesis
+bib_file_input = thesis.bcf
 
 files := $(pre_files)
 files += $(mooncloud_files)
@@ -151,9 +152,11 @@ tar_exclude := .git
 
 $(latex_output): $(all_deps) Makefile
 	$(latex) -file-line-error --shell-escape $(latex_input)
-	$(bibtex) $(bib_file_input)
+	$(biber) $(bib_file_input)
 	$(latex) -file-line-error --shell-escape $(latex_input)
 	$(latex) -file-line-error --shell-escape $(latex_input)
+	# latexmk -latexoption=-file-line-error -latexoption=--shell-escape \
+	#	--pdf $(latex_input)
 
 $(latex_summary_output): $(summary_files)
 	$(latex) -file-line-error $(latex_summary_input)
@@ -197,3 +200,9 @@ clean:
 	rm -f *.bbl
 	rm -f *.blg
 	rm -f *.lof
+	rm -f *.bcf
+	
+	rm -f *.ilg
+	rm -f *.ind
+	rm -f *.fdb_latexmk
+	rm -f thesis.synctex.gz
