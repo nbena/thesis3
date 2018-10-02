@@ -296,15 +296,15 @@ Linea per linea si descrive il contenuto del file:
 	\item[\texttt{push "route 192.168.100.0 255.255.255.0"}]Questa direttiva viene
 	usata lato server per inviare delle configurazioni ai client. In questo caso si indica
 	ai client di aggiungere nella routing table del sistema operativo una rotta che
-	apparirà così: \textit{rete 192.168.100.0/24 via virtual NIC's IP}. Essendo
+	apparirà così: \texttt{rete 192.168.100.0/24 via <virtual NIC's IP>}. Essendo
 	\texttt{192.168.100.0/24} la rete in cui si trova il server, l'effetto di questa
 	rotta è che ogni volta che l'OS deve decidere dove inoltrare un
 	pacchetto destinato a tale rete, lo invii alla scheda di rete virtuale
 	del client. In questo modo il client VPN lo riceve da essa e lo invia al server
 	lungo il socket.
 	\item[\texttt{route 192.168.1.0 255.255.255}]Indica di aggiungere una rotta
-	così composta nella routing table dell'OS del server: \textit{rete 192.168.1.0/24
-		via virtual NIC's IP}. Poiché \texttt{192.168.1.0/24} è la rete del client, l'effetto
+	così composta nella routing table dell'OS del server: \texttt{rete 192.168.1.0/24
+		via <virtual NIC's IP>}. Poiché \texttt{192.168.1.0/24} è la rete del client, l'effetto
 	dell'aggiunta di questa rotta è l'analogo di quello visto al punto precedente, solo che
 	viene applicato localmenete.
 	\item[\texttt{client-config-dir /etc/openvpn/server/ccd}]Specifica in quale
@@ -446,8 +446,8 @@ mentre ``\texttt{route <rete-altro-peer>}'' non c'è ma il suo effetto, cioè ag
 \texttt{<rete-atro-peer>} alla routing table del proprio OS c'è comunque grazie a \texttt{push}
 lato server.
 Una volta che il collegamento tra i due è stato stabilito vi sarà una entry
-nella routing table del kernel così fatta: \textit{rete 192.168.100.0/24 via
-	virtual NIC's IP}. Non possono nemmeno esserci direttive ``\texttt{iroute}'', perché
+nella routing table del kernel così fatta: \texttt{rete 192.168.100.0/24 via
+	<virtual NIC's IP>}. Non possono nemmeno esserci direttive ``\texttt{iroute}'', perché
 il client si connette ad un solo altro endpoint che è il server.\\
 Non è presente l'opzione di ``\texttt{keepalive}'' perché, come detto in
 precedenza, è sufficiente specificarla solo sul server.\\

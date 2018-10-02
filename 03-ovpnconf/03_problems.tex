@@ -123,7 +123,7 @@ Si analizza ora nuovamente il flusso indicato sopra alla luce del \textit{NAT al
   \texttt{192.168.100.50}
   \item il sistema operativo di \texttt{192.168.100.50} riceve il pacchetto ed
   esegue l'inverso del NAT, l'indirizzo IP destinazione appare ora essere \texttt{192.168.200.2}.
-  Poiché il client ha una rotta che dice: \textit{rete 192.168.200.2 via virtual NIC's IP}
+  Poiché il client ha una rotta che dice: \texttt{rete 192.168.200.2 via <virtual NIC's IP>}
   tale pacchetto viene inoltrato alla scheda di rete virtuale,
   \item il pacchetto viene ricevuto da OpenVPN ed inviato al server
   \item il server OpenVPN riceve il pacchetto e lo scrive sulla scheda di rete virtuale

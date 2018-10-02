@@ -3,60 +3,60 @@ Prima di passare ad analizzare come tutte le soluzioni appena indicate si combin
 tra loro, è utile fare un breve riassunto dei problemi affrontati
 e delle soluzioni attuate.
 \begin{description}
-  \item[\textit{NAT al contrario}]I pacchetti provenienti dalla rete MoonCloud
-  hanno come IP sorgente un IP appartente a tale rete, affinché le risposte possano
-  tornare indietro, occorre che in ciascuna rete target sia configurata la
-  seguente rotta: \textit{rete: rete-MoonCloud via: IP-client-VPN}. Essa può
-  essere inserita nel default gateway di ciascuna rete oppure in ogni host di tali reti.
-  Tuttavia, non è possibile intervenire sui dispositivi appena elencati, pertanto
-  la soluzione è quella di applicare NAT ai pacchetti provenienti da MoonCloud e
-  diretti alla rete target, quindi ai pacchetti in uscita dal device VPN client.
-  In questo modo, i pacchetti hanno come indirizzo IP sorgente quello del device
-  client, il quale si trova nella stessa rete degli host target, che quindi inviano
-  ad esso le proprie risposte, senza bisogno di configurare alcuna rotta
-  aggiuntiva,
-  \item[\textit{Bypassing della direttiva ``\texttt{route \ldots}''}]Lo
-  scopo di tale direttiva, sia essa posta nel client o nel server, è quella di
-  indicare quali reti sono raggiungibili mediante l'\textit{altro}. Tuttavia, poiché
-  OpenVPN legge il file di configurazione solo all'avvio, diventa un problema aggiungere
-  nuovi client al server senza dover riavviarlo. L'effetto di questa direttiva
-  è quello di aggiungere una nuova rotta nella routing table del sistema operativo
-  così fatta: \texttt{<net> via <virtual NIC's IP>}. Si sfrutta l'hook \texttt{client-connect}
-  disponibile per OpenVPN server, che consente di eseguire un programma quando un client si
-  connette. Il programma che si lancia è uno script Bash che esegue direttamente i
-  comandi di aggiunta delle rotte sulla base del client che ha fatto scattare quell'hook.
-  Le rotte sono rimosse in maniera analoga sfruttando l'hook \texttt{client-disconnect}.
-  Quando si aggiunge un nuovo client è sufficiente aggiornare questi due script.
-  \item[\textit{NAT lato server}]In OpenVPN
-  client i pacchetti diretti alla scheda di rete virtuale sono risposte provenienti
-  dagli host nella rete target, ed hanno come IP di destinazione un IP appartenente
-  alla/e rete/i in cui si trovano i \textit{Docker host}. Affinché OpenVPN sappia che
-  tali reti sianno raggiungibili tramite la VPN, è necessario che il server
-  le annunci mediante delle rotte, e questo viene normalmente fatto mediante la direttiva
-  \texttt{push "route <route-to-advertise>"}, il cui effetto è che il client aggiunga
-  tale rotta alla routing table del kernel. Tuttavia, non si può sapere a priori
-  quali reti saranno ``dietro'' il server, a tale scopo l'OS del server
-  effettua del NAT sui pacchetti diretti alla scheda di rete virtuale OpenVPN,
-  settando l'IP sorgente come l'IP della scheda di rete virtuale. Si ricorda che
-  tutte le NIC virtuali di una stessa VPN stanno nella stessa subnet VPN, cioè hanno
-  lo stesso NET ID.
-  Spostandosi
-  nel client, si ha che i pacchetti di risposta a MoonCloud hanno come IP destinazione
-  quello virtuale del server, il quale si trova nella stessa subnet della NIC
-  virtuale del client. Il sistema operativo sa quindi che deve inoltrare ad essa
-  tali pacchetti. 
-  Questo perché quando si assegna un indirizzo IP ad una scheda di rete (virtuale in
-  questo caso) si
-  aggiunge automaticamente la seguente rotta alla routing table dell'OS:
-  \texttt{<VPN-subnet> via <virtual NIC's IP>}.
-  \item[\textit{IP mapping}]Per poter connettere tra di loro $n$ reti mediante
-  una VPN è necessario che ciascuna rete partecipante abbia un NET ID diverso. Poiché
-  si vuole utilizzare un server per connettere diverse reti target di diversi clienti,
-  è ragionevole presumere che vi sia prima o poi un conflitto, e che due reti abbiano
-  lo stesso NET ID. Per superare questo problema è stato introdotto il nuovo concetto
-  di \textit{mappaggio delle reti/degli indirizzi IP}, per il quale MoonCloud assegna
-  ad ogni rete un nuovo NET ID, e mappa gli IP originali nel nuovo NET ID. Questo
-  mappaggio è garantito univoco. Lato client, si utilizza iptables per
-  modificare gli header IP e rendere ai clienti questa complessa operazione del tutto
-  trasparente.
+	\item[\textit{NAT al contrario}]I pacchetti provenienti dalla rete MoonCloud
+	hanno come IP sorgente un IP appartente a tale rete, affinché le risposte possano
+	tornare indietro, occorre che in ciascuna rete target sia configurata la
+	seguente rotta: \textit{rete: rete-MoonCloud via: IP-client-VPN}. Essa può
+	essere inserita nel default gateway di ciascuna rete oppure in ogni host di tali reti.
+	Tuttavia, non è possibile intervenire sui dispositivi appena elencati, pertanto
+	la soluzione è quella di applicare NAT ai pacchetti provenienti da MoonCloud e
+	diretti alla rete target, quindi ai pacchetti in uscita dal device VPN client.
+	In questo modo, i pacchetti hanno come indirizzo IP sorgente quello del device
+	client, il quale si trova nella stessa rete degli host target, che quindi inviano
+	ad esso le proprie risposte, senza bisogno di configurare alcuna rotta
+	aggiuntiva,
+	\item[\textit{Bypassing della direttiva ``\texttt{route \ldots}''}]Lo
+	scopo di tale direttiva, sia essa posta nel client o nel server, è quella di
+	indicare quali reti sono raggiungibili mediante l'\textit{altro}. Tuttavia, poiché
+	OpenVPN legge il file di configurazione solo all'avvio, diventa un problema aggiungere
+	nuovi client al server senza dover riavviarlo. L'effetto di questa direttiva
+	è quello di aggiungere una nuova rotta nella routing table del sistema operativo
+	così fatta: \texttt{<net> via <virtual NIC's IP>}. Si sfrutta l'hook \texttt{client-connect}
+	disponibile per OpenVPN server, che consente di eseguire un programma quando un client si
+	connette. Il programma che si lancia è uno script Bash che esegue direttamente i
+	comandi di aggiunta delle rotte sulla base del client che ha fatto scattare quell'hook.
+	Le rotte sono rimosse in maniera analoga sfruttando l'hook \texttt{client-disconnect}.
+	Quando si aggiunge un nuovo client è sufficiente aggiornare questi due script.
+	\item[\textit{NAT lato server}]In OpenVPN
+	client i pacchetti diretti alla scheda di rete virtuale sono risposte provenienti
+	dagli host nella rete target, ed hanno come IP di destinazione un IP appartenente
+	alla/e rete/i in cui si trovano i \textit{Docker host}. Affinché OpenVPN sappia che
+	tali reti sianno raggiungibili tramite la VPN, è necessario che il server
+	le annunci mediante delle rotte, e questo viene normalmente fatto mediante la direttiva
+	\texttt{push "route <route-to-advertise>"}, il cui effetto è che il client aggiunga
+	tale rotta alla routing table del kernel. Tuttavia, non si può sapere a priori
+	quali reti saranno ``dietro'' il server, a tale scopo l'OS del server
+	effettua del NAT sui pacchetti diretti alla scheda di rete virtuale OpenVPN,
+	settando l'IP sorgente come l'IP della scheda di rete virtuale. Si ricorda che
+	tutte le NIC virtuali di una stessa VPN stanno nella stessa subnet VPN, cioè hanno
+	lo stesso NET ID.
+	Spostandosi
+	nel client, si ha che i pacchetti di risposta a MoonCloud hanno come IP destinazione
+	quello virtuale del server, il quale si trova nella stessa subnet della NIC
+	virtuale del client. Il sistema operativo sa quindi che deve inoltrare ad essa
+	tali pacchetti. 
+	Questo perché quando si assegna un indirizzo IP ad una scheda di rete (virtuale in
+	questo caso) si
+	aggiunge automaticamente la seguente rotta alla routing table dell'OS:
+	\texttt{<VPN-subnet> via <virtual NIC's IP>}.
+	\item[\textit{IP mapping}]Per poter connettere tra di loro $n$ reti mediante
+	una VPN è necessario che ciascuna rete partecipante abbia un NET ID diverso. Poiché
+	si vuole utilizzare un server per connettere diverse reti target di diversi clienti,
+	è ragionevole presumere che vi sia prima o poi un conflitto, e che due reti abbiano
+	lo stesso NET ID. Per superare questo problema è stato introdotto il nuovo concetto
+	di \textit{mappaggio delle reti/degli indirizzi IP}, per il quale MoonCloud assegna
+	ad ogni rete un nuovo NET ID, e mappa gli IP originali nel nuovo NET ID. Questo
+	mappaggio è garantito univoco. Lato client, si utilizza iptables per
+	modificare gli header IP e rendere ai clienti questa complessa operazione del tutto
+	trasparente.
 \end{description}
