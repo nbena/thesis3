@@ -1,6 +1,6 @@
 \section{Criticità}
-Ogni volta che si invoca un comando in userspace per modificare il set
-di regole, il programma in userspace ottiene dal kernel il \textit{blob}
+Ogni volta che si invoca un comando in \textit{userspace} per modificare il set
+di regole, tale programma ottiene dal kernel il \textit{blob}
 di \textit{tutte} le regole, vi applica le modifiche, invia la versione
 modificata al kernel.
 Questo porta a numerosi problemi, tra cui il fatto che più il numero di regole
@@ -17,11 +17,11 @@ Alcuni dei problemi sono:
 \begin{description}
   \item[Duplicazione del codice]Per ogni protocollo gestito da iptables (o sue
   controparti), occorre che vi sia comprensione di esso sia a livello
-  utente (perché il programma in userspace deve creare il \textit{blob} per
-  il kernel), sia a livello di kernel-space, per operare correttamente sul pacchetto
+  utente (perché il programma in \textit{userspace} deve creare il \textit{blob} per
+  il kernel), sia a livello di \textit{kernelspace}, per operare correttamente sul pacchetto
   secondo quanto specificato dall'utente.\\
   Ciò significa che \textit{per ogni nuovo protocollo}, esso deve essere
-  supportato sia in userspace sia in kernel-space.
+  supportato sia in \textit{userspace} sia in \textit{kernelspace}.
   \item[Target multipli]Si supponga che si voglia loggare un pacchetto
   \textit{e} dropparlo, in una sola regola non è possibile, è necessario, ad
   esempio, creare una nuova tabella.
@@ -40,7 +40,7 @@ Alcuni dei problemi sono:
   % estensioni come \texttt{multiport} per il matching di porte multiple, ma ne
   % supporta solo fino a 15).
   \item[Multipli programmi]Un'altra criticità è il fatto che vi sono 4 programmi
-  userspace diversi, particolarmente problematica è la gestione separata di IPv4
+  \textit{userspace} diversi, particolarmente problematica è la gestione separata di IPv4
   e IPv6.
   \item[Scalabilità]Come si comporta iptables/netfilter quando vi sono
   davvero molte regole (centinaia o più) regole da gestire ed il troughput
