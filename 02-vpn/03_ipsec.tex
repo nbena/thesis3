@@ -70,11 +70,9 @@ complesso, e configurarlo nella maniera corretta non è facile, tuttavia non è 
 impossibile, il sito di strongSwan è ricco di esempi e di documentazione \cite{strongswan-example}.
 Nella terminologia IPsec con strongSwan si definiscono i seguenti termini:
 \begin{itemize}
-  \item \textit{roadwarrior} è il client, cioè il dispositivo che si connette da remoto alla rete.
-  \item \textit{VPN Gateway} è il dispositivo server che riceve le connessioni.
+  \item \textit{roadwarrior} è il client, cioè il dispositivo che si connette da remoto alla rete (\textit{initiator})
+  \item \textit{VPN Gateway} è il server che accetta le connessioni (\textit{responder}).
 \end{itemize}
-Il client è l'\textit{initiator},
-il server è il \textit{responder}.
 
 Da subito ci si è concentrati su un setup basato su IKEv2, poiché si tratta della
 versione più recente del protocollo. Non si è considerato IPsec con L2TP
@@ -108,7 +106,7 @@ che meritano una menzione sono relative ad alcuni algoritmi crittografici suppor
   performance e la facilità di implementazione)
   \item supporto ad alcuni algoritmi a chiave pubblica post-quantistici (basati su
   problemi matematici per i quali i computer quantistici non portano alcun vantaggio
-  nella loro soluzione) come \texttt{NTRU} (\textit{lattice-based cryptography})
+  nella loro soluzione) come \texttt{NTRU} (\textit{lattice-based cryptography}).
 \end{itemize}
 strongSwan offre NAT Traversal basato su UDP.
 

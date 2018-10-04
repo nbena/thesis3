@@ -139,7 +139,7 @@ la creazione del file di script per nftables.
 \end{figure}
 
 \subsubsection{Ritornare indirizzo IP mappato}
-Quando un client specifica un target per un'analisi, egli lo fà inserendo l'indirizzo
+Quando un client specifica un target per un'analisi, egli lo fa inserendo l'indirizzo
 IP originale, per lui la questione dell'IP mapping è completamente trasparente. Ciò
 significa che occorre una funzione che, dato un indirizzo IP originale di un
 certo VPN client, ritorni quello mappato, poiché esso è l'unico noto a MoonCloud.
@@ -279,9 +279,9 @@ relative solo al proprio client, quindi il primo thread trasferisce il file, imm
 il secondo trasferisce la propria versione, ed ecco che la modifica fatta dal primo viene
 sovrascritta.
 
-Un altro problema a cui si può pensare è il seguente: si fà una richiesta di revoca di un certificato,
+Un altro problema a cui si può pensare è il seguente: si fa una richiesta di revoca di un certificato,
 la CRL viene quindi modificata ed inizia la propagazione verso tutti i server.
-Poi si fà una richiesta di refresh, quindi la si ricrea ed inizia la distribuzione\ldots Qua c'è il
+Poi si fa una richiesta di refresh, quindi la si ricrea ed inizia la distribuzione\ldots Qua c'è il
 problema. Se si suppone che in totale vi siano 100 server e che la seconda richiesta sia arrivata
 mentre si concludeva il trasferimento verso il 50esimo, a quel punto si modifica la CRL
 e quella trasferita al 51esimo è diversa dalle precedenti.

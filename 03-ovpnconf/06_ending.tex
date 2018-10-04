@@ -63,14 +63,14 @@ topology subnet
 # path per client-specific file
 client-config-dir /etc/openvpn/ovpn1/ccd
 
-# TLS configuration
+# TLS config
 remote-cert-eku "TLS Web Client Authentication"
 tls-version-min 1.2
 
 tls-cipher TLS-ECDHE-ECDSA-WITH-AES-256-GCM-SHA384
 cipher AES-256-GCM
 
-# keys and certs
+# chiavi
 ca /etc/openvpn/certs/ca.crt
 key /etc/openvpn/ovpn1/certs/ovpn1.key
 cert /etc/openvpn/ovpn1/certs/ovpn1.crt
@@ -81,7 +81,7 @@ dh none
 # nuove chiavi ogni 20 minuti
 reneg-sec 1200
 
-# log configuration
+# log config
 log /var/log/openvpn/ovpn1/openvpn.log
 verb 4
 status /var/log/openvpn/ovpn1/openvpn-status.log
@@ -146,12 +146,13 @@ client
 # protocollo L4
 proto tcp
 
-# server address and port
+# nome server e porta
 remote ovpn1.moon-cloud.eu 443
 
 verify-x509-name ovpn1.moon-cloud.eu name
 
-# virtual NIC configuration
+# configurazione NIC
+# virtuale
 dev-type tun
 dev ovpn-office1
 
@@ -172,7 +173,7 @@ ca /etc/openvpn/certs/ca.crt
 key /etc/openvpn/office1/certs/office1.key
 cert /etc/openvpn/office1/certs/office1.crt
 
-# log configuration
+# log config
 log /var/log/openvpn/office1/openvpn.log
 verb 4
 status /var/log/openvpn/office1/openvpn-status.log
@@ -201,18 +202,16 @@ Si produce quindi uno script di comandi per iptables così composto:
 #!/bin/bash
 
 # ip mapping, modifica destinazione
-# (done for request packets)
 iptables -t nat -A PREROUTING -d 192.168.1.1 -s 10.7.0.0/24 -j DNAT --to-destination 192.168.100.1
 iptables -t nat -A PREROUTING -d 192.168.1.2 -s 10.7.0.0/24 -j DNAT --to-destination 192.168.100.2
 iptables -t nat -A PREROUTING -d 192.168.1.3 -s 10.7.0.0/24 -j DNAT --to-destination 192.168.100.3
 # ...
 iptables -t nat -A PREROUTING -d 192.168.1.254 -s 10.7.0.0/24 -j DNAT --to-destination 192.168.100.254
 
-# 'reverse NAT'
+# NAT al contrario
 iptables -t nat -A POSTROUTING -d 192.168.1.0/24 -s 10.7.0.0/24 -j MASQUERADE
 
 # ip mapping, modifica sorgente
-# (done for response packets)
 iptables -t nat -A POSTROUTING -s 192.168.100.1 -d 10.7.0.0/24 -j SNAT --to-source 192.168.1.1
 iptables -t nat -A POSTROUTING -s 192.168.100.2 -d 10.7.0.0/24 -j SNAT --to-source 192.168.1.2
 iptables -t nat -A POSTROUTING -s 192.168.100.3 -d 10.7.0.0/24 -j SNAT --to-source 192.168.1.3

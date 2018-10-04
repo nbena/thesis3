@@ -82,8 +82,8 @@ class OpenSSL(object):
         Does a basic setup for the certificate.
 
         -   deciding which curve to use
-        -   settings all of the attributes of the cert
-        -   generate a serial if it's not given
+        -   setting all of the attributes of the cert
+        -   generating a serial if not given
 
         :rtype  tuple:
         -   tuple[0]    private_key
@@ -152,7 +152,7 @@ class OpenSSL(object):
         Does the following:
         -   generates a key pair using ECDSA
         -   generates a certificate for that public key
-        -   save to two files the certificate and the private key
+        -   saves to two files the certificate and the private key
 
         :param  data    dict, keys:
         -   `CommonName`   str the `CommonName` to insert into
@@ -168,7 +168,7 @@ class OpenSSL(object):
         If `None`, a brand new one is generated using
             randomness.
 
-        :note   `serial`, if is not `None`, should be pseudorandom.
+        :note   `serial` if is not `None` should be pseudorandom.
 
         :rtype  tuple, as follows:
         -   tuple[0] = (path-to-cert, path-to-privkey-file)

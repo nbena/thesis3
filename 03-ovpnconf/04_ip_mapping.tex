@@ -165,37 +165,37 @@ Prima di proseguire, si chiarisce meglio la terminologia che da qui in poi sarà
 	MoonCloud. Dall'estratto dei file \texttt{client-up.sh} e
 	\texttt{client-down.sh} si può vedere infatti che le rotte aggiunte e rimosse sono
 	quelle mappate.
-	\begin{minted}[breaklines]{bash}
-		# /etc/openvpn/server/cs/client-up.sh
+\begin{minted}[breaklines]{bash}
+# /etc/openvpn/server/cs/client-up.sh
 				
-		#!/bin/bash
+#!/bin/bash
 				
-		if [ "$common_name" == "client1" ]; then
-		ip route add 192.168.1.0/24 via 10.7.0.1
-		iptables -t nat -A POSTROUTING -d 192.168.1.0/24 -j MASQUERADE
-		fi
-	\end{minted}
-	\begin{minted}[breaklines]{bash}
-		# /etc/openvpn/server/cs/client-down.sh
+if [ "$common_name" == "client1" ]; then
+  ip route add 192.168.1.0/24 via 10.7.0.1
+  iptables -t nat -A POSTROUTING -d 192.168.1.0/24 -j MASQUERADE
+fi
+\end{minted}
+\begin{minted}[breaklines]{bash}
+# /etc/openvpn/server/cs/client-down.sh
 				
-		#!/bin/bash
+#!/bin/bash
 				
 				
-		if [ "$common_name" == "client1" ]; then
-		ip route del 192.168.1.0/24 via 10.7.0.1
-		iptables -t nat -D POSTROUTING -d 192.168.1.0/24 -j MASQUERADE
-		fi
-	\end{minted}
+if [ "$common_name" == "client1" ]; then
+  ip route del 192.168.1.0/24 via 10.7.0.1
+  iptables -t nat -D POSTROUTING -d 192.168.1.0/24 -j MASQUERADE
+fi
+\end{minted}
 	Allo stesso modo, il file \texttt{client1} che contiene le direttive client-specific
 	avrà il seguente contenuto:
-	\begin{minted}{bash}
-		iroute 192.168.1.0 255.255.255.0
-	\end{minted}
+\begin{minted}{bash}
+iroute 192.168.1.0 255.255.255.0
+\end{minted}
 	Infine, per applicare la soluzione di \textit{NAT al contrario}, sul device client
 	sarà eseguito il comando iptables:
-	\begin{minted}[breaklines]{bash}
-		iptables -t nat -A POSTROUTING -d 192.168.100.0/24 -s 10.7.0.0/24 -j MASQUERADE
-	\end{minted}
+\begin{minted}[breaklines]{bash}
+iptables -t nat -A POSTROUTING -d 192.168.100.0/24 -s 10.7.0.0/24 -j MASQUERADE
+\end{minted}
 	Si noti che in questo comando la rete di destinazione è la \textit{rete originale}.\\
 	I passi eseguiti sono quindi i seguenti:
 	\begin{enumerate}
@@ -309,8 +309,8 @@ Prima di proseguire, si chiarisce meglio la terminologia che da qui in poi sarà
 	utilizzare i seguenti
 	due comandi:
 	\begin{minted}[breaklines]{bash}
-		iptables -t nat -A PREROUTING -d 192.168.1.254 -s 10.7.0.0/24 -j DNAT --to-destination 192.168.100.254
-		iptables -t nat -A POSTROUTING -s 192.168.100.254 -d 10.7.0.0/24 -j SNAT --to-source 192.168.1.254
+iptables -t nat -A PREROUTING -d 192.168.1.254 -s 10.7.0.0/24 -j DNAT --to-destination 192.168.100.254
+iptables -t nat -A POSTROUTING -s 192.168.100.254 -d 10.7.0.0/24 -j SNAT --to-source 192.168.1.254
 	\end{minted}
 	Il primo comando viene utilizzato per modificare l'indirizzo IP destinazione (\texttt{DNAT --to-destination}),
 	da quello mappato noto a MoonCloud ($MTI$) a quello originale ($OTI$); il secondo

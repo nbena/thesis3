@@ -259,8 +259,8 @@ configurare la routing table del suo kernel per instradare i pacchetti destinati
 ai target al VPN server. L'indirizzo IP di tale server è \texttt{172.31.40.221},
 per cui si sono eseguiti i seguenti due comandi sul \textit{Docker host}:
 \begin{minted}{bash}
-	ip route add 192.168.50.0/24 via 172.31.40.221
-	ip route add 192.168.200.0/24 via 172.31.40.221
+ip route add 192.168.50.0/24 via 172.31.40.221
+ip route add 192.168.200.0/24 via 172.31.40.221
 \end{minted}
 
 Mentre con SoftEther non si era nemmeno riusciti a completare la connessione, la
